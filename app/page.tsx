@@ -75,46 +75,49 @@ export default function Home() {
       </section>
 
       {/* ================= VIDEO SHOWCASE ================= */}
-      <section className="w-full border-t border-white/5 bg-[#0A1326] relative overflow-hidden">
-        <div className="absolute inset-0 bg-grid opacity-[0.06]" />
+      {/* ================= VIDEO SHOWCASE ================= */}
+<section className="w-full border-t border-white/5 bg-[#0A1326] relative overflow-hidden">
+  <div className="absolute inset-0 bg-grid opacity-[0.06]" />
 
-        <div className="max-w-6xl mx-auto px-6 py-20">
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="space-y-4 text-center mb-10"
-          >
-            <h2 className="text-4xl font-semibold text-white">
-              Work, Learn & Earn with Professionalism
-            </h2>
-            <p className="text-gray-400 max-w-2xl mx-auto">
-              A phygital lens on trust, professionalism and outcome-driven work.
-            </p>
-          </motion.div>
+  <div className="max-w-6xl mx-auto px-6 py-20">
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5 }}
+      className="space-y-4 text-center mb-10"
+    >
+      <h2 className="text-4xl font-semibold text-white">
+        Work, Learn & Earn with Professionalism
+      </h2>
+      <p className="text-gray-400 max-w-2xl mx-auto">
+        A phygital lens on trust, professionalism and outcome-driven work.
+      </p>
+    </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="rounded-xl overflow-hidden bg-white/5 border border-white/10 shadow-lg shadow-black/40 backdrop-blur-lg"
-          >
-            <video
-              src="/video-professionalism.mp4"
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="metadata"
-              loading="lazy"
-              poster="/poster-video-prof.jpg"
-              className="w-full h-auto rounded-lg"
-            />
-          </motion.div>
-        </div>
-      </section>
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.6 }}
+      className="rounded-xl overflow-hidden bg-white/5 border border-white/10 shadow-lg shadow-black/40 backdrop-blur-lg"
+    >
+      <video
+        src="/video-professionalism.mp4"
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="metadata"   // performance friendly
+        poster="/poster-video-prof.jpg"
+        className="w-full h-auto rounded-lg"
+      >
+        Your browser does not support video playback.
+      </video>
+    </motion.div>
+  </div>
+</section>
+
 
       {/* ================= PLATFORM MODULES ================= */}
       <section className="w-full border-t border-white/5 bg-[#081225]">
