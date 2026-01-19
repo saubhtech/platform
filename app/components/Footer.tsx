@@ -10,13 +10,13 @@ export default function Footer() {
       <div className="absolute inset-0 bg-grid opacity-[0.08] pointer-events-none" />
 
       {/* ====== GOVT SECTION ====== */}
-      <section className="w-full bg-[#08233F] border-t border-white/10 py-14 text-center">
+      {/* <section className="w-full bg-[#08233F] border-t border-white/10 py-14 text-center">
         <p className="text-[13px] font-semibold tracking-wide text-white">AIPTTAT</p>
         <p className="text-[14px] text-gray-200 leading-relaxed mt-1">
           Registered under section 8 (1) of the MCA, Govt of India <br />
           Licence Number 128032
         </p>
-      </section>
+      </section> */}
 
       {/* ===== TABLE SECTION ===== */}
       <section className="w-full bg-[#06172F] border-t border-white/10 py-20 relative">
