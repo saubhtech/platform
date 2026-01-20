@@ -65,7 +65,8 @@ export default function Footer() {
               <Link href="#" style={linkStyle}>Branding & Leads</Link>
             </td>
             <td style={thTdStyle}>
-              <Link href="#" style={linkStyle}>Privacy Policy</Link>
+              <Link href="/legal/privacy-policy">Privacy Policy</Link>
+
             </td>
           </tr>
 
