@@ -2,189 +2,142 @@ import Link from "next/link";
 import Image from "next/image";
 
 export default function Footer() {
+  const today = new Date();
+  const date = today.toLocaleDateString("en-IN");
+  const year = today.getFullYear();
+
+  const tableStyle = {
+    width: "100%",
+    borderCollapse: "collapse",
+    marginBottom: "1.5rem",
+  };
+
+  const thTdStyle = {
+    border: "1px solid rgba(255,255,255,0.15)",
+    padding: "10px 14px",
+    color: "rgba(255,255,255,0.9)",
+    fontSize: "0.9rem",
+    fontWeight: 500,
+  };
+
+  const linkStyle = {
+    color: "rgba(255,255,255,0.85)",
+    textDecoration: "none",
+    fontWeight: 400,
+  };
+
+  const footerColor = {
+    background: "#0d1117",
+    color: "#fff",
+    padding: "2rem 1.5rem 3rem",
+    marginTop: "4rem",
+    borderTop: "1px solid rgba(255,255,255,0.1)",
+  };
+
   return (
-    <footer className="footer">
-      <div className="footer-top">
-        <div className="footer-brand">
-          <div className="footer-logo">
-            <div className="footer-logo-img">
-              <Image
-                src="/file.png"
-                width={40}
-                height={40}
-                alt="zuugnu"
-              />
-            </div>
-            <span className="footer-logo-text">
-              Empowering Businesses. Enabling Associates. Enriching Community
-            </span>
-          </div>
-        </div>
-
-        <div className="footer-content">
-          <div className="footer-section">
-            <h4>Saubh.Tech</h4>
-            <ul>
-              <li>
-                <Link href="#">About Us</Link>
-              </li>
-              <li>
-                <Link href="#">How It Works</Link>
-              </li>
-              <li>
-                <Link href="#">Careers</Link>
-              </li>
-              <li>
-                <Link href="#">Success Stories</Link>
-              </li>
-              <li>
-                <Link href="#">Team and Support</Link>
-              </li>
-            </ul>
-          </div>
-          <div className="footer-section">
-            <h4>Business</h4>
-            <ul>
-              <li>
-                <Link href="#">Operating System</Link>
-              </li>
-              <li>
-                <Link href="#">Digital Branding & Leads</Link>
-              </li>
-              <li>
-                <Link href="#">Post Requirements</Link>
-              </li>
-              <li>
-                <Link href="#">Subscription</Link>
-              </li>
-            </ul>
-          </div>
-          <div className="footer-section">
-            <h4>Associates</h4>
-            <ul>
-              <li>
-                <Link href="#">Become an Associate</Link>
-              </li>
-              <li>
-                <Link href="#">Training Programs</Link>
-              </li>
-              <li>
-                <Link href="#">Browse Gig-Works</Link>
-              </li>
-              <li>
-                <Link href="#">Calculate Earnings</Link>
-              </li>
-            </ul>
-          </div>
-          <div className="footer-section">
-            <h4>Legal</h4>
-            <ul>
-              <li>
-                <Link href="#">Privacy Policy</Link>
-              </li>
-              <li>
-                <Link href="#">Terms of Service</Link>
-              </li>
-              <li>
-                <Link href="#">Escrow System</Link>
-              </li>
-              <li>
-                <Link href="#">Refund Policy</Link>
-              </li>
-              <li>
-                <Link href="#">GDPR Compliance</Link>
-              </li>
-            </ul>
-          </div>
-          <div className="footer-section">
-            <h4>Newsletter</h4>
-            <form className="newsletter-form">
-              <input type="text" placeholder="Name" required />
-              <input type="tel" placeholder="WhatsApp" required />
-              <input type="email" placeholder="Email" required />
-              <button type="submit">Subscribe</button>
-            </form>
-          </div>
-        </div>
+    <footer style={footerColor}>
+      
+      {/* TOP DATE */}
+      <div style={{ textAlign: "right", fontSize: "0.85rem", opacity: 0.8, marginBottom: "0.75rem" }}>
+        {date}
       </div>
 
-      {/* Contact & Social Strip */}
-      {/* Contact & Social Strip */}
-      <div className="footer-strip">
-        <div className="footer-contact-row">
-          <a
-            href="https://wa.me/918800607598"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="contact-item"
-          >
-            📞 <span>+91 8800607598</span>
-          </a>
+      {/* TABLE */}
+      <table style={tableStyle}>
+        <thead>
+          <tr>
+            <th style={thTdStyle}>Saubh.Tech</th>
+            <th style={thTdStyle}>Community</th>
+            <th style={thTdStyle}>Business</th>
+            <th style={thTdStyle}>Legal</th>
+          </tr>
+        </thead>
 
-          <a href="mailto:mail@zuugnu.com" className="contact-item">
-            ✉️ <span>mail@zuugnu.com</span>
-          </a>
-        </div>
+        <tbody>
+          <tr>
+            <td style={thTdStyle}>
+              <Link href="#" style={linkStyle}>About Us</Link>
+            </td>
+            <td style={thTdStyle}>
+              <Link href="#" style={linkStyle}>Be an Advisor</Link>
+            </td>
+            <td style={thTdStyle}>
+              <Link href="#" style={linkStyle}>Branding & Leads</Link>
+            </td>
+            <td style={thTdStyle}>
+              <Link href="#" style={linkStyle}>Privacy Policy</Link>
+            </td>
+          </tr>
 
-        <div className="footer-social-row">
-          <a
-            href="https://wa.me/918800607598"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="social-icon"
-            aria-label="WhatsApp"
-          >
-            📞
-          </a>
+          <tr>
+            <td style={thTdStyle}>
+              <Link href="#" style={linkStyle}>How It Works</Link>
+            </td>
+            <td style={thTdStyle}>
+              <Link href="#" style={linkStyle}>Certification</Link>
+            </td>
+            <td style={thTdStyle}>
+              <Link href="#" style={linkStyle}>Outsource Requirements</Link>
+            </td>
+            <td style={thTdStyle}>
+              <Link href="#" style={linkStyle}>Terms of Service</Link>
+            </td>
+          </tr>
 
-          <a
-            href="https://www.instagram.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="social-icon"
-            aria-label="Instagram"
-          >
-            📸
-          </a>
+          <tr>
+            <td style={thTdStyle}>
+              <Link href="#" style={linkStyle}>Success Stories</Link>
+            </td>
+            <td style={thTdStyle}>
+              <Link href="#" style={linkStyle}>Work from Anywhere</Link>
+            </td>
+            <td style={thTdStyle}>
+              <Link href="#" style={linkStyle}>Phygital Workplace</Link>
+            </td>
+            <td style={thTdStyle}>
+              <Link href="#" style={linkStyle}>Escrow System</Link>
+            </td>
+          </tr>
 
-          <a
-            href="https://www.linkedin.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="social-icon"
-            aria-label="LinkedIn"
-          >
-            in
-          </a>
+          <tr>
+            <td style={thTdStyle}>
+              <Link href="#" style={linkStyle}>Owners Team</Link>
+            </td>
+            <td style={thTdStyle}>
+              <Link href="#" style={linkStyle}>Calculate Earnings</Link>
+            </td>
+            <td style={thTdStyle}>
+              <Link href="#" style={linkStyle}>Subscription</Link>
+            </td>
+            <td style={thTdStyle}>
+              <Link href="#" style={linkStyle}>DPDPA & GDPR Compliance</Link>
+            </td>
+          </tr>
+        </tbody>
+      </table>
 
-          <a
-            href="https://x.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="social-icon"
-            aria-label="X"
-          >
-            𝕏
-          </a>
-
-          <a
-            href="https://www.youtube.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="social-icon"
-            aria-label="YouTube"
-          >
-            ▶
-          </a>
-        </div>
+      {/* CONTACT ROW */}
+      <div style={{ textAlign: "center", margin: "1.2rem 0", fontSize: "0.9rem" }}>
+        📞 Call &nbsp; | &nbsp; 💬 WhatsApp &nbsp; | &nbsp; ✉ Email &nbsp; | &nbsp; in LinkedIn &nbsp; | &nbsp; ⓧ X &nbsp; | &nbsp; ▶ YouTube
       </div>
 
-      <div className="footer-bottom">
-        <p>
-          AIPTTAT Association || Incorporated under section 8 of the MCA, Govt
-          of India || Licence Number 128032 || © 2025 Zuugnu Tech. All rights
-          reserved.
-        </p>
+      {/* LOGO + COMPANY */}
+      <div style={{ textAlign: "center", marginTop: "1.5rem" }}>
+        <Image
+          src="/file.png"
+          alt="logo"
+          width={45}
+          height={45}
+          style={{ marginBottom: "0.5rem" }}
+        />
+        <div style={{ marginBottom: "0.4rem" }}>Saubh.Tech</div>
+        <div style={{ opacity: 0.8, marginBottom: "0.4rem" }}>Address: Bengaluru, India</div>
+        <div style={{ opacity: 0.8 }}>GSTIN: 07ABCDE1234F1Z5</div>
+      </div>
+
+      {/* BOTTOM YEAR */}
+      <div style={{ textAlign: "center", marginTop: "1rem", fontSize: "0.85rem", opacity: 0.7 }}>
+        © {year} Saubh.Tech, All Rights Reserved.
       </div>
     </footer>
   );

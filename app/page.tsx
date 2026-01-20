@@ -12,6 +12,8 @@ import FAQSection from './components/FAQSection';
 import Testimonials from './components/Testimonials';
 import FinalCTA from './components/FinalCTA';
 import Footer from './components/Footer';
+import SupportSection from './components/SupportSection';
+import OperatingSystemSection from './components/OperatingSystemSection';
 
 export default function Home() {
   return (
@@ -19,6 +21,7 @@ export default function Home() {
       <FireflyBackground />
       <Header />
       <Hero />
+      <OperatingSystemSection />
       <StatsBanner />
       <ProblemSolution />
       <GigWorkSteps />
@@ -28,6 +31,7 @@ export default function Home() {
       <BlogsSection />
       <FAQSection />
       <Testimonials />
+      <SupportSection />
       <FinalCTA />
       <Footer />
     </>

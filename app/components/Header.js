@@ -18,6 +18,7 @@ export default function Header() {
           <span className="logo-text">Saubh.Tech</span>
         </div>
         <ul className="nav-menu">
+            <li><Link href="#operating-system">Operating System</Link></li>
           <li>
             <Link href="#phygital-gig-work">Gig-Work</Link>
           </li>
@@ -25,14 +26,14 @@ export default function Header() {
             <Link href="#branding">Branding</Link>
           </li>
           <li>
-            <Link href="#academy">Academy</Link>
+            <Link href="#academy">Skilling</Link>
           </li>
           <li>
             <Link href="#support">Support</Link>
           </li>
           <li>
             <Link href="/login" className="btn-login">
-              Login
+              Get Started
             </Link>
           </li>
         </ul>
