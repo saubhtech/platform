@@ -5,10 +5,10 @@ export default function Hero() {
     <section className="hero">
       <div className="hero-content">
         <h1>
-          Community-Verified Marketplace{' '}
+          Community-Verified {' '}
           <span className="highlight">
             <br />
-            Phygital Gig-Work Platform
+            Phygital Gig-Work Marketplace
           </span>
         </h1>
         <div className="hero-description">
