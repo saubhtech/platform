@@ -6,138 +6,132 @@ export default function Footer() {
   const date = today.toLocaleDateString("en-IN");
   const year = today.getFullYear();
 
-  const tableStyle = {
-    width: "100%",
-    borderCollapse: "collapse",
-    marginBottom: "1.5rem",
+  const footerWrapper = {
+    background: "#f8fafc",   // light premium bg (same family as hero)
+    color: "#0f172a",
+    padding: "2.5rem 1.5rem",
+    borderTop: "1px solid rgba(0,0,0,0.08)",
+    marginTop: "4rem",
+    fontFamily: "Inter, sans-serif"
   };
 
-  const thTdStyle = {
-    border: "1px solid rgba(255,255,255,0.15)",
-    padding: "10px 14px",
-    color: "rgba(255,255,255,0.9)",
+  const tableStyle = {
+    width: "100%",
+    borderCollapse: "separate",
+    borderSpacing: "0",
+    margin: "1rem 0 1.5rem",
+  };
+
+  const thStyle = {
+    borderBottom: "1px solid rgba(0,0,0,0.15)",
+    padding: "8px 12px",
+    textAlign: "left",
+    fontSize: "0.95rem",
+    fontWeight: 600,
+    color: "#0f172a"
+  };
+
+  const tdStyle = {
+    padding: "8px 12px",
     fontSize: "0.9rem",
-    fontWeight: 500,
+    color: "#334155",
+    borderBottom: "1px solid rgba(0,0,0,0.08)",
   };
 
   const linkStyle = {
-    color: "rgba(255,255,255,0.85)",
     textDecoration: "none",
+    color: "#0f172a",
     fontWeight: 400,
   };
 
-  const footerColor = {
-    background: "#0d1117",
-    color: "#fff",
-    padding: "2rem 1.5rem 3rem",
-    marginTop: "4rem",
-    borderTop: "1px solid rgba(255,255,255,0.1)",
+  const tealLink = {
+    color: "#0d9488", // teal primary
+    fontWeight: 500,
+    textDecoration: "none",
   };
 
   return (
-    <footer style={footerColor}>
-      
+    <footer style={footerWrapper}>
+
       {/* TOP DATE */}
-      <div style={{ textAlign: "right", fontSize: "0.85rem", opacity: 0.8, marginBottom: "0.75rem" }}>
+      <div style={{ textAlign: "right", fontSize: "0.85rem", opacity: 0.7 }}>
         {date}
       </div>
 
-      {/* TABLE */}
+      {/* TABLE / GRID */}
       <table style={tableStyle}>
         <thead>
           <tr>
-            <th style={thTdStyle}>Saubh.Tech</th>
-            <th style={thTdStyle}>Community</th>
-            <th style={thTdStyle}>Business</th>
-            <th style={thTdStyle}>Legal</th>
+            <th style={thStyle}>Saubh.Tech</th>
+            <th style={thStyle}>Community</th>
+            <th style={thStyle}>Business</th>
+            <th style={thStyle}>Legal</th>
           </tr>
         </thead>
 
         <tbody>
           <tr>
-            <td style={thTdStyle}>
-              <Link href="#" style={linkStyle}>About Us</Link>
-            </td>
-            <td style={thTdStyle}>
-              <Link href="#" style={linkStyle}>Be an Advisor</Link>
-            </td>
-            <td style={thTdStyle}>
-              <Link href="#" style={linkStyle}>Branding & Leads</Link>
-            </td>
-            <td style={thTdStyle}>
-              <Link href="/legal/privacy-policy">Privacy Policy</Link>
-
-            </td>
+            <td style={tdStyle}><Link href="#" style={linkStyle}>About Us</Link></td>
+            <td style={tdStyle}><Link href="#" style={linkStyle}>Be an Advisor</Link></td>
+            <td style={tdStyle}><Link href="#" style={linkStyle}>Branding & Leads</Link></td>
+            <td style={tdStyle}><Link href="/legal/privacy-policy" style={tealLink}>Privacy Policy</Link></td>
           </tr>
 
           <tr>
-            <td style={thTdStyle}>
-              <Link href="#" style={linkStyle}>How It Works</Link>
-            </td>
-            <td style={thTdStyle}>
-              <Link href="#" style={linkStyle}>Certification</Link>
-            </td>
-            <td style={thTdStyle}>
-              <Link href="#" style={linkStyle}>Outsource Requirements</Link>
-            </td>
-            <td style={thTdStyle}>
-              <Link href="#" style={linkStyle}>Terms of Service</Link>
-            </td>
+            <td style={tdStyle}><Link href="#" style={linkStyle}>How It Works</Link></td>
+            <td style={tdStyle}><Link href="#" style={linkStyle}>Certification</Link></td>
+            <td style={tdStyle}><Link href="#" style={linkStyle}>Outsource Requirements</Link></td>
+            <td style={tdStyle}><Link href="/legal/terms-of-service" style={tealLink}>Terms of Service</Link></td>
           </tr>
 
           <tr>
-            <td style={thTdStyle}>
-              <Link href="#" style={linkStyle}>Success Stories</Link>
-            </td>
-            <td style={thTdStyle}>
-              <Link href="#" style={linkStyle}>Work from Anywhere</Link>
-            </td>
-            <td style={thTdStyle}>
-              <Link href="#" style={linkStyle}>Phygital Workplace</Link>
-            </td>
-            <td style={thTdStyle}>
-              <Link href="#" style={linkStyle}>Escrow System</Link>
-            </td>
+            <td style={tdStyle}><Link href="#" style={linkStyle}>Success Stories</Link></td>
+            <td style={tdStyle}><Link href="#" style={linkStyle}>Work from Anywhere</Link></td>
+            <td style={tdStyle}><Link href="#" style={linkStyle}>Phygital Workplace</Link></td>
+            <td style={tdStyle}><Link href="#" style={linkStyle}>Escrow System</Link></td>
           </tr>
 
           <tr>
-            <td style={thTdStyle}>
-              <Link href="#" style={linkStyle}>Owners Team</Link>
-            </td>
-            <td style={thTdStyle}>
-              <Link href="#" style={linkStyle}>Calculate Earnings</Link>
-            </td>
-            <td style={thTdStyle}>
-              <Link href="#" style={linkStyle}>Subscription</Link>
-            </td>
-            <td style={thTdStyle}>
-              <Link href="#" style={linkStyle}>DPDPA & GDPR Compliance</Link>
-            </td>
+            <td style={tdStyle}><Link href="#" style={linkStyle}>Owners Team</Link></td>
+            <td style={tdStyle}><Link href="#" style={linkStyle}>Calculate Earnings</Link></td>
+            <td style={tdStyle}><Link href="#" style={linkStyle}>Subscription</Link></td>
+            <td style={tdStyle}><Link href="#" style={linkStyle}>DPDPA & GDPR Compliance</Link></td>
           </tr>
         </tbody>
       </table>
 
-      {/* CONTACT ROW */}
-      <div style={{ textAlign: "center", margin: "1.2rem 0", fontSize: "0.9rem" }}>
-        📞 Call &nbsp; | &nbsp; 💬 WhatsApp &nbsp; | &nbsp; ✉ Email &nbsp; | &nbsp; in LinkedIn &nbsp; | &nbsp; ⓧ X &nbsp; | &nbsp; ▶ YouTube
+      {/* CONTACT */}
+      <div style={{
+        textAlign: "center",
+        marginTop: "1rem",
+        marginBottom: "1.1rem",
+        color: "#334155",
+        fontSize: "0.9rem"
+      }}>
+        📞 Call • 💬 WhatsApp • ✉ Email • in LinkedIn • 𝕏 X • ▶ YouTube
       </div>
 
-      {/* LOGO + COMPANY */}
-      <div style={{ textAlign: "center", marginTop: "1.5rem" }}>
-        <Image
+      {/* LOGO BLOCK */}
+      <div style={{ textAlign: "center", marginTop: "1rem" }}>
+        {/* <Image
           src="/file.png"
           alt="logo"
-          width={45}
-          height={45}
+          width={48}
+          height={48}
           style={{ marginBottom: "0.5rem" }}
-        />
-        <div style={{ marginBottom: "0.4rem" }}>Saubh.Tech</div>
-        <div style={{ opacity: 0.8, marginBottom: "0.4rem" }}>Address: Bengaluru, India</div>
-        <div style={{ opacity: 0.8 }}>GSTIN: 07ABCDE1234F1Z5</div>
+        /> */}
+        <div style={{ fontWeight: 600 }}>Saubh.Tech</div>
+        {/* <div style={{ fontSize: "0.85rem", opacity: 0.75 }}>Bengaluru, India</div> */}
+        <div style={{ fontSize: "0.85rem", opacity: 0.75 }}>GSTIN: 07ABCDE1234F1Z5</div>
       </div>
 
-      {/* BOTTOM YEAR */}
-      <div style={{ textAlign: "center", marginTop: "1rem", fontSize: "0.85rem", opacity: 0.7 }}>
+      {/* COPYRIGHT */}
+      <div style={{
+        textAlign: "center",
+        marginTop: "1rem",
+        fontSize: "0.85rem",
+        opacity: 0.75,
+      }}>
         © {year} Saubh.Tech, All Rights Reserved.
       </div>
     </footer>

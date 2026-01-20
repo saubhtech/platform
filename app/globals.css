@@ -1172,3 +1172,20 @@ body {
   transform: scale(1.15);
   opacity: 0.8;
 }
+.legal h1 { font-size:2.2rem; font-weight:700; color:var(--dark); margin-bottom:1rem; }
+
+.legal h2 { font-size:1.4rem; font-weight:600; color:var(--teal-primary); margin-top:1.8rem; margin-bottom:0.5rem; }
+
+.legal h3 { font-size:1.1rem; font-weight:600; color:var(--dark); margin-top:1.2rem; margin-bottom:0.4rem; }
+
+.legal p  { color:var(--light); margin-bottom:0.6rem; line-height:1.7; }
+
+.legal ul { margin-left:1.2rem; margin-bottom:1rem; }
+
+.legal ul li { list-style:disc; margin-bottom:0.3rem; color:var(--light); }
+
+.legal table { width:100%; border:1px solid #e5e7eb; margin:1rem 0; font-size:0.95rem; }
+
+.legal th { background:var(--teal-primary); color:white; border:1px solid #e5e7eb; padding:8px; font-weight:600; }
+
+.legal td { border:1px solid #e5e7eb; padding:8px; color:var(--dark); }
