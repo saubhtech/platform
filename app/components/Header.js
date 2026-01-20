@@ -7,19 +7,19 @@ export default function Header() {
       <nav className="nav-container">
         <div className="logo-container">
           <div className="logo-img">
-            {/* <Image
-              src="/images/zuugnu.jpeg"
+            <Image
+              src="/file.png"
               width={32}
               height={32}
               alt="Zuugnu logo"
               priority
-            /> */}
+            />
           </div>
           <span className="logo-text">Saubh.Tech</span>
         </div>
         <ul className="nav-menu">
           <li>
-            <Link href="#gig-work">Gig-Work</Link>
+            <Link href="#phygital-gig-work">Gig-Work</Link>
           </li>
           <li>
             <Link href="#branding">Branding</Link>

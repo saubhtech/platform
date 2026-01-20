@@ -8,7 +8,7 @@ export default function Hero() {
           Community-Verified Marketplace{' '}
           <span className="highlight">
             <br />
-            Gig-Work Aggregator Platform
+            Phygital Gig-Work Platform
           </span>
         </h1>
         <div className="hero-description">

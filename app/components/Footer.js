@@ -7,14 +7,14 @@ export default function Footer() {
       <div className="footer-top">
         <div className="footer-brand">
           <div className="footer-logo">
-            {/* <div className="footer-logo-img">
+            <div className="footer-logo-img">
               <Image
-                src="/images/zuugnu.jpeg"
+                src="/file.png"
                 width={40}
                 height={40}
                 alt="zuugnu"
               />
-            </div> */}
+            </div>
             <span className="footer-logo-text">
               Empowering Businesses. Enabling Associates. Enriching Community
             </span>
