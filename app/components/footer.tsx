@@ -1,4 +1,7 @@
 import Link from "next/link";
+import Image from "next/image";
+
+
 import {
   Facebook,
   Instagram,
@@ -63,31 +66,49 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8 mb-12">
           
           {/* Logo column */}
-          <div>
-            <Link href="/" className="inline-block mb-4">
-              <span className="text-2xl font-bold">
-                Saubh<span className="text-primary">.Tech</span>
-              </span>
-            </Link>
+          
+        <div>
+  {/* Logo + Brand */}
+  <Link href="/" className="inline-flex items-center gap-3 mb-4">
+    <Image
+      src="/Saubh-Good.png"
+      alt="Saubh.Tech Logo"
+      width={44}
+      height={44}
+      priority
+      className="h-11 w-11 object-contain"
+    />
 
-            <p className="text-sm text-muted-foreground mb-4">
-              GSTN: <span className="font-medium">10AAUPS8603H1ZH</span>
-            </p>
+    <span className="text-2xl font-bold tracking-tight">
+      Saubh<span className="text-primary">.Tech</span>
+    </span>
+  </Link>
 
-            <ul className="space-y-3">
-              <li>
-                <Link href="/about-us" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  About us
-                </Link>
-              </li>
-              <li>
-                <Link href="/team-saubh" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  Team Saubh
-                </Link>
-              </li>
-            </ul>
-          </div>
+  {/* GST */}
+  <p className="text-sm text-muted-foreground mb-4">
+    GSTN: <span className="font-medium">10AAUPS8603H1ZH</span>
+  </p>
 
+  {/* Links */}
+  <ul className="space-y-3">
+    <li>
+      <Link
+        href="/about-us"
+        className="text-sm text-muted-foreground hover:text-primary transition-colors"
+      >
+        About us
+      </Link>
+    </li>
+    <li>
+      <Link
+        href="/team-saubh"
+        className="text-sm text-muted-foreground hover:text-primary transition-colors"
+      >
+        Team Saubh
+      </Link>
+    </li>
+  </ul>
+</div>
           {/* Community */}
           <div>
             <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-6">
