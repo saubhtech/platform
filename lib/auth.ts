@@ -1,8 +1,8 @@
-import jwt from 'jsonwebtoken';
+import jwt, { Secret, SignOptions, VerifyOptions } from 'jsonwebtoken';
 import { cookies } from 'next/headers';
 import { NextRequest } from 'next/server';
 
-const JWT_SECRET: string = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_SECRET: Secret = process.env.JWT_SECRET || 'your-secret-key';
 const JWT_EXPIRES_IN: string = process.env.JWT_EXPIRES_IN || '7d';
 
 export interface TokenPayload {
@@ -19,10 +19,12 @@ export const authService = {
    * @returns JWT token string
    */
   generateToken(payload: TokenPayload): string {
-    return jwt.sign(payload, JWT_SECRET, { 
+    const options: SignOptions = {
       expiresIn: JWT_EXPIRES_IN,
       issuer: 'saubh-tech',
-    });
+    };
+    
+    return jwt.sign(payload, JWT_SECRET, options);
   },
 
   /**
@@ -32,9 +34,11 @@ export const authService = {
    */
   verifyToken(token: string): TokenPayload | null {
     try {
-      const decoded = jwt.verify(token, JWT_SECRET, {
+      const options: VerifyOptions = {
         issuer: 'saubh-tech',
-      }) as TokenPayload;
+      };
+      
+      const decoded = jwt.verify(token, JWT_SECRET, options) as TokenPayload;
       return decoded;
     } catch (error) {
       console.error('Token verification failed:', error);
