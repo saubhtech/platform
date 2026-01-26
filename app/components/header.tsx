@@ -3,14 +3,14 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Rocket, Orbit, Cpu, BrainCircuit, MessageCircle } from "lucide-react";
 
 const navItems = [
-  { label: "Gig-Work", href: "#gig-work" },
-  { label: "Branding", href: "#branding" },
-  { label: "SaubhOS", href: "#saubhos" },
-  { label: "Academy", href: "#academy" },
-  { label: "Support", href: "#support" },
+  { label: "Gig-Work", href: "#gig-work", icon: Rocket, color: "#00f7ff" },
+  { label: "Branding", href: "#branding", icon: Orbit, color: "#ff00ff" },
+  { label: "SaubhOS", href: "#saubhos", icon: Cpu, color: "#00ff9d" },
+  { label: "Academy", href: "#academy", icon: BrainCircuit, color: "#ffb800" },
+  { label: "Support", href: "#support", icon: MessageCircle, color: "#ff2e63" },
 ];
 
 export function Header() {
@@ -40,15 +40,22 @@ export function Header() {
 
         {/* ===== Desktop Navigation ===== */}
         <nav className="hidden md:flex md:items-center md:gap-6">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="text-sm font-medium transition-colors hover:text-primary"
-            >
-              {item.label}
-            </Link>
-          ))}
+          {navItems.map((item) => {
+            const IconComponent = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="group flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary"
+              >
+                <IconComponent 
+                  className="h-4 w-4 transition-all duration-300 group-hover:drop-shadow-[0_0_8px_var(--icon-glow)]" 
+                  style={{ '--icon-glow': item.color } as React.CSSProperties}
+                />
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
 
         {/* ===== CTA ===== */}
@@ -81,16 +88,23 @@ export function Header() {
       {mobileMenuOpen && (
         <div className="md:hidden border-t">
           <nav className="container flex flex-col gap-4 p-4">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="text-sm font-medium transition-colors hover:text-primary"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {item.label}
-              </Link>
-            ))}
+            {navItems.map((item) => {
+              const IconComponent = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <IconComponent 
+                    className="h-4 w-4" 
+                    style={{ color: item.color }}
+                  />
+                  {item.label}
+                </Link>
+              );
+            })}
             <Button
               asChild
               className="w-full bg-[#ef4444] hover:bg-[#dc2626] text-white"

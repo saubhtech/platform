@@ -48,9 +48,9 @@ export function HeroSection() {
       </div>
 
       {/* ================= Content ================= */}
-      <div className="relative z-10 mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 w-full text-center">
+      <div className="relative z-10 mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 w-full">
         {/* ===== COMMUNITY VERIFIED BADGE ===== */}
-        <div className="relative mb-12 flex justify-center">
+        <div className="relative mb-12 flex justify-start ml-15">
           {/* RED aura (logo inspired – controlled) */}
           <div className="absolute -top-10 h-28 w-[420px] rounded-full bg-[#E84545]/30 blur-3xl opacity-70" />
 
@@ -98,7 +98,7 @@ export function HeroSection() {
         </div>
 
         {/* ===== HEADING ===== */}
-        <h1 className="font-bold tracking-tight text-foreground mb-8">
+        <h1 className="font-bold tracking-tight text-foreground mb-8 text-center">
           <span className="block text-5xl sm:text-6xl md:text-7xl lg:text-8xl">
             Phygital Gig-Work
           </span>
