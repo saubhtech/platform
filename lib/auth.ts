@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';
+import { NextRequest } from 'next/server';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
@@ -37,6 +38,31 @@ export const authService = {
       return decoded;
     } catch (error) {
       console.error('Token verification failed:', error);
+      return null;
+    }
+  },
+
+  /**
+   * Get user from request Authorization header (for API routes)
+   * @param request - NextRequest object
+   * @returns TokenPayload if valid token found, null otherwise
+   */
+  getUserFromRequest(request: NextRequest): TokenPayload | null {
+    try {
+      // Get authorization header
+      const authHeader = request.headers.get('authorization');
+      
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return null;
+      }
+
+      // Extract token (remove "Bearer " prefix)
+      const token = authHeader.substring(7);
+      
+      // Verify and return decoded token
+      return this.verifyToken(token);
+    } catch (error) {
+      console.error('Error getting user from request:', error);
       return null;
     }
   },
