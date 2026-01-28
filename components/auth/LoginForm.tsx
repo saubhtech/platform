@@ -5,14 +5,19 @@ export default function LoginForm() {
   const whatsappNumber = '919770370187';
   const displayNumber = '+91 97703 70187';
 
+  const copyNumber = () => {
+    navigator.clipboard.writeText(displayNumber);
+    alert('Number copied!');
+  };
+
   return (
     <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
       <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
         Get Password via WhatsApp
       </h2>
 
-      {/* Instructions */}
       <div className="space-y-4">
+        {/* Instructions */}
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-5">
           <h3 className="font-semibold text-blue-900 mb-3 flex items-center">
             <span className="text-2xl mr-2">🔐</span>
@@ -25,14 +30,16 @@ export default function LoginForm() {
 
         {/* Message to send */}
         <div className="bg-white border-2 border-green-300 rounded-lg p-4 shadow-sm">
-          <p className="text-xs text-gray-600 mb-2 font-medium">📝 Send this message:</p>
+          <p className="text-xs text-gray-600 mb-2 font-medium">
+            📝 Send this message:
+          </p>
           <div className="bg-gray-50 rounded p-3 mb-3">
             <code className="text-lg font-mono text-gray-900 block font-bold text-center">
               LOGIN
             </code>
           </div>
           <p className="text-xs text-gray-500 text-center">
-            That's it! Just type <span className="font-semibold">LOGIN</span>
+            Just type <span className="font-semibold">LOGIN</span>
           </p>
         </div>
 
@@ -46,10 +53,7 @@ export default function LoginForm() {
               {displayNumber}
             </span>
             <button
-              onClick={() => {
-                navigator.clipboard.writeText(displayNumber);
-                alert('Number copied!');
-              }}
+              onClick={copyNumber}
               className="text-xs bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
             >
               Copy
@@ -64,30 +68,20 @@ export default function LoginForm() {
             What happens next?
           </h3>
           <ul className="space-y-2 text-sm text-yellow-800">
-            <li className="flex items-start">
-              <span className="mr-2">🔹</span>
-              <span>A <strong>new password</strong> will be generated</span>
-            </li>
-            <li className="flex items-start">
-              <span className="mr-2">🔹</span>
-              <span>You'll receive it on WhatsApp instantly</span>
-            </li>
-            <li className="flex items-start">
-              <span className="mr-2">🔹</span>
-              <span>Use it to login below!</span>
-            </li>
+            <li>🔹 A new password will be generated</li>
+            <li>🔹 You’ll receive it on WhatsApp</li>
+            <li>🔹 Use it to login below</li>
           </ul>
         </div>
 
-        {/* Quick Link to WhatsApp */}
-        
+        {/* WhatsApp Quick Link */}
+        <a
           href={`https://wa.me/${whatsappNumber}?text=LOGIN`}
           target="_blank"
           rel="noopener noreferrer"
           className="block w-full py-4 bg-green-600 text-white text-center rounded-lg hover:bg-green-700 font-semibold shadow-lg transition-all hover:shadow-xl"
         >
-          <span className="text-xl mr-2">💬</span>
-          Open WhatsApp to Get Password
+          💬 Open WhatsApp to Get Password
         </a>
 
         {/* Login Form */}
@@ -95,6 +89,7 @@ export default function LoginForm() {
           <h3 className="font-semibold text-gray-900 mb-4 text-center">
             Login with Password
           </h3>
+
           <form className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-2 text-gray-700">
@@ -128,7 +123,7 @@ export default function LoginForm() {
         </div>
 
         <p className="text-center text-sm text-gray-600 mt-4">
-          Don't have an account?{' '}
+          Don’t have an account?{' '}
           <a href="/register" className="text-blue-600 hover:underline font-medium">
             Register here
           </a>
