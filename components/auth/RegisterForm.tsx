@@ -21,21 +21,33 @@ export default function RegisterForm() {
     setSuccess('');
 
     try {
-      const response = await fetch('/api/auth/register', {
+      // Step 1: Send "REGISTER Name" message to user's WhatsApp
+      const registerMessage = `REGISTER ${formData.fname}`;
+      
+      const messageResponse = await fetch('/api/auth/send-register-message', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({ 
+          whatsapp: formData.whatsapp,
+          message: registerMessage
+        })
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setSuccess('✅ Registration successful! Check your WhatsApp for password.');
-        setFormData({ fname: '', whatsapp: '' });
-        setTimeout(() => router.push('/login'), 3000);
-      } else {
-        setError(data.error || 'Registration failed');
+      if (!messageResponse.ok) {
+        const errorData = await messageResponse.json();
+        setError(errorData.error || 'Failed to send registration message');
+        setLoading(false);
+        return;
       }
+
+      // Step 2: Show success - webhook will handle the rest
+      setSuccess('✅ Registration message sent to your WhatsApp! Please check your phone and reply to complete registration.');
+      setFormData({ fname: '', whatsapp: '' });
+      
+      setTimeout(() => {
+        router.push('/login');
+      }, 5000);
+
     } catch (err) {
       setError('Network error. Please try again.');
     } finally {
@@ -49,6 +61,17 @@ export default function RegisterForm() {
         Create Account
       </h2>
 
+      {/* WhatsApp Registration Info */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <h3 className="font-semibold text-blue-900 mb-2">📱 How it works:</h3>
+        <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
+          <li>Enter your name and WhatsApp number</li>
+          <li>We'll send you a registration message</li>
+          <li>Reply to that message to complete registration</li>
+          <li>Get your password instantly!</li>
+        </ol>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium mb-2 text-gray-700">
@@ -58,10 +81,13 @@ export default function RegisterForm() {
             type="text"
             value={formData.fname}
             onChange={(e) => setFormData({...formData, fname: e.target.value})}
-            placeholder="John Doe"
+            placeholder="Yash Singh"
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
             required
           />
+          <p className="text-xs text-gray-500 mt-1">
+            This will be sent as: REGISTER {formData.fname || 'Your Name'}
+          </p>
         </div>
 
         <div>
@@ -98,7 +124,7 @@ export default function RegisterForm() {
           disabled={loading}
           className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
         >
-          {loading ? 'Creating Account...' : 'Register'}
+          {loading ? 'Sending Message...' : 'Register via WhatsApp'}
         </button>
 
         <p className="text-center text-sm text-gray-600 mt-4">
@@ -108,6 +134,20 @@ export default function RegisterForm() {
           </a>
         </p>
       </form>
+
+      {/* Alternative Direct WhatsApp Method */}
+      <div className="mt-6 pt-6 border-t border-gray-200">
+        <p className="text-sm text-gray-600 text-center mb-3">
+          Or register directly via WhatsApp:
+        </p>
+        <div className="bg-gray-50 rounded-lg p-3 text-center">
+          <p className="text-xs text-gray-600 mb-2">Send this message:</p>
+          <code className="text-sm bg-white px-3 py-2 rounded border border-gray-300 inline-block">
+            REGISTER Your Full Name
+          </code>
+          <p className="text-xs text-gray-500 mt-2">to our WhatsApp number</p>
+        </div>
+      </div>
     </div>
   );
 }

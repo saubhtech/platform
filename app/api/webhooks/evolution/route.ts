@@ -41,8 +41,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, skipped: 'no text in message' });
     }
 
-    console.log(`Message from ${fullPhone}: ${text}`);
+console.log(`Message from ${fullPhone}: ${text}`);
 
+// ✅ ADD THIS - Handle "YES" confirmation
+if (text.toUpperCase() === 'YES') {
+  await evolutionApiService.sendMessage(fullPhone,
+    `✅ Thank you for confirming!
+
+Please send your registration in this format:
+REGISTER Your Full Name
+
+Example:
+REGISTER Yash Singh`);
+  
+  return NextResponse.json({ success: true, action: 'confirmation_received' });
+}
     // Command: REGISTER <Name>
     if (text.toUpperCase().startsWith('REGISTER ')) {
       const fname = text.substring(9).trim();
