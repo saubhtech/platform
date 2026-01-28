@@ -7,7 +7,7 @@ const INSTANCE_NAME = process.env.EVOLUTION_INSTANCE_NAME || 'default';
 
 const evolutionApi = axios.create({
   baseURL: EVOLUTION_API_URL,
-  timeout: 8000,
+  timeout: 25000,
   headers: {
     'apikey': API_KEY,
     'Content-Type': 'application/json',
@@ -25,7 +25,7 @@ export const evolutionApiService = {
           number: formattedNumber,
           text: text,
         },
-        { timeout: 7000 }
+        { timeout: 20000 }
       );
       return response.data;
     } catch (error) {
