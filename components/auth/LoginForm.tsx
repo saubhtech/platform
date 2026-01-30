@@ -68,7 +68,7 @@ export default function LoginPage() {
   }
 
   // Sign In
-  const handleSignIn = (e) => {
+  const handleSignIn = (e: React.FormEvent) => {
     e.preventDefault()
     setLoginMessage("")
 
