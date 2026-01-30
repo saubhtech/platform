@@ -1,19 +1,22 @@
 // app/api/auth/logout/route.ts
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 
 export async function POST(request: NextRequest) {
-  const response = NextResponse.json({
-    success: true,
-    message: 'Logged out successfully'
-  });
+  try {
+    // Clear the auth token cookie
+    const cookieStore = await cookies();
+    cookieStore.delete('auth-token');
 
-  // Clear auth cookie
-  response.cookies.set('auth-token', '', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: 0
-  });
-
-  return response;
+    return NextResponse.json({
+      success: true,
+      message: 'Logged out successfully',
+    });
+  } catch (error) {
+    console.error('Logout Error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
 }
