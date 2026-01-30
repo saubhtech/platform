@@ -255,7 +255,8 @@ export function Footer() {
         {/* ===== ADDRESS ===== */}
         <div className="text-sm text-muted-foreground text-center mb-6">
           <MapPin className="inline h-4 w-4 mr-1 text-primary" />
-          01 Tola-Tari, Sarha, Dahiawan, Chapra, Saran, Bihar - 841301
+          FELLOW SHIP OF INDIA, 811/92 Nehru Place, New Delhi
+South East Delhi, Delhi - 110019
         </div>
 
         {/* ===== SOCIAL ICONS ===== */}

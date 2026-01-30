@@ -49,51 +49,85 @@ export function HeroSection() {
 
       {/* ================= Content ================= */}
       <div className="relative z-10 mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 w-full">
-        {/* ===== COMMUNITY VERIFIED BADGE ===== */}
-        <div className="relative mb-12 flex justify-start ml-15">
-          {/* RED aura (logo inspired – controlled) */}
-          <div className="absolute -top-10 h-28 w-[420px] rounded-full bg-[#E84545]/30 blur-3xl opacity-70" />
+        {/* ===== BADGES ROW ===== */}
+        <div className="relative mb-12 flex justify-between items-center">
+          {/* LEFT: COMMUNITY VERIFIED BADGE */}
+          <div className="relative">
+            {/* RED aura (logo inspired – controlled) */}
+            <div className="absolute -top-10 h-28 w-[420px] rounded-full bg-[#E84545]/30 blur-3xl opacity-70" />
 
-          <div
-            className="
-              relative z-10
-              inline-flex items-center gap-3
-              px-8 py-3.5 rounded-full
-              bg-secondary/75 backdrop-blur-md
-              ring-1 ring-[#E84545]/50
-              shadow-[0_0_40px_rgba(232,69,69,0.45)]
-            "
-          >
-            {/* 🌍 Globe icon */}
-            <svg
-              className="h-4.5 w-4.5 text-[#E84545]"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-            >
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10
-                10-4.48 10-10S17.52 2 12 2zm6.93 6h-2.02
-                a15.53 15.53 0 00-1.01-2.54A8.03 8.03 0 0118.93 8zM12 4
-                c.69.83 1.41 2.07 1.88 4H10.1c.49-1.93 1.21-3.17 1.9-4zM4.26 14
-                a7.9 7.9 0 010-4h2.16a17.8 17.8 0 000 4H4.26zm.81 2h2.02
-                a15.53 15.53 0 001.01 2.54A8.03 8.03 0 015.07 16zM6.42 8H4.4
-                a8.03 8.03 0 013.01-2.54A15.53 15.53 0 006.42 8zM12 20
-                c-.69-.83-1.41-2.07-1.88-4h3.78c-.49 1.93-1.21 3.17-1.9 4zm2.45-6H9.55
-                a15.9 15.9 0 010-4h4.9a15.9 15.9 0 010 4zm.13 4
-                a15.53 15.53 0 001.01-2.54h2.02a8.03 8.03 0 01-3.03 2.54zM17.58 14
-                a17.8 17.8 0 000-4h2.16a7.9 7.9 0 010 4h-2.16z"
-              />
-            </svg>
-
-            {/* TEXT */}
-            <span
+            <div
               className="
-                text-sm font-extrabold tracking-[0.18em] uppercase
-                text-[#E84545]
-                drop-shadow-[0_0_10px_rgba(232,69,69,0.85)]
+                relative z-10
+                inline-flex items-center gap-3
+                px-8 py-3.5 rounded-full
+                bg-secondary/75 backdrop-blur-md
+                ring-1 ring-[#E84545]/50
+                shadow-[0_0_40px_rgba(232,69,69,0.45)]
               "
             >
-              Community-Verified
-            </span>
+              {/* 🌍 Globe icon */}
+              <svg
+                className="h-4.5 w-4.5 text-[#E84545]"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10
+                  10-4.48 10-10S17.52 2 12 2zm6.93 6h-2.02
+                  a15.53 15.53 0 00-1.01-2.54A8.03 8.03 0 0118.93 8zM12 4
+                  c.69.83 1.41 2.07 1.88 4H10.1c.49-1.93 1.21-3.17 1.9-4zM4.26 14
+                  a7.9 7.9 0 010-4h2.16a17.8 17.8 0 000 4H4.26zm.81 2h2.02
+                  a15.53 15.53 0 001.01 2.54A8.03 8.03 0 015.07 16zM6.42 8H4.4
+                  a8.03 8.03 0 013.01-2.54A15.53 15.53 0 006.42 8zM12 20
+                  c-.69-.83-1.41-2.07-1.88-4h3.78c-.49 1.93-1.21 3.17-1.9 4zm2.45-6H9.55
+                  a15.9 15.9 0 010-4h4.9a15.9 15.9 0 010 4zm.13 4
+                  a15.53 15.53 0 001.01-2.54h2.02a8.03 8.03 0 01-3.03 2.54zM17.58 14
+                  a17.8 17.8 0 000-4h2.16a7.9 7.9 0 010 4h-2.16z"
+                />
+              </svg>
+
+              {/* TEXT */}
+              <span
+                className="
+                  text-sm font-extrabold tracking-[0.18em] uppercase
+                  text-[#E84545]
+                  drop-shadow-[0_0_10px_rgba(232,69,69,0.85)]
+                "
+              >
+                Community Verified
+              </span>
+            </div>
+          </div>
+
+          {/* RIGHT: ESCROW PROTECTED BADGE */}
+          <div className="relative">
+            {/* GREEN aura (escrow = trust = green) */}
+            <div className="absolute -top-10 -right-10 h-28 w-[380px] rounded-full bg-primary/30 blur-3xl opacity-70" />
+
+            <div
+              className="
+                relative z-10
+                inline-flex items-center gap-3
+                px-8 py-3.5 rounded-full
+                bg-secondary/75 backdrop-blur-md
+                ring-1 ring-primary/50
+                shadow-[0_0_40px_rgba(79,163,77,0.45)]
+              "
+            >
+              {/* 🛡️ Shield Check icon */}
+              <ShieldCheck className="h-5 w-5 text-primary" strokeWidth={2.5} />
+
+              {/* TEXT */}
+              <span
+                className="
+                  text-sm font-extrabold tracking-[0.18em] uppercase
+                  text-primary
+                  drop-shadow-[0_0_10px_rgba(79,163,77,0.85)]
+                "
+              >
+                Escrow Protected
+              </span>
+            </div>
           </div>
         </div>
 
@@ -106,8 +140,6 @@ export function HeroSection() {
             Marketplace
           </span>
         </h1>
-
-        
 
         {/* ===== CTA ===== */}
         <div className="flex flex-col sm:flex-row justify-center gap-4">
@@ -130,9 +162,9 @@ export function HeroSection() {
 
         {/* ===== TRUST ===== */}
         <div className="flex flex-wrap justify-center gap-6 mt-16 text-sm text-muted-foreground">
-          <span>● Escrow Protected</span>
           <span>● Verified Professionals</span>
           <span>● Pan-India Network</span>
+          <span>● 24/7 Support</span>
         </div>
       </div>
 
