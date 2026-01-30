@@ -137,40 +137,43 @@ export default function LoginPage() {
           {/* Register Card */}
           <div className="bg-white rounded-3xl shadow-2xl p-8 flex flex-col">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center text-white text-2xl">
+              <div className="text-4xl">
                 👤
               </div>
               <h2 className="text-3xl font-bold text-gray-800">Register</h2>
             </div>
 
-            {/* Instructions - 3 points */}
+            {/* Instructions - 3 bullet points */}
             <div className="space-y-3 mb-6">
               <div className="flex items-start gap-3">
-                <div className="w-7 h-7 bg-blue-500 text-white rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold">
-                  1
+                <div className="text-purple-600 text-xl flex-shrink-0 mt-1">
+                  •
                 </div>
-                <p className="text-gray-700 leading-relaxed">
-                  Open your WhatsApp
-                </p>
+                <div className="text-gray-700 leading-relaxed flex items-center gap-2">
+                  <p>Open your WhatsApp</p>
+                  <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                  </svg>
+                </div>
               </div>
 
               <div className="flex items-start gap-3">
-                <div className="w-7 h-7 bg-blue-500 text-white rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold">
-                  2
+                <div className="text-purple-600 text-xl flex-shrink-0 mt-1">
+                  •
                 </div>
                 <div className="text-gray-700 leading-relaxed">
-                  <p>Type <span className="font-semibold">Register Name*</span> and send it to</p>
-                  <p className="font-bold text-purple-600">+918800607598</p>
-                  <p className="text-sm text-gray-500 italic">* Replace Name with your real name.</p>
+                  <p>Type <span className="font-bold text-purple-600 bg-yellow-100 px-2 py-1 rounded">Register Your Name</span> and send it to</p>
+                  <p className="font-bold text-purple-600 mt-1">+918800607598 or +918130960040</p>
+                  <p className="text-sm text-gray-500 italic mt-1">* Replace Your Name with your real name.</p>
                 </div>
               </div>
 
               <div className="flex items-start gap-3">
-                <div className="w-7 h-7 bg-green-500 text-white rounded-full flex items-center justify-center flex-shrink-0 text-lg font-bold">
-                  ✓
+                <div className="text-purple-600 text-xl flex-shrink-0 mt-1">
+                  •
                 </div>
                 <p className="text-gray-700 leading-relaxed">
-                  You'll receive a confirmation message once registration is successful.
+                  You'll receive a message.
                 </p>
               </div>
             </div>
@@ -183,7 +186,7 @@ export default function LoginPage() {
                 </label>
                 <input
                   type="text"
-                  placeholder="Enter your name"
+                  placeholder="Your name"
                   value={registerName}
                   onChange={(e) => setRegisterName(e.target.value)}
                   disabled={registerLoading}
@@ -193,7 +196,7 @@ export default function LoginPage() {
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  WhatsApp Number: <span className="text-purple-600">+918800607598</span>
+                  WhatsApp Number:
                 </label>
                 <div className="relative">
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
@@ -203,7 +206,7 @@ export default function LoginPage() {
                   </div>
                   <input
                     type="text"
-                    placeholder="Enter your WhatsApp number"
+                    placeholder="Your WhatsApp number"
                     value={registerPhone}
                     onChange={(e) => setRegisterPhone(e.target.value.replace(/\D/g, ""))}
                     disabled={registerLoading}
@@ -239,36 +242,39 @@ export default function LoginPage() {
           {/* Sign In Card */}
           <div className="bg-white rounded-3xl shadow-2xl p-8 flex flex-col">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center text-white text-2xl">
+              <div className="text-4xl">
                 🔐
               </div>
               <h2 className="text-3xl font-bold text-gray-800">Sign In</h2>
             </div>
 
-            {/* Instructions - 3 points (matching register) */}
+            {/* Instructions - 3 bullet points */}
             <div className="space-y-3 mb-6">
               <div className="flex items-start gap-3">
-                <div className="w-7 h-7 bg-blue-500 text-white rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold">
-                  1
+                <div className="text-orange-600 text-xl flex-shrink-0 mt-1">
+                  •
                 </div>
-                <p className="text-gray-700 leading-relaxed">
-                  Open WhatsApp
-                </p>
+                <div className="text-gray-700 leading-relaxed flex items-center gap-2">
+                  <p>Open WhatsApp</p>
+                  <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                  </svg>
+                </div>
               </div>
 
               <div className="flex items-start gap-3">
-                <div className="w-7 h-7 bg-blue-500 text-white rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold">
-                  2
+                <div className="text-orange-600 text-xl flex-shrink-0 mt-1">
+                  •
                 </div>
                 <div className="text-gray-700 leading-relaxed">
-                  <p>Send <span className="font-semibold">Login</span> to</p>
-                  <p className="font-bold text-purple-600">+91 88006 07598</p>
+                  <p>Send <span className="font-bold text-orange-600 bg-yellow-100 px-2 py-1 rounded">Login</span> to</p>
+                  <p className="font-bold text-purple-600 mt-1">+918800607598 or +918130960040</p>
                 </div>
               </div>
 
               <div className="flex items-start gap-3">
-                <div className="w-7 h-7 bg-blue-500 text-white rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold">
-                  3
+                <div className="text-orange-600 text-xl flex-shrink-0 mt-1">
+                  •
                 </div>
                 <p className="text-gray-700 leading-relaxed">
                   You'll receive a 4-digit passcode
@@ -276,11 +282,11 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Form Fields - 2 inputs + 1 button (matching register) */}
+            {/* Form Fields - 2 inputs + 1 button */}
             <form onSubmit={handleSignIn} className="space-y-4 mt-auto">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  WhatsApp Number: <span className="text-purple-600">+918800607598</span>
+                  WhatsApp Number:
                 </label>
                 <div className="relative">
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
@@ -290,12 +296,12 @@ export default function LoginPage() {
                   </div>
                   <input
                     type="text"
-                    placeholder="Enter your WhatsApp number"
+                    placeholder="Your WhatsApp number"
                     value={loginPhone}
                     onChange={(e) => setLoginPhone(e.target.value.replace(/\D/g, ""))}
                     disabled={loginLoading}
                     maxLength={10}
-                    className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-700"
+                    className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-700"
                   />
                 </div>
               </div>
@@ -317,16 +323,9 @@ export default function LoginPage() {
                     onChange={(e) => setLoginPasscode(e.target.value.replace(/\D/g, ""))}
                     disabled={loginLoading}
                     maxLength={4}
-                    className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-700"
+                    className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-700"
                   />
                 </div>
-                <button
-                  type="button"
-                  onClick={requestLoginPasscode}
-                  className="text-sm text-blue-600 hover:text-blue-800 hover:underline transition-colors mt-2"
-                >
-                  Don't have a passcode? Click here to get one
-                </button>
               </div>
 
               <button
