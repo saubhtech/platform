@@ -11,7 +11,6 @@ const publicRoutes = [
   '/register',
   '/api/auth',
   '/api/dashboard/admin'
-  '/api/webhooks/whatsapp',
 ];
 
 export async function middleware(request: NextRequest) {
