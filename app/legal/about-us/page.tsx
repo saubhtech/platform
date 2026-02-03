@@ -710,10 +710,10 @@ function useReveal() {
 }
 
 /* ─── HOOK: counter animation ─────────────────────────────────────────── */
-function useCounter(target, duration = 1800) {
-  const [count, setCount] = useState(0);
-  const ref = useRef(null);
-  const animatedRef = useRef(false);
+function useCounter(target: number, duration: number = 1800) {
+  const [count, setCount] = useState<number>(0);
+  const ref = useRef<HTMLDivElement>(null);
+  const animatedRef = useRef<boolean>(false);
 
   useEffect(() => {
     const el = ref.current;
@@ -742,7 +742,13 @@ function useCounter(target, duration = 1800) {
 }
 
 /* ─── STAT COMPONENT ──────────────────────────────────────────────────── */
-function AnimatedStat({ value, suffix, label }) {
+interface AnimatedStatProps {
+  value: number;
+  suffix: string;
+  label: string;
+}
+
+function AnimatedStat({ value, suffix, label }: AnimatedStatProps) {
   const { count, ref } = useCounter(value);
   return (
     <div className="stat-item" ref={ref}>
@@ -753,7 +759,26 @@ function AnimatedStat({ value, suffix, label }) {
 }
 
 /* ─── DATA ────────────────────────────────────────────────────────────── */
-const VALUES = [
+interface Value {
+  icon: string;
+  title: string;
+  desc: string;
+}
+
+interface TimelineItem {
+  year: string;
+  title: string;
+  desc: string;
+}
+
+interface TeamMember {
+  name: string;
+  role: string;
+  icon: string;
+  social: string;
+}
+
+const VALUES: Value[] = [
   {
     icon: "🎯",
     title: "Trust First",
@@ -786,7 +811,7 @@ const VALUES = [
   }
 ];
 
-const TIMELINE = [
+const TIMELINE: TimelineItem[] = [
   {
     year: "2020",
     title: "The Idea Takes Shape",
@@ -814,7 +839,7 @@ const TIMELINE = [
   }
 ];
 
-const TEAM = [
+const TEAM: TeamMember[] = [
   { name: "Rajesh Kumar", role: "CEO & Founder", icon: "👨‍💼", social: "#" },
   { name: "Priya Sharma", role: "CTO", icon: "👩‍💻", social: "#" },
   { name: "Amit Patel", role: "Head of Product", icon: "👨‍🎨", social: "#" },
@@ -922,7 +947,7 @@ export default function AboutUsPage() {
             <h2 className="section-title">What We Stand For</h2>
           </div>
           <div className="values-grid">
-            {VALUES.map((value, i) => (
+            {VALUES.map((value: Value, i: number) => (
               <div className="value-card reveal" key={i}>
                 <span className="value-icon">{value.icon}</span>
                 <h4>{value.title}</h4>
@@ -940,7 +965,7 @@ export default function AboutUsPage() {
           </div>
           <div className="timeline-container">
             <div className="timeline-line" />
-            {TIMELINE.map((item, i) => (
+            {TIMELINE.map((item: TimelineItem, i: number) => (
               <div className="timeline-item" key={i}>
                 <div className="timeline-dot" />
                 <div className="timeline-content">
@@ -960,7 +985,7 @@ export default function AboutUsPage() {
             <h2 className="section-title">The People Behind the Platform</h2>
           </div>
           <div className="team-grid">
-            {TEAM.map((member, i) => (
+            {TEAM.map((member: TeamMember, i: number) => (
               <div className="team-card reveal" key={i}>
                 <div className="team-avatar">{member.icon}</div>
                 <div className="team-info">
