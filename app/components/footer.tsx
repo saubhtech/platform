@@ -94,14 +94,24 @@ export function Footer() {
                     Global Data
                   </Link>
                 </td>
-                <td className="border border-border/50 px-4 py-2 text-sm">
-                  <Link
-                    href="/legal/privacy-dpdpa-gdpr"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    Privacy, DPDPA & GDPR
-                  </Link>
-                </td>
+               <td className="border border-border/50 px-4 py-2 text-sm">
+  <Link
+    href="/legal/privacy-policy"
+    className="text-muted-foreground hover:text-primary transition-colors"
+  >
+    Privacy Policy
+  </Link>
+
+  <span className="mx-2 text-muted-foreground">|</span>
+
+  <Link
+    href="/legal/dpdpa-gdpr"
+    className="text-muted-foreground hover:text-primary transition-colors"
+  >
+    DPDPA & GDPR
+  </Link>
+</td>
+
               </tr>
 
               {/* Row 2 */}
@@ -126,7 +136,8 @@ export function Footer() {
                     Unified Communication
                   </Link>
                 </td>
-                <td className="border border-border/50 px-4 py-2 text-sm">
+
+<td className="border border-border/50 px-4 py-2 text-sm">
                   <Link
                     href="/legal/terms-of-service"
                     className="text-muted-foreground hover:text-primary transition-colors"
@@ -201,7 +212,7 @@ export function Footer() {
                     HR & Recruitment
                   </Link>
                 </td>
-                <td className="border border-border/50 px-4 py-2 text-sm">
+                 <td className="border border-border/50 px-4 py-2 text-sm">
                   <Link
                     href="/legal/refund-policy"
                     className="text-muted-foreground hover:text-primary transition-colors"
@@ -239,7 +250,7 @@ export function Footer() {
                     Counselling & Admission
                   </Link>
                 </td>
-                <td className="border border-border/50 px-4 py-2 text-sm">
+                 <td className="border border-border/50 px-4 py-2 text-sm">
                   <Link
                     href="/legal/online-payment"
                     className="text-muted-foreground hover:text-primary transition-colors"
@@ -247,6 +258,20 @@ export function Footer() {
                     Online Payment
                   </Link>
                 </td>
+              </tr>
+
+              {/* Row 6 - NEW ROW */}
+              <tr>
+                <td className="border border-border/50 px-4 py-2 text-sm">
+                  {/* Empty cell */}
+                </td>
+                <td className="border border-border/50 px-4 py-2 text-sm">
+                  {/* Empty cell */}
+                </td>
+                <td className="border border-border/50 px-4 py-2 text-sm">
+                  {/* Empty cell */}
+                </td>
+              
               </tr>
             </tbody>
           </table>
