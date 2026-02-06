@@ -1,138 +1,96 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import Image from "next/image";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { useEffect, useRef, useState } from 'react';
 
-const faqCategories = [
-  { id: "marketplace", label: "Verified Marketplace" },
-  { id: "business", label: "For Businesses" },
-  { id: "payments", label: "Payments & Escrow" },
+const faqs = [
+  {
+    q: 'Is Saubh.Tech safe?',
+    a: 'At Saubh, our top priority is safety and security. We use the latest encryption technology to protect your personal information. We also have a team of experts who monitor our platform 24/7 to prevent fraud and other malicious activity.',
+  },
+  {
+    q: 'Why use Saubh.Tech?',
+    a: 'Saubh is the perfect place to connect with trusted service providers, find the perfect gig-work, or get advice from other professionals. We have a wide variety of features and resources to help you succeed, and our team is always here to support you.',
+  },
+  {
+    q: 'How does Saubh.Tech work?',
+    a: 'Saubh connects you with the right people for your needs. Whether you’re looking for a job, a service provider, or just some advice, we can help you find what you’re looking for. Our platform is easy to use and our team is always here to support you.',
+  },
 ];
 
-const faqs = {
-  marketplace: [
-    {
-      question: "What is Saubh.Tech?",
-      answer:
-        "Saubh.Tech is India's first community-verified phygital gig-work marketplace that connects trusted professionals with organizations across 16+ sectors. We combine physical trust networks with digital scalability to create meaningful, verified connections.",
-    },
-    {
-      question: "How does Saubh.Tech work?",
-      answer:
-        "Professionals sign up and get verified through our community trust network. Organizations post requirements, and verified professionals can bid on assignments. Work is completed with escrow-protected payments, ensuring security for both parties.",
-    },
-    {
-      question: "What does 'Phygital' mean in Saubh.Tech's model?",
-      answer:
-        "Phygital combines 'Physical' and 'Digital'. It means we leverage real-world community trust and verification while providing digital tools for scalability, payments, and operations.",
-    },
-  ],
-  business: [
-    {
-      question: "Is Saubh.Tech available across India?",
-      answer:
-        "Yes! Saubh.Tech operates pan-India with verified professionals available in all major cities and emerging markets.",
-    },
-    {
-      question: "What makes Saubh.Tech different from other Gig platforms?",
-      answer:
-        "Saubh.Tech focuses on community-verified trust, escrow-protected payments, and a phygital approach.",
-    },
-  ],
-  payments: [
-    {
-      question: "How are payments protected?",
-      answer:
-        "All payments are escrow-protected. Clients fund escrow before work begins and payments are released only after approval.",
-    },
-    {
-      question: "What payment methods are supported?",
-      answer:
-        "UPI, Net Banking, Credit/Debit Cards, and Wallets are supported securely.",
-    },
-  ],
-};
+export default function FAQSection() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
 
-export function FAQSection() {
-  const [activeCategory, setActiveCategory] = useState<keyof typeof faqs>(
-    "marketplace"
-  );
+  useEffect(() => {
+    if (!sectionRef.current) return;
+
+    const els = sectionRef.current.querySelectorAll('.anim-up');
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
+
+    els.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, []);
+
+  const toggle = (i: number) => {
+    setOpenIndex((prev) => (prev === i ? null : i));
+  };
 
   return (
-    <section className="relative py-12 md:py-16 overflow-hidden">
-      {/* ===== Background Image ===== */}
-      <div className="absolute inset-0 z-0">
-        <Image
-          src="/faq-illustration.png"
-          alt="Young professionals in open discussion"
-          fill
-          priority
-          className="object-cover object-center"
-        />
+    <section ref={sectionRef} className="faq section-pad" id="faq">
+      <div className="container">
 
-        {/* Dark overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-background/85 via-background/75 to-background" />
+        {/* HEADER (NO ANIMATION ON TAG) */}
+        <div className="faq-header">
+          <span className="section-tag">
+            <i className="fas fa-circle-question"></i> FAQ
+          </span>
 
-        {/* Soft ambient glow */}
-        <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-[140px]" />
-        <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-primary/10 rounded-full blur-[140px]" />
-      </div>
-
-      {/* ===== Content ===== */}
-      <div className="relative z-10 mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4">
-            Frequently Asked Questions
-          </h2>
-          <p className="text-lg text-muted-foreground">
+          <p className="section-subtitle anim-up">
             Find answers to common questions about Saubh.Tech
           </p>
         </div>
 
-        {/* Tabs */}
-        <div className="flex flex-wrap justify-center gap-3 mb-10">
-          {faqCategories.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() =>
-                setActiveCategory(cat.id as keyof typeof faqs)
-              }
-              className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all ${
-                activeCategory === cat.id
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-secondary/60 text-muted-foreground hover:text-foreground"
-              }`}
+        {/* FAQ ITEMS */}
+        <div className="faq-row">
+          {faqs.map((faq, i) => (
+            <div
+              key={i}
+              className={`faq-item anim-up${openIndex === i ? ' open' : ''}`}
+              style={{ transitionDelay: `${i * 0.1}s` }}
             >
-              {cat.label}
-            </button>
+              <button
+                className="faq-q"
+                onClick={() => toggle(i)}
+                aria-expanded={openIndex === i}
+              >
+                <span className="faq-question-text">{faq.q}</span>
+                <i className="fas fa-chevron-down"></i>
+              </button>
+
+              <div className="faq-a">
+                <p>{faq.a}</p>
+              </div>
+            </div>
           ))}
         </div>
 
-        {/* Accordion */}
-        <div className="bg-card/40 border border-border/50 rounded-2xl p-6 md:p-8 backdrop-blur-md">
-          <Accordion type="single" collapsible className="space-y-4">
-            {faqs[activeCategory].map((faq, i) => (
-              <AccordionItem
-                key={i}
-                value={`item-${i}`}
-                className="border border-border/30 rounded-xl px-6 bg-secondary/20"
-              >
-                <AccordionTrigger className="text-left text-base font-medium py-5">
-                  {faq.question}
-                </AccordionTrigger>
-                <AccordionContent className="pb-5 text-muted-foreground">
-                  {faq.answer}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+        {/* VIEW MORE */}
+        <div className="faq-more anim-up" style={{ marginTop: 24 }}>
+          <a href="#knowledge-base">
+            Go to FAQs &amp; Knowledge Base <i className="fas fa-arrow-right"></i>
+          </a>
         </div>
       </div>
     </section>

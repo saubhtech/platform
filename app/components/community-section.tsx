@@ -1,339 +1,365 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useRef } from "react";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, CheckCircle2, Users, Shield, TrendingUp, Award, Sparkles } from "lucide-react";
+import { useEffect, useRef } from 'react';
 
-const benefits = [
-  { 
-    text: "Verified professionals with real reviews",
-    icon: Shield,
-    color: "#4FA34D"
+const voices = [
+  {
+    text: "The escrow payment system gives me complete peace of mind. I've completed over 50 assignments and always received payment on time. My income has grown 3x in just 6 months!",
+    author: 'Priya Sharma',
+    role: 'Business Associate • Mumbai',
+    rating: 5,
+    thumb: 'linear-gradient(135deg,#2d5016,#1a3a0a)',
   },
-  { 
-    text: "Secure payments and dispute resolution",
-    icon: Award,
-    color: "#3b82f6"
+  {
+    text: "The UGC quality is outstanding! Real customers sharing genuine experiences has increased our social engagement by 180%. Best investment we've made for our brand.",
+    author: 'Rajesh Kumar',
+    role: 'Restaurant Owner • Bangalore',
+    rating: 5,
+    thumb: 'linear-gradient(135deg,#3a4010,#1a2a06)',
   },
-  { 
-    text: "Local community trust networks",
-    icon: Users,
-    color: "#E84545"
+  {
+    text: 'The phygital model is brilliant. I can work remotely while building strong local connections. The community support and training have been invaluable for my career growth.',
+    author: 'Aisha Patel',
+    role: 'Digital Marketing Specialist • Delhi',
+    rating: 5,
+    thumb: 'linear-gradient(135deg,#1a3040,#0a1a2a)',
   },
-  { 
-    text: "Skill-based matching algorithms",
-    icon: TrendingUp,
-    color: "#f59e0b"
+  {
+    text: "The phygital approach works perfectly for our business. We've expanded to 12 cities with consistent quality. The associate network is reliable and professional.",
+    author: 'Vikram Gupta',
+    role: 'Regional Manager • Chennai',
+    rating: 4,
+    thumb: 'linear-gradient(135deg,#3a2020,#1a0a0a)',
+  },
+  {
+    text: "Organic leads from Saubh.Tech convert 4x better than our paid campaigns. We've reduced CAC by 60% while improving lead quality. Absolutely worth it!",
+    author: 'Sneha Kulkarni',
+    role: 'Marketing Head, EduTech Pro • Pune',
+    rating: 5,
+    thumb: 'linear-gradient(135deg,#2a1a3a,#100a1a)',
+  },
+  {
+    text: "Saubh Tech has given me financial stability. The guaranteed payments and continuous training help me grow professionally. My income increased from ₹15k to ₹55k monthly.",
+    author: 'Deepak Verma',
+    role: 'Freelance Marketer • Ranchi',
+    rating: 5,
+    thumb: 'linear-gradient(135deg,#1a3020,#0a1a10)',
   },
 ];
 
-export function CommunitySection() {
-  const [isVisible, setIsVisible] = useState(false);
-  const [activeCount, setActiveCount] = useState(0);
-  const [sectorCount, setSectorCount] = useState(0);
-  const [hoveredBenefit, setHoveredBenefit] = useState<number | null>(null);
+/* duplicate for seamless loop */
+const allVoices = [...voices, ...voices];
+
+function Stars({ count }: { count: number }) {
+  return (
+    <span className="cv-stars">
+      {[1, 2, 3, 4, 5].map((s) => (
+        <i
+          key={s}
+          className={`fas fa-star cv-s${s <= count ? '1' : '0'}`}
+          style={{
+            color: s <= count ? '#F59E0B' : 'rgba(255,255,255,0.1)',
+            fontSize: '.65rem',
+            filter: s <= count ? 'drop-shadow(0 0 3px rgba(245,158,11,0.4))' : 'none',
+          }}
+        />
+      ))}
+      <span style={{ color: '#F59E0B', fontSize: '.65rem', fontWeight: 700, marginLeft: 4, fontFamily: 'var(--font-display)' }}>{count}/5</span>
+    </span>
+  );
+}
+
+export default function CommunitySection() {
   const sectionRef = useRef<HTMLElement>(null);
 
-  // Intersection Observer for scroll animations
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            setIsVisible(true);
+            entry.target.querySelectorAll('.anim-up').forEach((el) => el.classList.add('visible'));
           }
         });
       },
-      { threshold: 0.2 }
+      { threshold: 0.1 }
     );
-
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
-
-    return () => {
-      if (sectionRef.current) {
-        observer.unobserve(sectionRef.current);
-      }
-    };
+    if (sectionRef.current) observer.observe(sectionRef.current);
+    return () => observer.disconnect();
   }, []);
 
-  // Counter animation
-  useEffect(() => {
-    if (isVisible) {
-      // Active Professionals counter (0 to 50)
-      const activeInterval = setInterval(() => {
-        setActiveCount((prev) => {
-          if (prev >= 50) {
-            clearInterval(activeInterval);
-            return 50;
-          }
-          return prev + 2;
-        });
-      }, 30);
-
-      // Industry Sectors counter (0 to 16)
-      const sectorInterval = setInterval(() => {
-        setSectorCount((prev) => {
-          if (prev >= 16) {
-            clearInterval(sectorInterval);
-            return 16;
-          }
-          return prev + 1;
-        });
-      }, 80);
-
-      return () => {
-        clearInterval(activeInterval);
-        clearInterval(sectorInterval);
-      };
-    }
-  }, [isVisible]);
-
   return (
-    <section ref={sectionRef} className="relative py-16 md:py-24 overflow-hidden">
-      {/* Background with parallax effect */}
-      <div className="absolute inset-0 z-0">
-        <Image
-          src="/community-illustration.jpg"
-          alt="Professionals networking and building trust"
-          fill
-          className="object-cover opacity-30"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-background/70" />
-        
-        {/* Animated gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-[#E84545]/5 opacity-60" />
-        
-        {/* Grid pattern */}
-        <div className="absolute inset-0 opacity-[0.02]">
-          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <pattern
-                id="community-grid"
-                width="50"
-                height="50"
-                patternUnits="userSpaceOnUse"
-              >
-                <circle cx="25" cy="25" r="1" fill="currentColor" className="text-foreground" />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#community-grid)" />
-          </svg>
+    <section ref={sectionRef} className="cv-sec section-pad" id="community" aria-labelledby="community-title">
+      <div className="container">
+
+        {/* Header */}
+        <div className="cv-hdr anim-up" style={{ textAlign: 'center', marginBottom: 40 }}>
+          <span className="cv-tag"><i className="fas fa-comments"></i> What People Say</span>
+          <h2 className="cv-title" id="community-title">
+            <span className="cv-grad">Community Voice</span>
+          </h2>
         </div>
       </div>
 
-      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-          {/* Left - Illustration Card */}
-          <div 
-            className={`relative order-2 lg:order-1 transition-all duration-1000 ${
-              isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-12"
-            }`}
-          >
-            <div className="group relative aspect-[4/3] rounded-3xl overflow-hidden border border-border/30 shadow-2xl hover:shadow-[0_20px_80px_rgba(79,163,77,0.15)] transition-all duration-500 hover:scale-[1.02]">
-              <Image
-                src="/community-illustration.jpg"
-                alt="Young professionals building community trust"
-                fill
-                className="object-cover transition-transform duration-700 group-hover:scale-110"
-              />
-              
-              {/* Gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
-              
-              {/* Animated border glow */}
-              <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{
-                boxShadow: "inset 0 0 60px rgba(79,163,77,0.2)"
-              }} />
-              
-              {/* Stats overlay */}
-              <div className="absolute bottom-6 left-6 right-6 flex gap-4">
-                {/* Active Professionals Card */}
-                <div className="group/stat flex-1 bg-card/90 backdrop-blur-md rounded-xl p-4 border border-border/50 hover:border-primary/50 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/20 cursor-default">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Users className="h-4 w-4 text-primary" />
-                    <div className="text-2xl font-bold text-primary group-hover/stat:scale-110 transition-transform duration-300">
-                      {activeCount}K+
-                    </div>
-                  </div>
-                  <div className="text-xs text-muted-foreground">Active Professionals</div>
-                  
-                  {/* Progress indicator */}
-                  <div className="mt-2 h-1 bg-secondary rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-primary to-[#E84545] transition-all duration-1000 ease-out"
-                      style={{ width: `${(activeCount / 50) * 100}%` }}
-                    />
-                  </div>
-                </div>
+      {/* Full-width marquee — overflows container */}
+      <div className="cv-marquee-wrap">
+        {/* Edge fades */}
+        <div className="cv-fade cv-fade-l" />
+        <div className="cv-fade cv-fade-r" />
 
-                {/* Industry Sectors Card */}
-                <div className="group/stat flex-1 bg-card/90 backdrop-blur-md rounded-xl p-4 border border-border/50 hover:border-[#E84545]/50 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-[#E84545]/20 cursor-default">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Award className="h-4 w-4 text-[#E84545]" />
-                    <div className="text-2xl font-bold text-[#E84545] group-hover/stat:scale-110 transition-transform duration-300">
-                      {sectorCount}+
-                    </div>
-                  </div>
-                  <div className="text-xs text-muted-foreground">Industry Sectors</div>
-                  
-                  {/* Progress indicator */}
-                  <div className="mt-2 h-1 bg-secondary rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-[#E84545] to-primary transition-all duration-1000 ease-out"
-                      style={{ width: `${(sectorCount / 16) * 100}%` }}
-                    />
-                  </div>
-                </div>
+        <div className="cv-track">
+          {allVoices.map((v, idx) => (
+            <div key={`${v.author}-${idx}`} className="cv-card">
+              <div className="cv-thumb" style={{ background: v.thumb }}>
+                <div className="cv-play"><i className="fas fa-play"></i></div>
               </div>
-
-              {/* Floating badge */}
-              <div className="absolute top-6 right-6 bg-primary/90 backdrop-blur-sm text-primary-foreground px-4 py-2 rounded-full text-xs font-bold shadow-lg animate-pulse">
-                ⭐ Trusted Community
+              <div className="cv-body">
+                <Stars count={v.rating} />
+                <p className="cv-txt">{v.text}</p>
+                <p className="cv-name">{v.author}</p>
+                <p className="cv-role">{v.role}</p>
               </div>
             </div>
-
-            {/* Decorative elements */}
-            <div className="absolute -z-10 top-8 left-8 w-full h-full rounded-3xl bg-gradient-to-br from-primary/20 to-[#E84545]/20 blur-2xl opacity-50" />
-          </div>
-
-          {/* Right - Content */}
-          <div 
-            className={`order-1 lg:order-2 transition-all duration-1000 ${
-              isVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-12"
-            }`}
-            style={{ transitionDelay: "200ms" }}
-          >
-            {/* Badge */}
-            <div 
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/80 backdrop-blur-sm border border-border/50 mb-6 hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 cursor-pointer group"
-            >
-              <Sparkles className="h-4 w-4 text-primary group-hover:rotate-180 transition-transform duration-500" />
-              <span className="text-sm font-medium text-foreground">Community Powered</span>
-            </div>
-
-            {/* Heading */}
-            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 text-balance">
-              Join the Trusted{" "}
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-[#E84545] to-primary">
-                Community
-              </span>
-            </h2>
-
-            {/* Description */}
-            <p 
-              className={`text-lg text-muted-foreground mb-8 text-pretty leading-relaxed transition-all duration-1000 ${
-                isVisible ? "opacity-100" : "opacity-0"
-              }`}
-              style={{ transitionDelay: "400ms" }}
-            >
-              Our phygital approach combines the warmth of local community networks 
-              with the efficiency of digital platforms. Every connection is backed 
-              by real verification and community trust.
-            </p>
-
-            {/* Benefits List */}
-            <ul className="space-y-4 mb-10">
-              {benefits.map((benefit, index) => {
-                const IconComponent = benefit.icon;
-                const isHovered = hoveredBenefit === index;
-                
-                return (
-                  <li
-                    key={benefit.text}
-                    onMouseEnter={() => setHoveredBenefit(index)}
-                    onMouseLeave={() => setHoveredBenefit(null)}
-                    className={`group/item flex items-center gap-4 p-4 rounded-xl transition-all duration-500 hover:bg-secondary/50 hover:shadow-lg hover:scale-[1.02] cursor-pointer ${
-                      isVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-8"
-                    }`}
-                    style={{ 
-                      transitionDelay: `${600 + index * 100}ms`,
-                      borderLeft: isHovered ? `3px solid ${benefit.color}` : '3px solid transparent',
-                    }}
-                  >
-                    {/* Icon container */}
-                    <div 
-                      className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center bg-secondary group-hover/item:scale-110 transition-all duration-300 group-hover/item:rotate-12"
-                      style={{
-                        backgroundColor: isHovered ? `${benefit.color}20` : undefined,
-                      }}
-                    >
-                      <IconComponent 
-                        className="h-5 w-5 transition-colors duration-300"
-                        style={{ color: isHovered ? benefit.color : undefined }}
-                      />
-                    </div>
-
-                    {/* Text */}
-                    <span className="text-foreground font-medium flex-1 group-hover/item:text-primary transition-colors duration-300">
-                      {benefit.text}
-                    </span>
-
-                    {/* Check icon */}
-                    <CheckCircle2 
-                      className="h-5 w-5 flex-shrink-0 transition-all duration-300 group-hover/item:scale-110"
-                      style={{ 
-                        color: isHovered ? benefit.color : 'currentColor',
-                        opacity: isHovered ? 1 : 0.5,
-                      }}
-                    />
-
-                    {/* Hover shine effect */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover/item:translate-x-full transition-transform duration-700 rounded-xl" />
-                  </li>
-                );
-              })}
-            </ul>
-
-            {/* CTA Button */}
-            <div 
-              className={`transition-all duration-1000 ${
-                isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-              }`}
-              style={{ transitionDelay: "1000ms" }}
-            >
-              <Button
-                size="lg"
-                className="group relative bg-gradient-to-r from-primary to-primary/90 text-primary-foreground hover:from-primary hover:to-primary px-8 py-6 text-base font-semibold shadow-xl shadow-primary/30 hover:shadow-2xl hover:shadow-primary/40 hover:scale-[1.05] transition-all duration-300 overflow-hidden"
-              >
-                {/* Shimmer effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                
-                <span className="relative z-10 flex items-center">
-                  Join the Community
-                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
-                </span>
-
-                {/* Glow pulse */}
-                <div className="absolute inset-0 bg-primary opacity-0 group-hover:opacity-30 blur-xl transition-opacity duration-300" />
-              </Button>
-
-              {/* Trust indicators */}
-              <div className="flex items-center gap-6 mt-6 text-sm text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <div className="flex -space-x-2">
-                    {[1, 2, 3].map((i) => (
-                      <div
-                        key={i}
-                        className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-[#E84545] border-2 border-background flex items-center justify-center text-white text-xs font-bold"
-                      >
-                        {i}K
-                      </div>
-                    ))}
-                  </div>
-                  <span>Joined today</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className="text-primary">★★★★★</span>
-                  <span>4.9/5 rating</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
+
+      <style jsx>{`
+        /* ━━ SECTION ━━ */
+        .cv-sec {
+          background: var(--bg-dark, #0C0F0A);
+          color: var(--text-light, #F0EDE8);
+          overflow: hidden;
+        }
+
+        /* ━━ HEADER ━━ */
+        .cv-tag {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 20px;
+          border-radius: 100px;
+          font-family: var(--font-display);
+          font-size: .8rem;
+          font-weight: 600;
+          letter-spacing: 1px;
+          text-transform: uppercase;
+          background: rgba(255,255,255,0.06);
+          border: 1px solid rgba(255,255,255,0.1);
+          color: #8FD45E;
+          margin-bottom: 16px;
+        }
+
+        .cv-title {
+          font-family: var(--font-display);
+          font-weight: 800;
+          font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+          line-height: 1.2;
+          margin-top: 12px;
+        }
+
+        .cv-grad {
+          background: linear-gradient(135deg, #8FD45E 0%, #F0960E 35%, #E8553A 65%, #8FD45E 100%);
+          background-size: 200% auto;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          animation: cvShim 3s linear infinite;
+        }
+
+        /* ━━ MARQUEE WRAPPER ━━ */
+        .cv-marquee-wrap {
+          position: relative;
+          width: 100%;
+          overflow: hidden;
+          padding: 10px 0 20px;
+        }
+
+        /* Edge fade masks */
+        .cv-fade {
+          position: absolute;
+          top: 0; bottom: 0;
+          width: 80px;
+          z-index: 5;
+          pointer-events: none;
+        }
+        .cv-fade-l { left: 0; background: linear-gradient(90deg, var(--bg-dark, #0C0F0A) 0%, transparent 100%); }
+        .cv-fade-r { right: 0; background: linear-gradient(270deg, var(--bg-dark, #0C0F0A) 0%, transparent 100%); }
+
+        /* ━━ TRACK — continuous scroll ━━ */
+        .cv-track {
+          display: flex;
+          gap: 20px;
+          width: max-content;
+          animation: cvScroll 30s linear infinite;
+        }
+
+        .cv-marquee-wrap:hover .cv-track {
+          animation-play-state: paused;
+        }
+
+        /* ━━ CARD — 280px fixed ━━ */
+        .cv-card {
+          min-width: 280px;
+          max-width: 280px;
+          border-radius: 16px;
+          background: rgba(10,13,8,0.92);
+          border: 1px solid rgba(255,255,255,0.08);
+          overflow: hidden;
+          flex-shrink: 0;
+          position: relative;
+          transition: all .45s cubic-bezier(.4,0,.2,1);
+        }
+
+        /* Top accent bar */
+        .cv-card::before {
+          content: '';
+          position: absolute;
+          top: 0; left: 0; right: 0;
+          height: 2px;
+          background: linear-gradient(90deg, var(--green, #6DB33F), var(--amber, #F0960E));
+          z-index: 3;
+          transition: height .3s ease, box-shadow .3s ease;
+        }
+        .cv-card:hover::before {
+          height: 3px;
+          box-shadow: 0 0 12px rgba(109,179,63,0.4);
+        }
+
+        /* BG glow */
+        .cv-card::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          border-radius: inherit;
+          background: radial-gradient(circle at 50% 0%, rgba(109,179,63,0.07), transparent 60%);
+          opacity: 0;
+          transition: opacity .4s ease;
+          pointer-events: none;
+        }
+        .cv-card:hover::after { opacity: 1; }
+
+        .cv-card:hover {
+          transform: translateY(-6px);
+          border-color: rgba(109,179,63,0.3);
+          box-shadow: 0 0 36px rgba(109,179,63,0.08), 0 14px 28px rgba(0,0,0,0.3);
+        }
+
+        /* ━━ THUMB — 160px ━━ */
+        .cv-thumb {
+          height: 160px;
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+          transition: filter .4s ease;
+        }
+        .cv-card:hover .cv-thumb { filter: brightness(1.1); }
+
+        /* Play btn */
+        .cv-play {
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          background: rgba(255,255,255,0.9);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1rem;
+          color: var(--green, #6DB33F);
+          box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+          transition: all .35s ease;
+          z-index: 2;
+        }
+        .cv-card:hover .cv-play {
+          transform: scale(1.12);
+          background: rgba(109,179,63,0.9);
+          color: #fff;
+          box-shadow: 0 0 22px rgba(109,179,63,0.4);
+        }
+
+        /* ━━ BODY ━━ */
+        .cv-body {
+          padding: 14px 16px 16px;
+          position: relative;
+          z-index: 1;
+        }
+
+        /* ━━ STARS ━━ */
+        .cv-stars {
+          display: flex;
+          align-items: center;
+          gap: 2px;
+          margin-bottom: 8px;
+        }
+        .cv-s1 {
+          color: #F59E0B !important;
+          font-size: .65rem;
+          filter: drop-shadow(0 0 3px rgba(245,158,11,0.4));
+          transition: transform .3s ease;
+        }
+        .cv-card:hover .cv-s1 {
+          animation: cvPop .35s ease forwards;
+        }
+        .cv-card:hover .cv-s1:nth-child(1) { animation-delay: 0s; }
+        .cv-card:hover .cv-s1:nth-child(2) { animation-delay: .05s; }
+        .cv-card:hover .cv-s1:nth-child(3) { animation-delay: .1s; }
+        .cv-card:hover .cv-s1:nth-child(4) { animation-delay: .15s; }
+        .cv-card:hover .cv-s1:nth-child(5) { animation-delay: .2s; }
+        .cv-s0 {
+          color: rgba(255,255,255,0.1) !important;
+          font-size: .65rem;
+        }
+
+        /* ━━ TEXT ━━ */
+        .cv-txt {
+          font-size: .82rem;
+          color: #9CA39C;
+          line-height: 1.55;
+          font-style: italic;
+          margin-bottom: 12px;
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          transition: color .3s ease;
+        }
+        .cv-card:hover .cv-txt { color: #b8bfb8; }
+
+        /* ━━ AUTHOR ━━ */
+        .cv-name {
+          font-family: var(--font-display);
+          font-size: .82rem;
+          font-weight: 700;
+          color: #fff;
+          margin: 0;
+          transition: color .3s ease;
+        }
+        .cv-card:hover .cv-name { color: #8FD45E; }
+
+        .cv-role {
+          font-size: .72rem;
+          color: rgba(255,255,255,0.4);
+          margin: 2px 0 0;
+        }
+
+        /* ━━ ANIMATIONS ━━ */
+        @keyframes cvShim {
+          0%   { background-position: 0% center; }
+          100% { background-position: 200% center; }
+        }
+        @keyframes cvPop {
+          0%   { transform: scale(1); }
+          50%  { transform: scale(1.35) rotate(12deg); }
+          100% { transform: scale(1.05); }
+        }
+
+        /* Continuous marquee: scrolls exactly half (6 cards worth) then loops seamlessly */
+        @keyframes cvScroll {
+          0%   { transform: translateX(0); }
+          100% { transform: translateX(calc(-50% - 10px)); }
+        }
+      `}</style>
     </section>
   );
 }

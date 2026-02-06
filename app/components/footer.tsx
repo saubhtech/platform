@@ -1,318 +1,467 @@
-import Link from "next/link";
-import Image from "next/image";
+'use client';
 
-import {
-  Facebook,
-  Instagram,
-  Twitter,
-  Linkedin,
-  Youtube,
-  MapPin,
-  Mail,
-  Phone,
-} from "lucide-react";
+import { useEffect, useRef } from 'react';
 
-// Pinterest icon (lucide me nahi hai)
-function PinterestIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path d="M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738.098.119.112.224.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.632-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z" />
-    </svg>
-  );
-}
-
-const socialLinks = [
-  { icon: Facebook, href: "#", label: "Facebook" },
-  { icon: Instagram, href: "#", label: "Instagram" },
-  { icon: Twitter, href: "#", label: "X (Twitter)" },
-  { icon: Linkedin, href: "#", label: "LinkedIn" },
-  { icon: Youtube, href: "#", label: "YouTube" },
+const socials = [
+  { icon: 'fab fa-facebook-f', label: 'Facebook', href: '#' },
+  { icon: 'fab fa-instagram', label: 'Instagram', href: '#' },
+  { icon: 'fab fa-x-twitter', label: 'X', href: '#' },
+  { icon: 'fab fa-linkedin-in', label: 'LinkedIn', href: '#' },
+  { icon: 'fab fa-youtube', label: 'YouTube', href: '#' },
+  { icon: 'fab fa-pinterest-p', label: 'Pinterest', href: '#' },
 ];
 
-export function Footer() {
+const communityLinks = [
+  'About Saubh Global',
+  'Founding Co-owners',
+  'Be a Certified Advisor',
+  'Team Saubh',
+  'Calculate Earnings',
+];
+
+const businessLinks = [
+  'Unified Communication',
+  'Marketing & Sales',
+  'HR & Recruitment',
+  'Counselling & Admission',
+];
+
+const legalLinks = [
+  'Data Privacy, DPDPA & GDPR',
+  'Terms of Service',
+  'Escrow System',
+  'Refund Policy',
+  'Online Payment',
+];
+
+export default function FooterSection() {
+  const footerRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.querySelectorAll('.ft-anim').forEach((el, i) => {
+              (el as HTMLElement).style.animationDelay = `${i * 0.06}s`;
+              el.classList.add('ft-visible');
+            });
+          }
+        });
+      },
+      { threshold: 0.05 }
+    );
+    if (footerRef.current) obs.observe(footerRef.current);
+    return () => obs.disconnect();
+  }, []);
+
   return (
-    <footer className="relative border-t border-border/30 bg-card/30">
-      <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent pointer-events-none" />
+    <footer ref={footerRef} className="ft-sec" role="contentinfo">
 
-      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
-        {/* ===== TABLE LAYOUT ===== */}
-        <div className="overflow-x-auto mb-8">
-          <table className="w-full border-collapse border border-border/50">
-            <thead>
-              <tr className="bg-secondary/30">
-                <th className="border border-border/50 px-4 py-3 text-left text-sm font-semibold">
-                  <Link href="/" className="inline-flex items-center gap-2">
-                    <Image
-                      src="/Saubh-Good.png"
-                      alt="Saubh.Tech Logo"
-                      width={24}
-                      height={24}
-                      priority
-                      className="h-6 w-6 object-contain"
-                    />
-                    <span className="text-base font-bold">
-                      Saubh<span className="text-primary">.Tech</span>
-                    </span>
-                  </Link>
-                </th>
-                <th className="border border-border/50 px-4 py-3 text-left text-sm font-semibold">
-                  Community
-                </th>
-                <th className="border border-border/50 px-4 py-3 text-left text-sm font-semibold">
-                  Business
-                </th>
-                <th className="border border-border/50 px-4 py-3 text-left text-sm font-semibold">
-                  Legal
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {/* Row 1 */}
-              <tr>
-                <td className="border border-border/50 px-4 py-2 text-sm">
-                  <span className="text-muted-foreground">GSTN:</span>{" "}
-                  <span className="font-medium">10AAUPS8603H1ZH</span>
-                </td>
-                <td className="border border-border/50 px-4 py-2 text-sm">
-                  <Link
-                    href="/legal/about-us"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    About Saubh
-                  </Link>
-                </td>
-                <td className="border border-border/50 px-4 py-2 text-sm">
-                  <Link
-                    href="/business/global-data"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    Global Data
-                  </Link>
-                </td>
-               <td className="border border-border/50 px-4 py-2 text-sm">
-  <Link
-    href="/legal/privacy-policy"
-    className="text-muted-foreground hover:text-primary transition-colors"
-  >
-    Privacy Policy
-  </Link>
+      {/* Ambient orbs */}
+      <div className="ft-orb ft-orb1" />
+      <div className="ft-orb ft-orb2" />
 
-  <span className="mx-2 text-muted-foreground">|</span>
+      {/* Top glow line */}
+      <div className="ft-topline" />
 
-  <Link
-    href="/legal/dpdpa-gdpr"
-    className="text-muted-foreground hover:text-primary transition-colors"
-  >
-    DPDPA & GDPR
-  </Link>
-</td>
+      <div className="container ft-wrap">
 
-              </tr>
+        {/* Grid */}
+        <div className="ft-grid">
 
-              {/* Row 2 */}
-              <tr>
-                <td className="border border-border/50 px-4 py-2 text-sm">
-                  <span className="text-muted-foreground">UDYAM:</span>{" "}
-                  <span className="font-medium">BR-31-0066281</span>
-                </td>
-                <td className="border border-border/50 px-4 py-2 text-sm">
-                  <Link
-                    href="/community/founding-coowners"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    Founding Co-owners
-                  </Link>
-                </td>
-                <td className="border border-border/50 px-4 py-2 text-sm">
-                  <Link
-                    href="/business/unified-communication"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    Unified Communication
-                  </Link>
-                </td>
+          {/* Brand column */}
+          <div className="ft-brand ft-anim">
+            <div className="ft-logo">
+              <img src="/Saubh-Good.png" alt="Saubh.Tech" className="ft-logo-img" />
+              <span className="ft-logo-text">Saubh<span className="ft-dot">.</span>Tech</span>
+            </div>
 
-<td className="border border-border/50 px-4 py-2 text-sm">
-                  <Link
-                    href="/legal/terms-of-service"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    Terms of Service
-                  </Link>
-                </td>
-              </tr>
+            <div className="ft-info">
+              <div className="ft-info-item"><i className="fas fa-id-card"></i> GSTN: 10AAUPS8603H1ZH</div>
+              <div className="ft-info-item"><i className="fas fa-building"></i> UDYAM-BR-31-0056281</div>
+              <div className="ft-info-item"><i className="fas fa-envelope"></i> <a href="mailto:hello@saubh.tech">hello@saubh.tech</a></div>
+              <div className="ft-info-item"><i className="fas fa-phone"></i> <a href="tel:918800607598">918800607598</a></div>
+              <div className="ft-info-item"><i className="fab fa-whatsapp"></i> <a href="https://wa.me/918800607598">918800607598</a></div>
+            </div>
 
-              {/* Row 3 */}
-              <tr>
-                <td className="border border-border/50 px-4 py-2 text-sm">
-                  <Mail className="inline h-3.5 w-3.5 mr-1 text-primary" />
-                  <a
-                    href="mailto:mail@saubh.in"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    mail@saubh.in
-                  </a>
-                </td>
-                <td className="border border-border/50 px-4 py-2 text-sm">
-                  <Link
-                    href="/community/certified-advisor"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    Be a Certified Advisor
-                  </Link>
-                </td>
-                <td className="border border-border/50 px-4 py-2 text-sm">
-                  <Link
-                    href="/business/marketing-sales"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    Marketing & Sales
-                  </Link>
-                </td>
-                <td className="border border-border/50 px-4 py-2 text-sm">
-                  <Link
-                    href="/legal/escrow-system"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    Escrow System
-                  </Link>
-                </td>
-              </tr>
+            <div className="ft-social">
+              {socials.map((s) => (
+                <a key={s.label} href={s.href} aria-label={s.label} className="ft-soc-link">
+                  <i className={s.icon}></i>
+                </a>
+              ))}
+            </div>
+          </div>
 
-              {/* Row 4 */}
-              <tr>
-                <td className="border border-border/50 px-4 py-2 text-sm">
-                  <Phone className="inline h-3.5 w-3.5 mr-1 text-primary" />
-                  <span className="text-muted-foreground">Call:</span>{" "}
-                  <a
-                    href="tel:918800607598"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    918800607598
-                  </a>
-                </td>
-                <td className="border border-border/50 px-4 py-2 text-sm">
-                  <Link
-                    href="/community/team-saubh"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    Team Saubh
-                  </Link>
-                </td>
-                <td className="border border-border/50 px-4 py-2 text-sm">
-                  <Link
-                    href="/business/hr-recruitment"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    HR & Recruitment
-                  </Link>
-                </td>
-                 <td className="border border-border/50 px-4 py-2 text-sm">
-                  <Link
-                    href="/legal/refund-policy"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    Refund Policy
-                  </Link>
-                </td>
-              </tr>
+          {/* Link columns */}
+          <div className="ft-col ft-anim">
+            <h4 className="ft-col-title">Community</h4>
+            {communityLinks.map((l) => (
+              <a key={l} href="#" className="ft-link">{l}</a>
+            ))}
+          </div>
 
-              {/* Row 5 */}
-              <tr>
-                <td className="border border-border/50 px-4 py-2 text-sm">
-                  <Phone className="inline h-3.5 w-3.5 mr-1 text-primary" />
-                  <span className="text-muted-foreground">WhatsApp:</span>{" "}
-                  <a
-                    href="https://wa.me/918800607598"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    918800607598
-                  </a>
-                </td>
-                <td className="border border-border/50 px-4 py-2 text-sm">
-                  <Link
-                    href="/community/calculate-earnings"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    Calculate Earnings
-                  </Link>
-                </td>
-                <td className="border border-border/50 px-4 py-2 text-sm">
-                  <Link
-                    href="/business/counselling-admission"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    Counselling & Admission
-                  </Link>
-                </td>
-                 <td className="border border-border/50 px-4 py-2 text-sm">
-                  <Link
-                    href="/legal/online-payment"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    Online Payment
-                  </Link>
-                </td>
-              </tr>
+          <div className="ft-col ft-anim">
+            <h4 className="ft-col-title">Business</h4>
+            {businessLinks.map((l) => (
+              <a key={l} href="#" className="ft-link">{l}</a>
+            ))}
+          </div>
 
-              {/* Row 6 - NEW ROW */}
-              <tr>
-                <td className="border border-border/50 px-4 py-2 text-sm">
-                  {/* Empty cell */}
-                </td>
-                <td className="border border-border/50 px-4 py-2 text-sm">
-                  {/* Empty cell */}
-                </td>
-                <td className="border border-border/50 px-4 py-2 text-sm">
-                  {/* Empty cell */}
-                </td>
-              
-              </tr>
-            </tbody>
-          </table>
+          <div className="ft-col ft-anim">
+            <h4 className="ft-col-title">Legal</h4>
+            {legalLinks.map((l) => (
+              <a key={l} href="#" className="ft-link">{l}</a>
+            ))}
+          </div>
         </div>
 
-        {/* ===== ADDRESS ===== */}
-        <div className="text-sm text-muted-foreground text-center mb-6">
-          <MapPin className="inline h-4 w-4 mr-1 text-primary" />
-          FELLOW SHIP OF INDIA, 811/92 Nehru Place, New Delhi
-South East Delhi, Delhi - 110019
-        </div>
-
-        {/* ===== SOCIAL ICONS ===== */}
-        <div className="flex flex-wrap justify-center gap-4 mb-8">
-          {socialLinks.map((social) => (
-            <a
-              key={social.label}
-              href={social.href}
-              aria-label={social.label}
-              className="w-10 h-10 rounded-full bg-secondary/50 border border-border/50 flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/50 hover:bg-primary/10 transition-all"
-            >
-              <social.icon className="h-5 w-5" />
-            </a>
-          ))}
-          <a
-            href="#"
-            aria-label="Pinterest"
-            className="w-10 h-10 rounded-full bg-secondary/50 border border-border/50 flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/50 hover:bg-primary/10 transition-all"
-          >
-            <PinterestIcon className="h-5 w-5" />
-          </a>
-        </div>
-
-        {/* ===== FOOTER LINE ===== */}
-        <div className="pt-6 border-t border-border/30 text-center">
-          <p className="text-sm text-muted-foreground">
-            Envisioned by Mani, a jewel on the earth. || &copy; 2026 Saubh.Tech
-            || All Rights Reserved.
+        {/* Bottom */}
+        <div className="ft-bottom ft-anim">
+          <div className="ft-addresses">
+            <div className="ft-addr">
+              <i className="fas fa-location-dot"></i>
+              <span>01 Tola-Tari, Sarha, Dahiawan, Chapra, Saran, Bihar – 841301</span>
+            </div>
+            <div className="ft-addr">
+              <i className="fas fa-location-dot"></i>
+              <span>Fellow Ship of India, 811/92 Nehru Place, South East Delhi, New Delhi – 110019</span>
+            </div>
+          </div>
+          <p className="ft-tagline">
+            <span className="ft-grad">Gig Work. Verified People. Secured Income</span>
+          </p>
+          <p className="ft-copy">
+            Envisioned by Mani, a jewel of the earth. &nbsp;|&nbsp; ©2026 Saubh.Tech &nbsp;|&nbsp; All Rights Reserved.
           </p>
         </div>
       </div>
+
+      <style jsx>{`
+        /* ━━ FOOTER SECTION ━━ */
+        .ft-sec {
+          background: var(--bg-dark, #0C0F0A);
+          padding: 80px 0 32px;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .ft-wrap { position: relative; z-index: 1; }
+
+        /* ━━ TOP GLOW LINE ━━ */
+        .ft-topline {
+          position: absolute;
+          top: 0; left: 0; right: 0;
+          height: 1px;
+          background: linear-gradient(90deg, transparent 5%, rgba(109,179,63,0.4) 30%, rgba(240,150,14,0.3) 50%, rgba(232,85,58,0.3) 70%, transparent 95%);
+        }
+        .ft-topline::after {
+          content: '';
+          position: absolute;
+          top: -2px; left: 0; right: 0;
+          height: 6px;
+          background: linear-gradient(90deg, transparent 5%, rgba(109,179,63,0.08) 30%, rgba(240,150,14,0.06) 50%, transparent 95%);
+          filter: blur(4px);
+        }
+
+        /* ━━ AMBIENT ORBS ━━ */
+        .ft-orb {
+          position: absolute;
+          border-radius: 50%;
+          filter: blur(100px);
+          pointer-events: none;
+          animation: ftDrift 14s ease-in-out infinite;
+          z-index: 0;
+        }
+        .ft-orb1 { width: 350px; height: 350px; background: rgba(109,179,63,0.04); top: -8%; left: -3%; }
+        .ft-orb2 { width: 280px; height: 280px; background: rgba(240,150,14,0.03); bottom: -6%; right: -4%; animation-delay: 6s; }
+
+        /* ━━ GRID ━━ */
+        .ft-grid {
+          display: grid;
+          grid-template-columns: 1.5fr 1fr 1fr 1fr;
+          gap: 40px;
+          margin-bottom: 48px;
+        }
+
+        /* ━━ BRAND COLUMN ━━ */
+        .ft-logo {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 20px;
+        }
+
+        .ft-logo-img {
+          width: 40px;
+          height: 40px;
+          border-radius: 10px;
+          object-fit: contain;
+          transition: all .4s ease;
+        }
+        .ft-logo:hover .ft-logo-img {
+          transform: rotate(-6deg) scale(1.08);
+          filter: drop-shadow(0 0 10px rgba(109,179,63,0.25));
+        }
+
+        .ft-logo-text {
+          font-family: var(--font-display);
+          font-size: 1.25rem;
+          font-weight: 700;
+          color: var(--text-light, #F0EDE8);
+        }
+
+        .ft-dot { color: #8FD45E; }
+
+        /* ━━ INFO ITEMS ━━ */
+        .ft-info {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          margin-bottom: 20px;
+        }
+
+        .ft-info-item {
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
+          font-size: .85rem;
+          color: var(--text-muted, #9CA39C);
+          transition: color .3s ease;
+        }
+        .ft-info-item:hover { color: #b8bfb8; }
+
+        .ft-info-item i {
+          color: rgba(143,212,94,0.6);
+          margin-top: 3px;
+          font-size: .8rem;
+          transition: all .3s ease;
+        }
+        .ft-info-item:hover i {
+          color: #8FD45E;
+          filter: drop-shadow(0 0 4px rgba(143,212,94,0.3));
+        }
+
+        .ft-info-item a {
+          color: inherit;
+          text-decoration: none;
+          transition: color .3s ease;
+        }
+        .ft-info-item a:hover { color: #8FD45E; }
+
+        /* ━━ SOCIAL ICONS ━━ */
+        .ft-social {
+          display: flex;
+          gap: 10px;
+        }
+
+        .ft-soc-link {
+          width: 40px;
+          height: 40px;
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.08);
+          color: var(--text-muted, #9CA39C);
+          font-size: .9rem;
+          text-decoration: none;
+          transition: all .4s cubic-bezier(.4,0,.2,1);
+          position: relative;
+          overflow: hidden;
+        }
+
+        .ft-soc-link::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(135deg, rgba(109,179,63,0.2), rgba(109,179,63,0.05));
+          opacity: 0;
+          transition: opacity .4s ease;
+          border-radius: inherit;
+        }
+
+        .ft-soc-link:hover {
+          color: #fff;
+          border-color: rgba(109,179,63,0.5);
+          transform: translateY(-4px) scale(1.05);
+          box-shadow: 0 0 20px rgba(109,179,63,0.15), 0 8px 16px rgba(0,0,0,0.2);
+        }
+        .ft-soc-link:hover::before { opacity: 1; }
+
+        .ft-soc-link i {
+          position: relative;
+          z-index: 1;
+          transition: transform .3s ease;
+        }
+        .ft-soc-link:hover i {
+          transform: scale(1.15);
+        }
+
+        /* ━━ LINK COLUMNS ━━ */
+        .ft-col-title {
+          font-family: var(--font-display);
+          font-size: .85rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          color: var(--text-light, #F0EDE8);
+          margin-bottom: 20px;
+          position: relative;
+          display: inline-block;
+        }
+
+        .ft-col-title::after {
+          content: '';
+          position: absolute;
+          bottom: -6px;
+          left: 0;
+          width: 0;
+          height: 2px;
+          background: linear-gradient(90deg, #8FD45E, #F0960E);
+          border-radius: 2px;
+          transition: width .5s cubic-bezier(.4,0,.2,1);
+        }
+
+        .ft-col:hover .ft-col-title::after { width: 100%; }
+
+        .ft-link {
+          display: flex;
+          align-items: center;
+          gap: 0;
+          padding: 5px 0;
+          font-size: .88rem;
+          color: var(--text-muted, #9CA39C);
+          text-decoration: none;
+          transition: all .35s ease;
+          position: relative;
+        }
+
+        .ft-link::before {
+          content: '';
+          display: inline-block;
+          width: 0;
+          height: 1px;
+          background: #8FD45E;
+          margin-right: 0;
+          transition: all .35s cubic-bezier(.4,0,.2,1);
+          vertical-align: middle;
+        }
+
+        .ft-link:hover {
+          color: #8FD45E;
+          transform: translateX(6px);
+        }
+
+        .ft-link:hover::before {
+          width: 12px;
+          margin-right: 8px;
+          box-shadow: 0 0 6px rgba(143,212,94,0.3);
+        }
+
+        /* ━━ BOTTOM ━━ */
+        .ft-bottom {
+          padding-top: 32px;
+          border-top: 1px solid rgba(255,255,255,0.06);
+          text-align: center;
+        }
+
+        .ft-addresses {
+          display: flex;
+          justify-content: center;
+          gap: 32px;
+          flex-wrap: wrap;
+          margin-bottom: 20px;
+        }
+
+        .ft-addr {
+          display: flex;
+          align-items: flex-start;
+          gap: 8px;
+          font-size: .8rem;
+          color: var(--text-muted, #9CA39C);
+          max-width: 550px;
+          text-align: left;
+          transition: color .3s ease;
+        }
+        .ft-addr:hover { color: #b8bfb8; }
+
+        .ft-addr i {
+          color: rgba(143,212,94,0.5);
+          margin-top: 3px;
+          font-size: .7rem;
+          flex-shrink: 0;
+          transition: all .3s ease;
+        }
+        .ft-addr:hover i {
+          color: #8FD45E;
+          filter: drop-shadow(0 0 4px rgba(143,212,94,0.3));
+        }
+
+        /* Tagline shimmer */
+        .ft-tagline {
+          font-family: var(--font-display);
+          font-weight: 700;
+          font-size: 1.05rem;
+          margin-bottom: 8px;
+        }
+
+        .ft-grad {
+          background: linear-gradient(135deg, #8FD45E 0%, #F0960E 35%, #E8553A 65%, #8FD45E 100%);
+          background-size: 200% auto;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          animation: ftShim 3s linear infinite;
+        }
+
+        .ft-copy {
+          font-size: .85rem;
+          color: var(--text-muted, #9CA39C);
+          line-height: 1.8;
+        }
+
+        /* ━━ SCROLL REVEAL ━━ */
+        .ft-anim {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+
+        .ft-visible {
+          animation: ftUp .6s ease forwards;
+        }
+
+        /* ━━ ANIMATIONS ━━ */
+        @keyframes ftUp {
+          0%   { opacity: 0; transform: translateY(20px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes ftShim {
+          0%   { background-position: 0% center; }
+          100% { background-position: 200% center; }
+        }
+
+        @keyframes ftDrift {
+          0%, 100% { transform: translate(0, 0); }
+          33%      { transform: translate(18px, -12px); }
+          66%      { transform: translate(-10px, 8px); }
+        }
+
+        /* ━━ RESPONSIVE ━━ */
+        @media (max-width: 1024px) {
+          .ft-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 640px) {
+          .ft-sec { padding: 60px 0 28px; }
+          .ft-grid { grid-template-columns: 1fr; gap: 32px; }
+          .ft-addresses { flex-direction: column; align-items: center; }
+          .ft-addr { text-align: center; justify-content: center; }
+        }
+      `}</style>
     </footer>
   );
 }

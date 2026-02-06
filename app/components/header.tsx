@@ -1,300 +1,190 @@
-"use client";
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { Menu, X, PuzzleIcon, Sparkles, PuzzleIcon as Puzzle2, GraduationCap, Headset } from "lucide-react";
+'use client';
 
-const navItems = [
-  { label: "Gig-Work", href: "#gig-work", icon: PuzzleIcon, color: "#00f7ff" },
-  { label: "Branding", href: "#branding", icon: Sparkles, color: "#ff00ff" },
-  { label: "SaubhOS", href: "#saubhos", icon: Puzzle2, color: "#00ff9d" },
-  { label: "Academy", href: "#academy", icon: GraduationCap, color: "#ffb800" },
-  { label: "Support", href: "#support", icon: Headset, color: "#ff2e63" },
+import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
+
+const languages = [
+  { code: 'en', label: 'English', short: 'EN' },
+  { code: 'hi', label: 'हिन्दी', short: 'HI' },
+  { code: 'bn', label: 'বাংলা', short: 'BN' },
+  { code: 'te', label: 'తెలుగు', short: 'TE' },
+  { code: 'mr', label: 'मराठी', short: 'MR' },
+  { code: 'ta', label: 'தமிழ்', short: 'TA' },
+  { code: 'gu', label: 'ગુજરાતી', short: 'GU' },
+  { code: 'ur', label: 'اردو', short: 'UR' },
+  { code: 'kn', label: 'ಕನ್ನಡ', short: 'KN' },
+  { code: 'or', label: 'ଓଡ଼ିଆ', short: 'OR' },
+  { code: 'ml', label: 'മലയാളം', short: 'ML' },
+  { code: 'pa', label: 'ਪੰਜਾਬੀ', short: 'PA' },
+  { code: 'as', label: 'অসমীয়া', short: 'AS' },
+  { code: 'mai', label: 'मैथिली', short: 'MAI' },
+  { code: 'sa', label: 'संस्कृतम्', short: 'SA' },
+  { code: 'sd', label: 'سنڌي', short: 'SD' },
+  { code: 'ne', label: 'नेपाली', short: 'NE' },
+  { code: 'ks', label: 'कॉशुर', short: 'KS' },
+  { code: 'kok', label: 'कोंकणी', short: 'KOK' },
+  { code: 'doi', label: 'डोगरी', short: 'DOI' },
+  { code: 'mni', label: 'মৈতৈলোন্', short: 'MNI' },
+  { code: 'brx', label: 'बड़ो', short: 'BRX' },
+  { code: 'sat', label: 'ᱥᱟᱱᱛᱟᱲᱤ', short: 'SAT' },
 ];
 
-export function Header() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
-  const [activeSection, setActiveSection] = useState("");
-  const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
+  const [selectedLang, setSelectedLang] = useState(languages[0]);
+  const langRef = useRef<HTMLDivElement>(null);
 
-  // Handle scroll effects
   useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      
-      // Header shadow on scroll
-      setScrolled(currentScrollY > 10);
-      
-      // Hide/show header based on scroll direction
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        setIsVisible(false);
-      } else {
-        setIsVisible(true);
-      }
-      setLastScrollY(currentScrollY);
+    const handleScroll = () => setScrolled(window.scrollY > 60);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
-      // Active section detection
-      const sections = navItems.map(item => item.href.substring(1));
-      for (const section of sections) {
-        const element = document.getElementById(section);
-        if (element) {
-          const rect = element.getBoundingClientRect();
-          if (rect.top <= 100 && rect.bottom >= 100) {
-            setActiveSection(`#${section}`);
-            break;
-          }
-        }
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (langRef.current && !langRef.current.contains(e.target as Node)) {
+        setLangOpen(false);
       }
     };
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, []);
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
-
-  // Smooth scroll handler
-  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    e.preventDefault();
-    const targetId = href.substring(1);
-    const element = document.getElementById(targetId);
-    
-    if (element) {
-      const offsetTop = element.offsetTop - 80;
-      window.scrollTo({
-        top: offsetTop,
-        behavior: "smooth"
-      });
-    }
-    
-    setMobileMenuOpen(false);
+  const handleLangSelect = (lang: typeof languages[0]) => {
+    setSelectedLang(lang);
+    setLangOpen(false);
+    // For future: trigger translation context change here
   };
 
+  const closeMenu = () => setMobileMenuOpen(false);
+
   return (
-    <header 
-      className={`fixed top-0 z-50 w-full border-b transition-all duration-300 ${
-        scrolled 
-          ? "bg-background/80 backdrop-blur-lg shadow-lg shadow-primary/5" 
-          : "bg-background/95 backdrop-blur supports-[backdrop-filter]:backdrop-blur"
-      } ${
-        isVisible ? "translate-y-0" : "-translate-y-full"
-      }`}
-    >
-      <div className={`container flex items-center justify-between px-4 transition-all duration-300 ${
-        scrolled ? "h-14" : "h-16"
-      }`}>
-        {/* ===== Logo ===== */}
-        <Link href="/" className="flex items-center space-x-2 group">
-          <div className="relative">
+    <>
+      <nav
+        className={`nav${scrolled ? ' scrolled' : ''}`}
+        role="navigation"
+        aria-label="Main navigation"
+      >
+        <div className="nav-inner">
+          {/* ── Logo ── */}
+          <a href="/" className="nav-logo" aria-label="Saubh.Tech Home">
             <Image
               src="/Saubh-Good.png"
               alt="Saubh.Tech Logo"
               width={40}
               height={40}
-              className={`transition-all duration-300 ${
-                scrolled ? "h-8 w-8" : "h-10 w-10"
-              } group-hover:scale-110 group-hover:rotate-12`}
             />
-            <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          </div>
-          <div className="flex items-center gap-1">
-            <span className={`font-bold text-foreground transition-all duration-300 bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text ${
-              scrolled ? "text-lg" : "text-xl"
-            }`}>
-              Saubh
+            <span>
+              Saubh<span className="dot">.</span>Tech
             </span>
-            <span className={`font-bold transition-all duration-300 bg-gradient-to-r from-primary via-primary to-[#ef4444] bg-clip-text text-transparent ${
-              scrolled ? "text-lg" : "text-xl"
-            }`}>
-              .Tech
-            </span>
-          </div>
-        </Link>
+          </a>
 
-        {/* ===== Desktop Navigation ===== */}
-        <nav className="hidden md:flex md:items-center md:gap-1">
-          {navItems.map((item) => {
-            const IconComponent = item.icon;
-            const isActive = activeSection === item.href;
-            
-            return (
-              <a
-                key={item.href}
-                href={item.href}
-                onClick={(e) => handleNavClick(e, item.href)}
-                className={`group relative flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all duration-300 rounded-lg ${
-                  isActive 
-                    ? "text-primary" 
-                    : "text-foreground/70 hover:text-primary"
-                }`}
+          {/* ── Desktop Nav Links ── */}
+          <div className="nav-links">
+            <a href="#gig-work">
+              <i className="fas fa-briefcase"></i> Gig-work
+            </a>
+            <a href="#branding">
+              <i className="fas fa-bullhorn"></i> Branding
+            </a>
+            <a href="#saubhos">
+              <i className="fas fa-microchip"></i> SaubhOS
+            </a>
+            <a href="#learning">
+              <i className="fas fa-graduation-cap"></i> Academy
+            </a>
+            <a href="#faq">
+              <i className="fas fa-headset"></i> Support
+            </a>
+
+            {/* ── Language Switcher ── */}
+            <div className="lang-switcher" ref={langRef}>
+              <button
+                className="lang-btn"
+                onClick={() => setLangOpen(!langOpen)}
+                aria-label="Select language"
               >
-                {/* Hover background effect */}
-                <div 
-                  className={`absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 ${
-                    isActive ? "opacity-10" : ""
-                  }`}
-                  style={{ 
-                    backgroundColor: item.color,
-                    boxShadow: `0 0 20px ${item.color}40`
-                  }}
-                />
-                
-                {/* Icon with glow */}
-                <div className="relative">
-                  <IconComponent 
-                    className={`${item.label === "Academy" ? "h-5 w-5" : "h-4 w-4"} transition-all duration-300 relative z-10 ${
-                      isActive ? "scale-110" : "group-hover:scale-110 group-hover:-rotate-12"
-                    }`}
-                    style={{ 
-                      color: isActive ? item.color : undefined,
-                      filter: isActive ? `drop-shadow(0 0 8px ${item.color})` : undefined
-                    }}
-                  />
-                  <div 
-                    className={`absolute inset-0 blur-md opacity-0 group-hover:opacity-60 transition-opacity duration-300 ${
-                      isActive ? "opacity-40" : ""
-                    }`}
-                    style={{ backgroundColor: item.color }}
-                  />
-                </div>
-                
-                <span className="relative z-10">{item.label}</span>
-                
-                {/* Active indicator */}
-                {isActive && (
-                  <div 
-                    className="absolute bottom-0 left-1/2 -translate-x-1/2 h-0.5 w-8 rounded-full"
-                    style={{ backgroundColor: item.color }}
-                  />
-                )}
-                
-                {/* Hover underline */}
-                <div 
-                  className="absolute bottom-0 left-1/2 -translate-x-1/2 h-0.5 w-0 group-hover:w-8 rounded-full transition-all duration-300"
-                  style={{ backgroundColor: item.color }}
-                />
-              </a>
-            );
-          })}
-        </nav>
+                <i className="fas fa-globe"></i> {selectedLang.short}{' '}
+                <i className="fas fa-chevron-down" style={{ fontSize: '.6rem' }}></i>
+              </button>
+              <div className={`lang-dropdown${langOpen ? ' open' : ''}`}>
+                {languages.map((lang) => (
+                  <button
+                    key={lang.code}
+                    className={`lang-option${lang.code === selectedLang.code ? ' active' : ''}`}
+                    onClick={() => handleLangSelect(lang)}
+                  >
+                    {lang.label}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-        {/* ===== CTA ===== */}
-        <div className="flex items-center gap-4">
-          <Button
-            asChild
-            className="hidden md:inline-flex bg-gradient-to-r from-[#ef4444] to-[#dc2626] hover:from-[#dc2626] hover:to-[#b91c1c] text-white shadow-lg shadow-[#ef4444]/20 hover:shadow-xl hover:shadow-[#ef4444]/30 transition-all duration-300 hover:scale-105 relative overflow-hidden group"
-          >
-            <Link href="/login">
-              <span className="relative z-10">Login</span>
-              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-            </Link>
-          </Button>
+            {/* ── Login CTA ── */}
+            <a href="#login" className="nav-cta">
+              <i className="fas fa-arrow-right-to-bracket"></i> Login
+            </a>
+          </div>
 
-          {/* ===== Mobile Menu Button ===== */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden hover:bg-primary/10 transition-all duration-300"
+          {/* ── Mobile Toggle ── */}
+          <button
+            className="menu-toggle"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle menu"
           >
-            <div className="relative">
-              {mobileMenuOpen ? (
-                <X className="h-6 w-6 transition-transform duration-300 rotate-90" />
-              ) : (
-                <Menu className="h-6 w-6 transition-transform duration-300" />
-              )}
-            </div>
-          </Button>
+            <i className={`fas ${mobileMenuOpen ? 'fa-xmark' : 'fa-bars'}`}></i>
+          </button>
         </div>
-      </div>
+      </nav>
 
-      {/* ===== Mobile Navigation ===== */}
-      <div 
-        className={`md:hidden border-t overflow-hidden transition-all duration-300 ease-in-out ${
-          mobileMenuOpen ? "max-h-[400px] opacity-100" : "max-h-0 opacity-0"
-        }`}
-      >
-        {/* Backdrop overlay */}
-        {mobileMenuOpen && (
-          <div 
-            className="fixed inset-0 top-16 bg-background/60 backdrop-blur-sm -z-10"
-            onClick={() => setMobileMenuOpen(false)}
-          />
-        )}
-        
-        <nav className="container flex flex-col gap-2 p-4 bg-background/95">
-          {navItems.map((item, index) => {
-            const IconComponent = item.icon;
-            const isActive = activeSection === item.href;
-            
-            return (
-              <a
-                key={item.href}
-                href={item.href}
-                onClick={(e) => handleNavClick(e, item.href)}
-                className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-300 relative overflow-hidden group ${
-                  isActive ? "bg-primary/10" : "hover:bg-primary/5"
-                }`}
-                style={{
-                  animation: mobileMenuOpen ? `slideIn 0.3s ease-out ${index * 0.1}s both` : undefined
-                }}
-              >
-                {/* Background glow on hover */}
-                <div 
-                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                  style={{ 
-                    background: `radial-gradient(circle at left, ${item.color}15, transparent)` 
-                  }}
-                />
-                
-                <IconComponent 
-                  className={`${item.label === "Academy" ? "h-5 w-5" : "h-4 w-4"} relative z-10 transition-all duration-300 group-hover:scale-110`}
-                  style={{ 
-                    color: isActive ? item.color : undefined,
-                    filter: isActive ? `drop-shadow(0 0 6px ${item.color})` : undefined
-                  }}
-                />
-                <span className={`relative z-10 ${isActive ? "text-primary" : ""}`}>
-                  {item.label}
-                </span>
-                
-                {isActive && (
-                  <div 
-                    className="ml-auto h-2 w-2 rounded-full"
-                    style={{ backgroundColor: item.color }}
-                  />
-                )}
-              </a>
-            );
-          })}
-          
-          <Button
-            asChild
-            className="w-full mt-2 bg-gradient-to-r from-[#ef4444] to-[#dc2626] hover:from-[#dc2626] hover:to-[#b91c1c] text-white shadow-lg shadow-[#ef4444]/20 hover:shadow-xl hover:shadow-[#ef4444]/30 transition-all duration-300 relative overflow-hidden group"
-          >
-            <Link href="/login">
-              <span className="relative z-10">Login</span>
-              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-            </Link>
-          </Button>
-        </nav>
-      </div>
+      {/* ── Mobile Menu ── */}
+      <div className={`mobile-menu${mobileMenuOpen ? ' open' : ''}`}>
+        <a href="#gig-work" onClick={closeMenu}>
+          <i className="fas fa-briefcase"></i> Gig-work
+        </a>
+        <a href="#branding" onClick={closeMenu}>
+          <i className="fas fa-bullhorn"></i> Branding
+        </a>
+        <a href="#saubhos" onClick={closeMenu}>
+          <i className="fas fa-microchip"></i> SaubhOS
+        </a>
+        <a href="#learning" onClick={closeMenu}>
+          <i className="fas fa-graduation-cap"></i> Academy
+        </a>
+        <a href="#faq" onClick={closeMenu}>
+          <i className="fas fa-headset"></i> Support
+        </a>
 
-      {/* Keyframe animations */}
-      <style jsx>{`
-        @keyframes slideIn {
-          from {
-            opacity: 0;
-            transform: translateX(-20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-      `}</style>
-    </header>
+        {/* ── Mobile Language Selector ── */}
+        <div className="mobile-lang-grid">
+          {languages.slice(0, 6).map((lang) => (
+            <button
+              key={lang.code}
+              className={`mobile-lang-btn${lang.code === selectedLang.code ? ' active' : ''}`}
+              onClick={() => { handleLangSelect(lang); closeMenu(); }}
+            >
+              {lang.label}
+            </button>
+          ))}
+        </div>
+
+        <a
+          href="#login"
+          onClick={closeMenu}
+          style={{
+            background: 'var(--gradient-btn)',
+            color: '#fff',
+            textAlign: 'center',
+            borderRadius: '100px',
+            marginTop: '12px',
+            fontWeight: 700,
+          }}
+        >
+          <i className="fas fa-arrow-right-to-bracket"></i> Login
+        </a>
+      </div>
+    </>
   );
 }

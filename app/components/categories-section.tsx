@@ -1,270 +1,276 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useRef } from "react";
-import { Search, Sparkles, TrendingUp, ChevronRight } from "lucide-react";
+import { useEffect, useRef } from 'react';
 
-const categories = [
-  { icon: "🌾", label: "Agriculture, Food & Nutrition", color: "#22c55e" },
-  { icon: "📢", label: "Branding, Marketing & Sales", color: "#f59e0b" },
-  { icon: "💻", label: "Computing, Data & Digital Technology", color: "#3b82f6" },
-  { icon: "🎓", label: "Education, Skilling & Career", color: "#8b5cf6" },
-  { icon: "💰", label: "Finance, Banking & Insurance", color: "#10b981" },
-  { icon: "🏛️", label: "Government, Public Sector & Welfare", color: "#6366f1" },
-  { icon: "🩺", label: "Health, Wellness & Personal Care", color: "#ec4899" },
-  { icon: "👥", label: "HR, Employment & Gig-Work", color: "#f97316" },
-  { icon: "🛠️", label: "Installation, Repair & Tech Support", color: "#14b8a6" },
-  { icon: "⚖️", label: "Legal, Police & Protection", color: "#64748b" },
-  { icon: "🏭", label: "Manufacturing, Procurement & Production", color: "#84cc16" },
-  { icon: "❤️", label: "Matchmaking, Relationships & Guidance", color: "#ef4444" },
-  { icon: "🎬", label: "Media, Entertainment & Sports", color: "#a855f7" },
-  { icon: "🏠", label: "Real Estate, Infra & Construction", color: "#0ea5e9" },
-  { icon: "🚚", label: "Transport, Logistics & Storage", color: "#f59e0b" },
-  { icon: "✈️", label: "Travel, Tourism & Hospitality", color: "#06b6d4" },
+const sectors = [
+  { emoji: '🌾', name: 'Agriculture, Food & Nutrition' },
+  { emoji: '📢', name: 'Branding, Marketing & Sales' },
+  { emoji: '💻', name: 'Computing, Data & Digital Technology' },
+  { emoji: '🎓', name: 'Education, Skilling & Career' },
+  { emoji: '💰', name: 'Finance, Banking & Insurance' },
+  { emoji: '🏛️', name: 'Government, Public Sector & Welfare' },
+  { emoji: '🩺', name: 'Health, Wellness & Personal Care' },
+  { emoji: '👥', name: 'HR, Employment & GigWork' },
+  { emoji: '🛠️', name: 'Installation, Repair & Tech Support' },
+  { emoji: '⚖️', name: 'Legal, Police & Protection' },
+  { emoji: '🏭', name: 'Manufacturing, Procurement & Production' },
+  { emoji: '❤️', name: 'Matchmaking, Relationships & Guidance' },
+  { emoji: '🎬', name: 'Media, Entertainment & Sports' },
+  { emoji: '🏠', name: 'Real Estate, Infra & Construction' },
+  { emoji: '🚚', name: 'Transport, Logistics & Storage' },
+  { emoji: '✈️', name: 'Travel, Tourism & Hospitality' },
 ];
 
-export function CategoriesSection() {
-  const [isVisible, setIsVisible] = useState(false);
-  const [activeCategory, setActiveCategory] = useState<number | null>(null);
+export default function CategoriesSection() {
   const sectionRef = useRef<HTMLElement>(null);
 
-  // Intersection Observer for scroll animations
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            setIsVisible(true);
+            entry.target.classList.add('visible');
           }
         });
       },
-      { threshold: 0.1 }
+      { threshold: 0.05 }
     );
 
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
+    const section = sectionRef.current;
+    if (section) {
+      section.querySelectorAll('.anim-up, .cat-chip').forEach((el) => observer.observe(el));
     }
 
-    return () => {
-      if (sectionRef.current) {
-        observer.unobserve(sectionRef.current);
-      }
-    };
+    return () => observer.disconnect();
   }, []);
 
   return (
-    <section ref={sectionRef} className="relative py-16 md:py-24 bg-background overflow-hidden">
-      {/* Background decorations */}
-      <div className="absolute inset-0 pointer-events-none">
-        {/* Gradient orbs */}
-        <div className="absolute top-1/4 left-10 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-10 w-96 h-96 bg-[#E84545]/5 rounded-full blur-3xl" />
-        
-        {/* Grid pattern */}
-        <div className="absolute inset-0 opacity-[0.02]">
-          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <pattern
-                id="category-grid"
-                width="40"
-                height="40"
-                patternUnits="userSpaceOnUse"
-              >
-                <path
-                  d="M 40 0 L 0 0 0 40"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1"
-                  className="text-foreground"
-                />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#category-grid)" />
-          </svg>
-        </div>
-      </div>
+    <section
+      ref={sectionRef}
+      className="cat-section section-pad"
+      id="sectors"
+      aria-labelledby="sectors-title"
+    >
+      <div className="container">
 
-      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div 
-          className={`flex flex-col items-center text-center mb-16 transition-all duration-1000 ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
-        >
-          {/* Badge with icon */}
-          <div className="group relative inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-secondary/80 backdrop-blur-sm border border-border/50 mb-6 hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 cursor-pointer">
-            {/* Animated background */}
-            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary/10 via-[#E84545]/10 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            
-            <Search className="relative z-10 h-4 w-4 text-primary group-hover:rotate-12 transition-transform duration-300" />
-            <span className="relative z-10 text-sm font-medium text-foreground">
-              Explore Services Across Sectors
-            </span>
-            <Sparkles className="relative z-10 h-3.5 w-3.5 text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse" />
-          </div>
-
-          {/* Main heading with gradient */}
-          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground text-balance mb-4">
-            Browse by{" "}
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-[#E84545] to-primary">
-              Category
-            </span>
+        {/* ── Header ── */}
+        <div className="cat-header anim-up">
+          <span className="section-tag">
+            <i className="fas fa-compass"></i> Explore Opportunities
+          </span>
+          <h2 className="cat-title" id="sectors-title">
+            Explore Opportunities and Offerings
+            <br />
+            <span>across <span className="cat-gradient">16 sectors</span></span>
           </h2>
-
-          {/* Subtitle */}
-          <p 
-            className={`text-muted-foreground text-lg max-w-2xl transition-all duration-1000 ${
-              isVisible ? "opacity-100" : "opacity-0"
-            }`}
-            style={{ transitionDelay: "200ms" }}
-          >
-            Discover verified professionals across 16+ specialized sectors
-          </p>
-
-          {/* Decorative line */}
-          <div className="mt-6 h-1 w-24 bg-gradient-to-r from-transparent via-primary to-transparent rounded-full" />
         </div>
 
-        {/* Categories Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {categories.map((category, index) => (
-            <CategoryCard
-              key={category.label}
-              icon={category.icon}
-              label={category.label}
-              color={category.color}
-              index={index}
-              isVisible={isVisible}
-              isActive={activeCategory === index}
-              onHover={() => setActiveCategory(index)}
-              onLeave={() => setActiveCategory(null)}
-            />
-          ))}
-        </div>
-
-        {/* Stats section */}
-        <div 
-          className={`mt-16 grid grid-cols-2 md:grid-cols-4 gap-6 transition-all duration-1000 ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
-          style={{ transitionDelay: "800ms" }}
-        >
-          {[
-            { value: "16+", label: "Categories", icon: "🎯" },
-            { value: "500+", label: "Services", icon: "⚡" },
-            { value: "24/7", label: "Available", icon: "🕐" },
-            { value: "100%", label: "Verified", icon: "✅" },
-          ].map((stat, index) => (
+        {/* ── 4-column grid of sector chips ── */}
+        <div className="cat-grid">
+          {sectors.map((sector, i) => (
             <div
-              key={index}
-              className="group text-center p-4 rounded-xl bg-card/50 border border-border/30 hover:border-primary/30 hover:bg-card transition-all duration-300 cursor-default"
+              key={sector.name}
+              className="cat-chip"
+              style={{ animationDelay: `${i * 0.06}s` }}
             >
-              <div className="text-2xl mb-2 group-hover:scale-110 transition-transform duration-300">
-                {stat.icon}
-              </div>
-              <div className="text-2xl sm:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-[#E84545] group-hover:scale-105 transition-transform duration-300">
-                {stat.value}
-              </div>
-              <div className="text-xs sm:text-sm text-muted-foreground mt-1">
-                {stat.label}
-              </div>
+              <span className="cat-emoji">{sector.emoji}</span>
+              <span className="cat-name">{sector.name}</span>
+              <i className="fas fa-arrow-right cat-arrow"></i>
             </div>
           ))}
         </div>
+
+        {/* ── Buttons ── */}
+        <div className="btn-group" style={{ justifyContent: 'center' }}>
+          <a href="#offer" className="btn btn-primary">
+            <i className="fas fa-hand-holding-heart"></i> Offer Service/Product
+          </a>
+          <a href="#post" className="btn btn-outline">
+            <i className="fas fa-plus-circle"></i> Post Requirements
+          </a>
+          <a href="#demo" className="btn btn-ghost">
+            <i className="fas fa-calendar-check"></i> Schedule a Demo
+          </a>
+        </div>
       </div>
+
+      <style jsx>{`
+        /* ━━ Section ━━ */
+        .cat-section {
+          background: var(--bg-dark, #0C0F0A);
+          color: var(--text-light, #F0EDE8);
+          overflow: hidden;
+        }
+
+        /* ━━ Header ━━ */
+        .cat-header {
+          text-align: center;
+          margin-bottom: 56px;
+        }
+
+        .cat-title {
+          font-family: var(--font-display);
+          font-weight: 800;
+          font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+          line-height: 1.2;
+          color: #ffffff;
+          margin-top: 16px;
+        }
+
+        .cat-gradient {
+          background: linear-gradient(135deg, #8FD45E 0%, #F0960E 50%, #E8553A 100%);
+          background-size: 200% auto;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          animation: shimmer 3s linear infinite;
+        }
+
+        /* ━━ Grid ━━ */
+        .cat-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 16px;
+          margin-bottom: 48px;
+        }
+
+        /* ━━ Chip — wow hover ━━ */
+        .cat-chip {
+          position: relative;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 20px 22px;
+          border-radius: var(--radius, 16px);
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.08);
+          font-family: var(--font-display);
+          font-size: .88rem;
+          font-weight: 500;
+          color: var(--text-light, #F0EDE8);
+          cursor: pointer;
+          overflow: hidden;
+          transition: all .4s cubic-bezier(.4,0,.2,1);
+
+          /* staggered reveal */
+          opacity: 0;
+          transform: translateY(24px);
+        }
+
+        .cat-chip.visible {
+          animation: chipIn .6s ease forwards;
+        }
+
+        /* Glow line on left */
+        .cat-chip::before {
+          content: '';
+          position: absolute;
+          left: 0;
+          top: 50%;
+          width: 3px;
+          height: 0;
+          transform: translateY(-50%);
+          border-radius: 0 3px 3px 0;
+          background: linear-gradient(180deg, #6DB33F, #F0960E);
+          transition: height .35s ease;
+        }
+
+        /* Hover glow bg */
+        .cat-chip::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          border-radius: inherit;
+          background: radial-gradient(circle at 20% 50%, rgba(109,179,63,0.12), transparent 70%);
+          opacity: 0;
+          transition: opacity .4s ease;
+        }
+
+        .cat-chip:hover {
+          transform: translateY(-4px) scale(1.02);
+          border-color: rgba(109,179,63,0.4);
+          box-shadow: 0 8px 32px rgba(109,179,63,0.15), 0 0 0 1px rgba(109,179,63,0.1);
+          background: rgba(255,255,255,0.07);
+        }
+
+        .cat-chip:hover::before {
+          height: 60%;
+        }
+
+        .cat-chip:hover::after {
+          opacity: 1;
+        }
+
+        /* Emoji */
+        .cat-emoji {
+          font-size: 1.5rem;
+          flex-shrink: 0;
+          transition: transform .4s ease;
+          position: relative;
+          z-index: 1;
+        }
+
+        .cat-chip:hover .cat-emoji {
+          transform: scale(1.25) rotate(-8deg);
+        }
+
+        /* Name */
+        .cat-name {
+          flex: 1;
+          line-height: 1.4;
+          position: relative;
+          z-index: 1;
+          transition: color .3s ease;
+        }
+
+        .cat-chip:hover .cat-name {
+          color: #ffffff;
+        }
+
+        /* Arrow — slides in on hover */
+        .cat-arrow {
+          font-size: .7rem;
+          color: var(--green-light, #8FD45E);
+          opacity: 0;
+          transform: translateX(-8px);
+          transition: all .35s ease;
+          position: relative;
+          z-index: 1;
+        }
+
+        .cat-chip:hover .cat-arrow {
+          opacity: 1;
+          transform: translateX(0);
+        }
+
+        /* ━━ Animations ━━ */
+        @keyframes chipIn {
+          0% {
+            opacity: 0;
+            transform: translateY(24px) scale(0.96);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+
+        @keyframes shimmer {
+          0%   { background-position: 0% center; }
+          100% { background-position: 200% center; }
+        }
+
+        /* ━━ Responsive ━━ */
+        @media (max-width: 1024px) {
+          .cat-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (max-width: 768px) {
+          .cat-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 480px) {
+          .cat-grid { grid-template-columns: 1fr; }
+        }
+      `}</style>
     </section>
-  );
-}
-
-function CategoryCard({
-  icon,
-  label,
-  color,
-  index,
-  isVisible,
-  isActive,
-  onHover,
-  onLeave,
-}: {
-  icon: string;
-  label: string;
-  color: string;
-  index: number;
-  isVisible: boolean;
-  isActive: boolean;
-  onHover: () => void;
-  onLeave: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onMouseEnter={onHover}
-      onMouseLeave={onLeave}
-      className={`group relative flex items-center gap-4 p-5 rounded-xl bg-card border border-border/50 transition-all duration-500 hover:bg-secondary/50 hover:border-primary/30 hover:shadow-xl hover:-translate-y-1 text-left overflow-hidden ${
-        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-      }`}
-      style={{
-        transitionDelay: `${index * 50}ms`,
-      }}
-    >
-      {/* Hover background gradient */}
-      <div 
-        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl"
-        style={{
-          background: `radial-gradient(circle at left, ${color}15, transparent)`,
-        }}
-      />
-
-      {/* Animated border gradient */}
-      <div 
-        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"
-        style={{
-          background: `linear-gradient(135deg, ${color}20, transparent)`,
-        }}
-      />
-
-      {/* Icon container with scale effect */}
-      <div className="relative z-10 flex-shrink-0 w-14 h-14 flex items-center justify-center rounded-lg bg-secondary/50 group-hover:bg-secondary transition-all duration-300 group-hover:scale-110 group-hover:rotate-6">
-        <span className="text-3xl transition-transform duration-300 group-hover:scale-110" role="img" aria-hidden="true">
-          {icon}
-        </span>
-        
-        {/* Glow effect behind icon */}
-        <div 
-          className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-50 blur-md transition-opacity duration-300"
-          style={{ backgroundColor: color }}
-        />
-      </div>
-
-      {/* Text content */}
-      <div className="relative z-10 flex-1 min-w-0">
-        <span className="block text-sm font-semibold text-foreground group-hover:text-primary transition-colors duration-300 line-clamp-2">
-          {label}
-        </span>
-        
-        {/* Count indicator (simulated) */}
-        <span className="text-xs text-muted-foreground mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          {Math.floor(Math.random() * 50) + 10}+ services
-        </span>
-      </div>
-
-      {/* Arrow icon */}
-      <ChevronRight 
-        className="relative z-10 h-5 w-5 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300"
-        style={{ color: isActive ? color : undefined }}
-      />
-
-      {/* Shine effect on hover */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-
-      {/* Pulse effect for active card */}
-      {isActive && (
-        <div 
-          className="absolute inset-0 rounded-xl animate-pulse"
-          style={{ 
-            boxShadow: `0 0 20px ${color}40`,
-          }}
-        />
-      )}
-    </button>
   );
 }

@@ -1,417 +1,287 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useRef } from "react";
-import { Briefcase, User, Check, Shield, Zap, Award, Clock, DollarSign, Target } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useEffect, useRef } from 'react';
 
-const providerBenefits = [
-  {
-    text: "List offerings across multiple sectors and territories",
-    icon: Target,
-    color: "#4FA34D"
-  },
-  {
-    text: "Procure prepaid demand and bid on assignments",
-    icon: Zap,
-    color: "#4FA34D"
-  },
-  {
-    text: "Complete work and receive instant, escrow-guaranteed payments",
-    icon: DollarSign,
-    color: "#4FA34D"
-  },
-  {
-    text: "Build reach, reputation, and recurring revenue",
-    icon: Award,
-    color: "#4FA34D"
-  },
-];
-
-const clientBenefits = [
-  {
-    text: "Call or chat with verified providers instantly",
-    icon: Clock,
-    color: "#4FA34D"
-  },
-  {
-    text: "Post assignments to securely outsource work",
-    icon: Shield,
-    color: "#4FA34D"
-  },
-  {
-    text: "Compare bids and hire at competitive rates",
-    icon: Target,
-    color: "#4FA34D"
-  },
-  {
-    text: "Pay safely with escrow protection",
-    icon: DollarSign,
-    color: "#4FA34D"
-  },
-];
-
-export function TrustSection() {
-  const [isVisible, setIsVisible] = useState(false);
-  const [hoveredProvider, setHoveredProvider] = useState<number | null>(null);
-  const [hoveredClient, setHoveredClient] = useState<number | null>(null);
-  const [activeCard, setActiveCard] = useState<'provider' | 'client' | null>(null);
+export default function TrustSection() {
   const sectionRef = useRef<HTMLElement>(null);
 
-  // Intersection Observer for scroll animations
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            setIsVisible(true);
+            entry.target.classList.add('visible');
           }
         });
       },
-      { threshold: 0.2 }
+      { threshold: 0.1 }
     );
 
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
+    const section = sectionRef.current;
+    if (section) {
+      section.querySelectorAll('.anim-up').forEach((el) => observer.observe(el));
     }
 
-    return () => {
-      if (sectionRef.current) {
-        observer.unobserve(sectionRef.current);
-      }
-    };
+    return () => observer.disconnect();
   }, []);
 
   return (
-    <section ref={sectionRef} className="relative py-24 md:py-32 overflow-hidden">
-      {/* Background image */}
-      <div
-        className="absolute inset-0 bg-cover bg-no-repeat"
-        style={{
-          backgroundImage: "url('/trust-illustration.jpg')",
-          backgroundPosition: "50% center",
-        }}
-      >
-        {/* Dark overlay */}
-        <div className="absolute inset-0 bg-background/85" />
+    <section ref={sectionRef} className="trust-section section-pad" aria-labelledby="rp-title">
 
-        {/* Animated gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/5 opacity-60" />
+      {/* BG Image */}
+      <div className="trust-bg" />
+      {/* Heavy dark overlay */}
+      <div className="trust-overlay" />
 
-        {/* Subtle glow - animated */}
-        <div className="absolute top-1/4 left-1/3 w-[500px] h-[300px] bg-primary/10 rounded-full blur-[160px] animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/3 w-[400px] h-[250px] bg-primary/10 rounded-full blur-[140px] animate-pulse" style={{ animationDelay: "1s" }} />
+      <div className="container trust-container">
 
-        {/* Grid pattern */}
-        <div className="absolute inset-0 opacity-[0.02]">
-          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <pattern
-                id="trust-grid"
-                width="60"
-                height="60"
-                patternUnits="userSpaceOnUse"
-              >
-                <path
-                  d="M 60 0 L 0 0 0 60"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1"
-                  className="text-foreground"
-                />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#trust-grid)" />
-          </svg>
+        {/* Header */}
+        <div className="trust-header">
+          <span className="trust-tag anim-up">
+            <i className="fas fa-bolt"></i> Real People. Real Work. Real Trust.
+          </span>
+          <h2 className="trust-heading anim-up" id="rp-title">
+            We Connect <span className="trust-shimmer">Real People</span> with <span className="trust-shimmer">Real Work</span>
+          </h2>
         </div>
-      </div>
 
-      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div 
-          className={`text-center mb-16 transition-all duration-1000 ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
-        >
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-secondary/80 backdrop-blur-sm border border-border/50 mb-6 hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 cursor-pointer group">
-            <Shield className="h-4 w-4 text-primary group-hover:rotate-12 transition-transform duration-300" />
-            <span className="text-sm font-medium text-foreground">Trust & Safety First</span>
+        {/* Cards */}
+        <div className="trust-grid">
+          <div className="trust-card anim-up">
+            <div className="trust-card-top">
+              <div className="trust-icon trust-icon--green"><i className="fas fa-briefcase"></i></div>
+              <h3>Verified Providers</h3>
+            </div>
+            <ul>
+              <li><span className="chk chk-green">✓</span> List offerings across multiple sectors and territories.</li>
+              <li><span className="chk chk-green">✓</span> Bid on assignments, procure prepaid demand.</li>
+              <li><span className="chk chk-green">✓</span> Complete work, get escrow-guaranteed payments.</li>
+            </ul>
           </div>
 
-          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-foreground mb-4">
-            Real People. Real Work.{" "}
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-[#E84545] to-primary">
-              Real Trust.
-            </span>
-          </h2>
-          <p 
-            className={`text-lg text-muted-foreground max-w-2xl mx-auto transition-all duration-1000 ${
-              isVisible ? "opacity-100" : "opacity-0"
-            }`}
-            style={{ transitionDelay: "200ms" }}
-          >
-            Connect with verified professionals and clients in a secure,
-            transparent marketplace
-          </p>
-
-          {/* Decorative line */}
-          <div className="mt-6 h-1 w-24 bg-gradient-to-r from-transparent via-primary to-transparent rounded-full mx-auto" />
+          <div className="trust-card anim-up" style={{ transitionDelay: '.15s' }}>
+            <div className="trust-card-top">
+              <div className="trust-icon trust-icon--coral"><i className="fas fa-user-tie"></i></div>
+              <h3>Verified Clients</h3>
+            </div>
+            <ul>
+              <li><span className="chk chk-coral">✓</span> Post assignments to outsource requirements.</li>
+              <li><span className="chk chk-coral">✓</span> Call or chat with verified providers.</li>
+              <li><span className="chk chk-coral">✓</span> Compare bids, and hire with escrow protection.</li>
+            </ul>
+          </div>
         </div>
 
-        {/* Two Column Cards */}
-        <div className="grid md:grid-cols-2 gap-8">
-          {/* Providers Card */}
-          <Card 
-            onMouseEnter={() => setActiveCard('provider')}
-            onMouseLeave={() => setActiveCard(null)}
-            className={`group relative bg-card/60 backdrop-blur-md border-border/40 hover:border-primary/50 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-2 overflow-hidden ${
-              isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-12"
-            }`}
-            style={{ transitionDelay: "400ms" }}
-          >
-            {/* Animated background gradient */}
-            <div 
-              className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-            />
-
-            {/* Glow effect */}
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl bg-gradient-to-br from-primary/10 to-transparent" />
-
-            <CardHeader className="relative z-10">
-              <div className="flex items-center gap-4">
-                {/* Icon container */}
-                <div className="relative w-14 h-14 rounded-2xl bg-primary/15 flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-                  <Briefcase className="h-7 w-7 text-primary" />
-                  {/* Icon glow */}
-                  <div className="absolute inset-0 rounded-2xl bg-primary/30 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                </div>
-
-                <div>
-                  <CardTitle className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground group-hover:from-primary group-hover:to-foreground transition-all duration-300">
-                    Verified Providers
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {providerBenefits.length} key benefits
-                  </p>
-                </div>
-              </div>
-            </CardHeader>
-
-            <CardContent className="relative z-10">
-              <ul className="space-y-4">
-                {providerBenefits.map((benefit, i) => {
-                  const IconComponent = benefit.icon;
-                  const isHovered = hoveredProvider === i;
-
-                  return (
-                    <li
-                      key={i}
-                      onMouseEnter={() => setHoveredProvider(i)}
-                      onMouseLeave={() => setHoveredProvider(null)}
-                      className={`group/item flex gap-3 p-3 rounded-lg transition-all duration-300 hover:bg-secondary/50 hover:scale-[1.02] cursor-pointer ${
-                        isVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4"
-                      }`}
-                      style={{ 
-                        transitionDelay: `${600 + i * 100}ms`,
-                        borderLeft: isHovered ? `3px solid ${benefit.color}` : '3px solid transparent',
-                      }}
-                    >
-                      {/* Icon container */}
-                      <div 
-                        className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center bg-secondary group-hover/item:scale-110 transition-all duration-300 group-hover/item:rotate-12"
-                        style={{
-                          backgroundColor: isHovered ? `${benefit.color}20` : undefined,
-                        }}
-                      >
-                        <IconComponent 
-                          className="h-4 w-4 transition-colors duration-300"
-                          style={{ color: isHovered ? benefit.color : undefined }}
-                        />
-                      </div>
-
-                      {/* Check icon */}
-                      <div 
-                        className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center group-hover/item:scale-110 transition-transform duration-300"
-                        style={{
-                          backgroundColor: isHovered ? `${benefit.color}30` : undefined,
-                        }}
-                      >
-                        <Check 
-                          className="h-4 w-4 transition-colors duration-300"
-                          style={{ color: isHovered ? benefit.color : undefined }}
-                        />
-                      </div>
-
-                      {/* Text */}
-                      <span className="text-muted-foreground group-hover/item:text-foreground transition-colors duration-300 flex-1">
-                        {benefit.text}
-                      </span>
-
-                      {/* Hover shine effect */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover/item:translate-x-full transition-transform duration-700 rounded-lg" />
-                    </li>
-                  );
-                })}
-              </ul>
-
-              {/* Card footer stats */}
-              <div className="mt-6 pt-6 border-t border-border/50 flex items-center justify-between text-sm">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                  <span>5K+ Active Providers</span>
-                </div>
-                <div className="text-primary font-semibold group-hover:scale-105 transition-transform duration-300">
-                  Join Now →
-                </div>
-              </div>
-            </CardContent>
-
-            {/* Card number indicator */}
-            <div className="absolute top-4 right-4 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              01
-            </div>
-          </Card>
-
-          {/* Clients Card */}
-          <Card 
-            onMouseEnter={() => setActiveCard('client')}
-            onMouseLeave={() => setActiveCard(null)}
-            className={`group relative bg-card/60 backdrop-blur-md border-border/40 hover:border-primary/50 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-2 overflow-hidden ${
-              isVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-12"
-            }`}
-            style={{ transitionDelay: "400ms" }}
-          >
-            {/* Animated background gradient */}
-            <div 
-              className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-            />
-
-            {/* Glow effect */}
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl bg-gradient-to-br from-primary/10 to-transparent" />
-
-            <CardHeader className="relative z-10">
-              <div className="flex items-center gap-4">
-                {/* Icon container */}
-                <div className="relative w-14 h-14 rounded-2xl bg-primary/15 flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-                  <User className="h-7 w-7 text-primary" />
-                  {/* Icon glow */}
-                  <div className="absolute inset-0 rounded-2xl bg-primary/30 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                </div>
-
-                <div>
-                  <CardTitle className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground group-hover:from-primary group-hover:to-foreground transition-all duration-300">
-                    Verified Clients
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {clientBenefits.length} key benefits
-                  </p>
-                </div>
-              </div>
-            </CardHeader>
-
-            <CardContent className="relative z-10">
-              <ul className="space-y-4">
-                {clientBenefits.map((benefit, i) => {
-                  const IconComponent = benefit.icon;
-                  const isHovered = hoveredClient === i;
-
-                  return (
-                    <li
-                      key={i}
-                      onMouseEnter={() => setHoveredClient(i)}
-                      onMouseLeave={() => setHoveredClient(null)}
-                      className={`group/item flex gap-3 p-3 rounded-lg transition-all duration-300 hover:bg-secondary/50 hover:scale-[1.02] cursor-pointer ${
-                        isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4"
-                      }`}
-                      style={{ 
-                        transitionDelay: `${600 + i * 100}ms`,
-                        borderLeft: isHovered ? `3px solid ${benefit.color}` : '3px solid transparent',
-                      }}
-                    >
-                      {/* Icon container */}
-                      <div 
-                        className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center bg-secondary group-hover/item:scale-110 transition-all duration-300 group-hover/item:rotate-12"
-                        style={{
-                          backgroundColor: isHovered ? `${benefit.color}20` : undefined,
-                        }}
-                      >
-                        <IconComponent 
-                          className="h-4 w-4 transition-colors duration-300"
-                          style={{ color: isHovered ? benefit.color : undefined }}
-                        />
-                      </div>
-
-                      {/* Check icon */}
-                      <div 
-                        className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center group-hover/item:scale-110 transition-transform duration-300"
-                        style={{
-                          backgroundColor: isHovered ? `${benefit.color}30` : undefined,
-                        }}
-                      >
-                        <Check 
-                          className="h-4 w-4 text-primary transition-colors duration-300"
-                          style={{ color: isHovered ? benefit.color : undefined }}
-                        />
-                      </div>
-
-                      {/* Text */}
-                      <span className="text-muted-foreground group-hover/item:text-foreground transition-colors duration-300 flex-1">
-                        {benefit.text}
-                      </span>
-
-                      {/* Hover shine effect */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover/item:translate-x-full transition-transform duration-700 rounded-lg" />
-                    </li>
-                  );
-                })}
-              </ul>
-
-              {/* Card footer stats */}
-              <div className="mt-6 pt-6 border-t border-border/50 flex items-center justify-between text-sm">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                  <span>10K+ Active Clients</span>
-                </div>
-                <div className="text-primary font-semibold group-hover:scale-105 transition-transform duration-300">
-                  Get Started →
-                </div>
-              </div>
-            </CardContent>
-
-            {/* Card number indicator */}
-            <div className="absolute top-4 right-4 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              02
-            </div>
-          </Card>
-        </div>
-
-        {/* Bottom trust badges */}
-        <div 
-          className={`mt-16 flex flex-wrap justify-center gap-8 items-center transition-all duration-1000 ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
-          style={{ transitionDelay: "1000ms" }}
-        >
-          {[
-            { icon: Shield, text: "Secure Escrow" },
-            { icon: Award, text: "Verified Profiles" },
-            { icon: Zap, text: "Instant Matching" },
-          ].map((badge, index) => {
-            const IconComponent = badge.icon;
-            return (
-              <div
-                key={index}
-                className="group flex items-center gap-3 px-6 py-3 rounded-full bg-secondary/50 backdrop-blur-sm border border-border/30 hover:border-primary/50 hover:bg-secondary transition-all duration-300 cursor-pointer hover:scale-105"
-              >
-                <IconComponent 
-                  className="h-5 w-5 text-primary transition-transform duration-300 group-hover:rotate-12"
-                />
-                <span className="text-sm font-medium text-foreground">{badge.text}</span>
-              </div>
-            );
-          })}
+        {/* Buttons */}
+        <div className="btn-group" style={{ justifyContent: 'center' }}>
+          <a href="#offer" className="btn btn-outline"><i className="fas fa-hand-holding-heart"></i> Offer Service/Product</a>
+          <a href="#post" className="btn btn-outline"><i className="fas fa-plus-circle"></i> Post Requirements</a>
+          <a href="#demo" className="btn btn-ghost"><i className="fas fa-calendar-check"></i> Schedule a Demo</a>
         </div>
       </div>
+
+      <style jsx>{`
+        .trust-section {
+          position: relative;
+          overflow: hidden;
+          background: #050705;
+        }
+
+        /* ── BG image at 15% so it tints the bg without overpowering ── */
+        .trust-bg {
+          position: absolute;
+          inset: 0;
+          z-index: 0;
+          background-image: url('/red2 (1).png');
+          background-size: cover;
+          background-position: center;
+          background-repeat: no-repeat;
+          opacity: 0.25;
+          pointer-events: none;
+        }
+
+        /* ── Heavy dark overlay ── */
+        .trust-overlay {
+          position: absolute;
+          inset: 0;
+          z-index: 1;
+          background:
+            linear-gradient(180deg,
+              rgba(5,7,5, 0.88) 0%,
+              rgba(5,7,5, 0.5)  35%,
+              rgba(5,7,5, 0.5)  65%,
+              rgba(5,7,5, 0.88) 100%
+            );
+          pointer-events: none;
+        }
+
+        .trust-container {
+          position: relative;
+          z-index: 2;
+        }
+
+        /* ── Header ── */
+        .trust-header {
+          text-align: center;
+          margin-bottom: 56px;
+        }
+
+        .trust-tag {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 20px;
+          border-radius: 100px;
+          font-family: var(--font-display);
+          font-size: .8rem;
+          font-weight: 600;
+          letter-spacing: 1px;
+          text-transform: uppercase;
+          background: rgba(255,255,255,0.06);
+          border: 1px solid rgba(255,255,255,0.1);
+          color: #8FD45E;
+          margin-bottom: 20px;
+        }
+
+        .trust-heading {
+          font-family: var(--font-display);
+          font-weight: 900;
+          font-size: clamp(2rem, 4.5vw, 3.2rem);
+          line-height: 1.12;
+          color: #ffffff;
+          margin-top: 16px;
+        }
+
+        .trust-heading.visible {
+          animation: headReveal 1s cubic-bezier(.4,0,.2,1) forwards;
+        }
+
+        .trust-shimmer {
+          background: linear-gradient(135deg, #8FD45E 0%, #F0960E 35%, #E8553A 65%, #8FD45E 100%);
+          background-size: 200% auto;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          animation: shimmer 3s linear infinite;
+        }
+
+        /* ── Cards grid ── */
+        .trust-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 28px;
+          margin-bottom: 40px;
+        }
+
+        /* ── SOLID dark cards — content always readable ── */
+        .trust-card {
+          padding: 40px 36px;
+          border-radius: 24px;
+          background: rgba(10, 13, 8, 0.92);
+          border: 1px solid rgba(255,255,255,0.1);
+          box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+          transition: all .4s ease;
+        }
+
+        .trust-card:hover {
+          transform: translateY(-6px);
+          border-color: rgba(109,179,63,0.4);
+          box-shadow: 0 0 60px rgba(109,179,63,0.12);
+        }
+
+        .trust-card:hover .trust-icon {
+          transform: scale(1.1) rotate(-5deg);
+        }
+
+        .trust-card-top {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          margin-bottom: 22px;
+        }
+
+        .trust-icon {
+          width: 52px;
+          height: 52px;
+          border-radius: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.4rem;
+          transition: transform .3s ease;
+        }
+
+        .trust-icon--green { background: rgba(109,179,63,0.15); color: #8FD45E; }
+        .trust-icon--coral { background: rgba(232,85,58,0.15); color: #E8553A; }
+
+        .trust-card h3 {
+          font-family: var(--font-display);
+          font-size: 1.35rem;
+          font-weight: 700;
+          color: #ffffff;
+        }
+
+        .trust-card ul {
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+          list-style: none;
+          padding: 0;
+          margin: 0;
+        }
+
+        .trust-card li {
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
+          font-size: 1rem;
+          color: #b0b7b0;
+          line-height: 1.6;
+          opacity: 0;
+        }
+
+        .trust-card.visible li:nth-child(1) { animation: fadeUp .5s .2s ease forwards; }
+        .trust-card.visible li:nth-child(2) { animation: fadeUp .5s .35s ease forwards; }
+        .trust-card.visible li:nth-child(3) { animation: fadeUp .5s .5s ease forwards; }
+
+        .chk {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          font-size: .7rem;
+          font-weight: 700;
+          margin-top: 2px;
+          flex-shrink: 0;
+        }
+
+        .chk-green { background: rgba(109,179,63,0.2); color: #8FD45E; }
+        .chk-coral { background: rgba(232,85,58,0.2); color: #E8553A; }
+
+        /* ── Animations ── */
+        @keyframes headReveal {
+          0%   { opacity:0; transform:translateY(40px) scale(.95); filter:blur(8px); }
+          60%  { opacity:1; filter:blur(0); }
+          100% { opacity:1; transform:translateY(0) scale(1); filter:blur(0); }
+        }
+
+        @keyframes shimmer {
+          0%   { background-position: 0% center; }
+          100% { background-position: 200% center; }
+        }
+
+        @keyframes fadeUp {
+          from { opacity:0; transform:translateY(20px); }
+          to   { opacity:1; transform:translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+          .trust-grid { grid-template-columns: 1fr; }
+          .trust-card { padding: 28px 24px; }
+        }
+      `}</style>
     </section>
   );
 }

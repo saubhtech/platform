@@ -1,182 +1,361 @@
-"use client";
+'use client';
 
-import { Users, IndianRupee, TrendingUp, Clock, Sparkles } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { useEffect, useRef } from 'react';
 
-const stats = [
+const articles = [
   {
-    icon: Users,
-    value: "13M+",
-    label: "Gig Workers",
-    description: "Active professionals across India",
-    trend: "+23%",
-    color: "from-blue-500/20 to-cyan-500/20",
+    cat: 'Gig Economy & Phygital Work',
+    icon: 'fa-globe',
+    date: '2025-01-15',
+    title: "What Is Phygital Work and Why It's the Future of India's Gig Economy",
+    desc: 'Discover how phygital work combines physical trust with digital scalability to revolutionize India\'s gig economy.',
   },
   {
-    icon: IndianRupee,
-    value: "₹1.85T",
-    label: "Gig Market",
-    description: "Total market valuation",
-    trend: "+18%",
-    color: "from-emerald-500/20 to-green-500/20",
+    cat: 'Gig Economy & Phygital Work',
+    icon: 'fa-chart-line',
+    date: '2025-01-14',
+    title: "The Rise of India's Gig Economy: Opportunities, Challenges & Trends",
+    desc: 'Explore the explosive growth of India\'s gig economy and what it means for workers and businesses.',
   },
   {
-    icon: TrendingUp,
-    value: "₹24K Cr",
-    label: "UGC + SMA",
-    description: "User-generated content economy",
-    trend: "+31%",
-    color: "from-violet-500/20 to-purple-500/20",
+    cat: 'Gig Economy & Phygital Work',
+    icon: 'fa-laptop-code',
+    date: '2025-01-13',
+    title: 'Why Digital-Only Platforms Are No Longer Enough',
+    desc: 'Learn why successful platforms need to integrate physical touchpoints with digital infrastructure.',
   },
   {
-    icon: Clock,
-    value: "24×7",
-    label: "Phygital Availability",
-    description: "Round-the-clock access",
-    trend: "∞",
-    color: "from-amber-500/20 to-orange-500/20",
+    cat: 'Branding, UGC & Trust',
+    icon: 'fa-video',
+    date: '2025-01-07',
+    title: 'Why User-Generated Content (UGC) Converts Better Than Paid Ads',
+    desc: 'Data-driven insights into why UGC outperforms traditional advertising.',
+  },
+  {
+    cat: 'Branding, UGC & Trust',
+    icon: 'fa-shield-halved',
+    date: '2025-01-06',
+    title: 'How UGC Builds Trust Faster Than Traditional Advertising',
+    desc: 'The psychology behind why consumers trust peer-generated content.',
+  },
+  {
+    cat: 'Branding, UGC & Trust',
+    icon: 'fa-scale-balanced',
+    date: '2025-01-05',
+    title: 'UGC vs Influencer Marketing: What Works Better for Indian SMEs?',
+    desc: 'A practical comparison for small and medium businesses in India.',
   },
 ];
 
-export function GigEconomySection() {
+export default function GigEconomySection() {
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.querySelectorAll('.anim-up').forEach((el) =>
+              el.classList.add('visible')
+            );
+          }
+        });
+      },
+      { threshold: 0.08 }
+    );
+    if (sectionRef.current) observer.observe(sectionRef.current);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <section className="relative py-12 md:py-16 lg:py-20 overflow-hidden">
-      {/* Enhanced gradient background with animation */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-secondary/20 to-background" />
-      
-      {/* Multiple decorative glows for depth */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl animate-pulse" 
-           style={{ animationDuration: '4s' }} />
-      <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-primary/3 rounded-full blur-3xl" />
-      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-primary/3 rounded-full blur-3xl" />
+    <section ref={sectionRef} className="ge-section section-pad" id="blog" aria-labelledby="blog-title">
 
-      {/* Animated grid pattern overlay */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
+      {/* BG Image */}
+      <div className="ge-bg" />
+      {/* Overlay */}
+      <div className="ge-overlay" />
 
-      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Enhanced Section Header with badge */}
-        <div className="text-center mb-12 lg:mb-16">
-          {/* New: Floating badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 backdrop-blur-sm mb-6 animate-in fade-in slide-in-from-bottom-3 duration-700">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-primary">Live Market Data</span>
-            <span className="flex h-2 w-2 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-            </span>
-          </div>
+      <div className="container ge-container">
 
-          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-foreground mb-4 text-balance animate-in fade-in slide-in-from-bottom-4 duration-1000">
-            India&apos;s Booming Gig Economy:{" "}
-            <span className="text-primary bg-clip-text">Unprecedented Opportunities</span>
+        {/* Header — single heading only */}
+        <div className="ge-header anim-up">
+          <span className="ge-tag">
+            <i className="fas fa-newspaper"></i> Gig Economy
+          </span>
+          <h2 className="ge-title" id="blog-title">
+            <span className="ge-shimmer">Gig Economy</span>
           </h2>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-5 duration-1000 delay-150">
-            Join the revolution transforming how India works
-          </p>
         </div>
 
-        {/* Enhanced Stats Grid with stagger animation */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 mb-12 lg:mb-16">
-          {stats.map((stat, index) => (
-            <Card
-              key={stat.label}
-              className="group relative bg-card/50 border-border/50 backdrop-blur-sm hover:bg-card/80 hover:border-primary/30 transition-all duration-500 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-2 animate-in fade-in slide-in-from-bottom-6"
-              style={{
-                animationDelay: `${index * 150}ms`,
-                animationDuration: '800ms',
-              }}
+        {/* Blog cards grid */}
+        <div className="ge-grid">
+          {articles.map((a, i) => (
+            <article
+              key={a.title}
+              className="ge-card anim-up"
+              style={{ transitionDelay: `${i * 0.06}s` }}
             >
-              {/* New: Gradient overlay on hover */}
-              <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-lg`} />
-              
-              {/* New: Top accent line */}
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-t-lg" />
-
-              <CardContent className="relative p-6 text-center">
-                {/* Enhanced Icon with animated ring */}
-                <div className="relative inline-flex items-center justify-center mb-4">
-                  {/* Animated ring */}
-                  <div className="absolute inset-0 w-14 h-14 rounded-2xl border-2 border-primary/20 group-hover:scale-125 group-hover:border-primary/40 transition-all duration-500" />
-                  <div className="absolute inset-0 w-14 h-14 rounded-2xl border border-primary/10 group-hover:scale-150 group-hover:border-primary/20 transition-all duration-700 delay-75" />
-                  
-                  <div className="relative inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 group-hover:bg-primary/20 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
-                    <stat.icon className="h-7 w-7 text-primary group-hover:scale-110 transition-transform duration-500" />
-                  </div>
-                </div>
-                
-                {/* Value with counter animation effect */}
-                <div className="relative">
-                  <div className="text-4xl sm:text-5xl font-bold text-foreground mb-2 tracking-tight group-hover:scale-105 transition-transform duration-500">
-                    {stat.value}
-                  </div>
-                  
-                  {/* New: Trend indicator */}
-                  <div className="absolute -top-2 -right-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 opacity-0 group-hover:opacity-100 transition-all duration-500 group-hover:translate-x-0 translate-x-2">
-                    <TrendingUp className="h-3 w-3 text-emerald-500" />
-                    <span className="text-xs font-semibold text-emerald-500">{stat.trend}</span>
-                  </div>
-                </div>
-                
-                {/* Label */}
-                <div className="text-lg font-semibold text-foreground mb-1 group-hover:text-primary transition-colors duration-300">
-                  {stat.label}
-                </div>
-                
-                {/* Description with enhanced spacing */}
-                <div className="text-sm text-muted-foreground leading-relaxed">
-                  {stat.description}
-                </div>
-
-                {/* New: Bottom shine effect */}
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              </CardContent>
-            </Card>
+              <div className="ge-thumb">
+                <span className="ge-cat">{a.cat}</span>
+                <div className="ge-thumb-icon"><i className={`fas ${a.icon}`}></i></div>
+              </div>
+              <div className="ge-body">
+                <span className="ge-date">{a.date}</span>
+                <h3>{a.title}</h3>
+                <p>{a.desc}</p>
+              </div>
+            </article>
           ))}
         </div>
 
-        {/* Enhanced Supporting Section with decorative elements */}
-        <div className="relative text-center animate-in fade-in slide-in-from-bottom-6 duration-1000 delay-500">
-          {/* Decorative quotes */}
-          <div className="absolute -top-4 left-1/2 -translate-x-1/2 text-6xl text-primary/10 font-serif">"</div>
-          
-          <div className="relative max-w-4xl mx-auto">
-            {/* Background card for quote */}
-            <div className="relative px-8 py-6 rounded-2xl border border-border/50 bg-card/30 backdrop-blur-sm">
-              <p className="text-xl md:text-2xl lg:text-3xl font-medium text-muted-foreground">
-                Gig-work empowers you to work{" "}
-                <span className="relative inline-block text-primary font-semibold">
-                  locally
-                  <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent" />
-                </span>{" "}
-                and scale{" "}
-                <span className="relative inline-block text-primary font-semibold">
-                  globally
-                  <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent" />
-                </span>
-              </p>
-
-              {/* New: Attribution or data source */}
-              <div className="mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground/60">
-                <div className="h-px w-8 bg-gradient-to-r from-transparent to-muted-foreground/30" />
-                <span>Powered by real-time market insights</span>
-                <div className="h-px w-8 bg-gradient-to-l from-transparent to-muted-foreground/30" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* New: Optional CTA section */}
-        <div className="mt-12 text-center animate-in fade-in slide-in-from-bottom-6 duration-1000 delay-700">
-          <div className="inline-flex items-center gap-4 px-6 py-3 rounded-full border border-primary/30 bg-primary/5 backdrop-blur-sm hover:bg-primary/10 hover:border-primary/50 transition-all duration-300 cursor-pointer group">
-            <span className="text-sm font-medium text-foreground">Explore opportunities in your area</span>
-            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 group-hover:bg-primary/30 transition-colors">
-              <svg className="w-3 h-3 text-primary group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </div>
-          </div>
+        {/* View all */}
+        <div className="ge-more anim-up">
+          <a href="#all-articles">View All Articles <i className="fas fa-arrow-right"></i></a>
         </div>
       </div>
+
+      <style jsx>{`
+        /* ━━ SECTION ━━ */
+        .ge-section {
+          position: relative;
+          overflow: hidden;
+          background: #050705;
+          color: var(--text-light, #F0EDE8);
+        }
+
+        /* ━━ BG IMAGE ━━ */
+        .ge-bg {
+          position: absolute;
+          inset: 0;
+          z-index: 0;
+          background-image: url('/learning.png');
+          background-size: cover;
+          background-position: center;
+          background-repeat: no-repeat;
+          opacity: 0.3;
+          pointer-events: none;
+        }
+
+        /* ━━ OVERLAY ━━ */
+        .ge-overlay {
+          position: absolute;
+          inset: 0;
+          z-index: 1;
+          background:
+            linear-gradient(180deg,
+              rgba(5,7,5,0.88) 0%,
+              rgba(5,7,5,0.4) 35%,
+              rgba(5,7,5,0.4) 65%,
+              rgba(5,7,5,0.88) 100%
+            ),
+            radial-gradient(ellipse 500px 350px at 20% 40%, rgba(109,179,63,0.05) 0%, transparent 70%),
+            radial-gradient(ellipse 500px 350px at 80% 60%, rgba(240,150,14,0.04) 0%, transparent 70%);
+          pointer-events: none;
+        }
+
+        .ge-container { position: relative; z-index: 2; }
+
+        /* ━━ HEADER ━━ */
+        .ge-header {
+          text-align: center;
+          margin-bottom: 48px;
+        }
+
+        .ge-tag {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 20px;
+          border-radius: 100px;
+          font-family: var(--font-display);
+          font-size: .8rem;
+          font-weight: 600;
+          letter-spacing: 1px;
+          text-transform: uppercase;
+          background: rgba(255,255,255,0.06);
+          border: 1px solid rgba(255,255,255,0.1);
+          color: #8FD45E;
+          margin-bottom: 20px;
+        }
+
+        .ge-title {
+          font-family: var(--font-display);
+          font-weight: 800;
+          font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+          line-height: 1.2;
+          margin-top: 16px;
+        }
+
+        .ge-shimmer {
+          background: linear-gradient(135deg, #8FD45E 0%, #F0960E 35%, #E8553A 65%, #8FD45E 100%);
+          background-size: 200% auto;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          animation: shimmer 3s linear infinite;
+        }
+
+        /* ━━ GRID ━━ */
+        .ge-grid {
+          display: grid;
+          grid-template-columns: repeat(6, 1fr);
+          gap: 16px;
+          margin-bottom: 32px;
+        }
+
+        /* ━━ CARD ━━ */
+        .ge-card {
+          border-radius: var(--radius, 16px);
+          background: rgba(10,13,8,0.88);
+          border: 1px solid rgba(255,255,255,0.08);
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          transition: all .5s cubic-bezier(.4,0,.2,1);
+          cursor: pointer;
+          position: relative;
+        }
+
+        .ge-card::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          border-radius: inherit;
+          background: radial-gradient(circle at 50% 0%, rgba(109,179,63,0.08), transparent 70%);
+          opacity: 0;
+          transition: opacity .5s ease;
+          pointer-events: none;
+        }
+
+        .ge-card:hover {
+          transform: translateY(-8px) scale(1.02);
+          border-color: rgba(109,179,63,0.35);
+          box-shadow:
+            0 0 40px rgba(109,179,63,0.1),
+            0 20px 40px rgba(0,0,0,0.35);
+        }
+
+        .ge-card:hover::after { opacity: 1; }
+
+        /* ━━ THUMB ━━ */
+        .ge-thumb {
+          height: 120px;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .ge-card:nth-child(1) .ge-thumb { background: linear-gradient(135deg, #2d5016, #1a3a0a); }
+        .ge-card:nth-child(2) .ge-thumb { background: linear-gradient(135deg, #3a5010, #1a3016); }
+        .ge-card:nth-child(3) .ge-thumb { background: linear-gradient(135deg, #4a3010, #2a1a06); }
+        .ge-card:nth-child(4) .ge-thumb { background: linear-gradient(135deg, #5a2010, #3a1006); }
+        .ge-card:nth-child(5) .ge-thumb { background: linear-gradient(135deg, #1a4020, #0a2a10); }
+        .ge-card:nth-child(6) .ge-thumb { background: linear-gradient(135deg, #3a2030, #1a1020); }
+
+        .ge-thumb-icon {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 2rem;
+          color: rgba(255,255,255,0.2);
+          transition: all .5s ease;
+        }
+
+        .ge-card:hover .ge-thumb-icon {
+          color: rgba(255,255,255,0.45);
+          transform: scale(1.2) rotate(-6deg);
+        }
+
+        .ge-cat {
+          position: absolute;
+          top: 8px;
+          left: 8px;
+          padding: 4px 10px;
+          border-radius: 6px;
+          font-size: .65rem;
+          font-weight: 600;
+          font-family: var(--font-display);
+          background: rgba(0,0,0,0.6);
+          color: #fff;
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+        }
+
+        /* ━━ BODY ━━ */
+        .ge-body {
+          padding: 14px 14px 16px;
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .ge-date {
+          font-size: .72rem;
+          color: rgba(255,255,255,0.35);
+          margin-bottom: 6px;
+        }
+
+        .ge-card h3 {
+          font-family: var(--font-display);
+          font-size: .82rem;
+          font-weight: 700;
+          line-height: 1.35;
+          margin-bottom: 6px;
+          color: #ffffff;
+          transition: color .3s ease;
+        }
+
+        .ge-card:hover h3 { color: #8FD45E; }
+
+        .ge-card p {
+          font-size: .75rem;
+          color: #9CA39C;
+          line-height: 1.5;
+          flex: 1;
+          transition: color .3s ease;
+        }
+
+        .ge-card:hover p { color: #b8bfb8; }
+
+        /* ━━ VIEW ALL ━━ */
+        .ge-more {
+          text-align: center;
+        }
+
+        .ge-more a {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          font-family: var(--font-display);
+          font-weight: 600;
+          color: #8FD45E;
+          transition: all .3s ease;
+          text-decoration: none;
+        }
+
+        .ge-more a:hover {
+          color: #6DB33F;
+          gap: 14px;
+        }
+
+        /* ━━ ANIMATIONS ━━ */
+        @keyframes shimmer {
+          0%   { background-position: 0% center; }
+          100% { background-position: 200% center; }
+        }
+
+        /* ━━ RESPONSIVE ━━ */
+        @media (max-width: 1200px) {
+          .ge-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (max-width: 768px) {
+          .ge-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 480px) {
+          .ge-grid { grid-template-columns: 1fr; }
+        }
+      `}</style>
     </section>
   );
 }
