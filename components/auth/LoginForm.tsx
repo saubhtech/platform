@@ -49,10 +49,12 @@ export default function LoginPage() {
 
           {/* ━━ REGISTER ━━ */}
           <div className={`lg-card ${activeTab === 'register' ? 'lg-active' : 'lg-hide'}`}>
-            <div className="lg-card-icon">
-              <i className="fas fa-user"></i>
+            <div className="lg-card-head">
+              <div className="lg-card-icon">
+                <i className="fas fa-user"></i>
+              </div>
+              <h2 className="lg-card-title">Register</h2>
             </div>
-            <h2 className="lg-card-title">Register</h2>
 
             <div className="lg-steps">
               <div className="lg-step">
@@ -67,10 +69,10 @@ export default function LoginPage() {
                   <strong className="lg-nums">+918800607598</strong> or <strong className="lg-nums">+918130960040</strong>
                 </span>
               </div>
-              <p className="lg-note">* Replace Your Name with your real name.</p>
+              <p className="lg-note">* <span className="lg-highlight">Replace Your Name with your real name.</span></p>
               <div className="lg-step">
                 <span className="lg-bullet">3</span>
-                <span>You'll receive a message.</span>
+                <span>You'll receive login details.</span>
               </div>
             </div>
 
@@ -97,10 +99,12 @@ export default function LoginPage() {
 
           {/* ━━ SIGN IN ━━ */}
           <div className={`lg-card ${activeTab === 'signin' ? 'lg-active' : 'lg-hide'}`}>
-            <div className="lg-card-icon lg-icon-amber">
-              <i className="fas fa-lock"></i>
+            <div className="lg-card-head">
+              <div className="lg-card-icon lg-icon-amber">
+                <i className="fas fa-lock"></i>
+              </div>
+              <h2 className="lg-card-title">Sign In</h2>
             </div>
-            <h2 className="lg-card-title">Sign In</h2>
 
             <div className="lg-steps">
               <div className="lg-step">
@@ -162,7 +166,7 @@ export default function LoginPage() {
         .lg-bg {
           position: absolute;
           inset: 0;
-          background: url('/loginBG.jpeg') center/cover no-repeat;
+          background: url('/loginBG.png') center/cover no-repeat;
           opacity: 0.2;
           z-index: 0;
         }
@@ -319,6 +323,14 @@ export default function LoginPage() {
           display: none;
         }
 
+        /* ━━ CARD HEAD ━━ */
+        .lg-card-head {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          margin-bottom: 20px;
+        }
+
         /* ━━ CARD ICON ━━ */
         .lg-card-icon {
           width: 52px;
@@ -330,8 +342,8 @@ export default function LoginPage() {
           font-size: 1.2rem;
           background: rgba(143,212,94,0.12);
           color: #8FD45E;
-          margin-bottom: 12px;
           transition: all .4s ease;
+          flex-shrink: 0;
         }
 
         .lg-icon-amber {
@@ -354,7 +366,7 @@ export default function LoginPage() {
           font-size: 1.5rem;
           font-weight: 800;
           color: #fff;
-          margin-bottom: 20px;
+          margin: 0;
         }
 
         /* ━━ STEPS ━━ */
@@ -397,6 +409,17 @@ export default function LoginPage() {
           color: rgba(255,255,255,0.35);
           font-style: italic;
           margin: -4px 0 12px 36px;
+        }
+
+        .lg-highlight {
+          background: rgba(232,85,58,0.15);
+          color: #E8553A;
+          padding: 1px 8px;
+          border-radius: 4px;
+          border: 1px solid rgba(232,85,58,0.25);
+          font-style: normal;
+          font-weight: 600;
+          font-size: .76rem;
         }
 
         /* Code badges */
