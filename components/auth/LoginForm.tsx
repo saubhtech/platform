@@ -162,7 +162,7 @@ export default function LoginPage() {
         .lg-bg {
           position: absolute;
           inset: 0;
-          background: url('/loginBG.png') center/cover no-repeat;
+          background: url('/loginBG.jpeg') center/cover no-repeat;
           opacity: 0.2;
           z-index: 0;
         }
