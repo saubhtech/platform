@@ -13,7 +13,7 @@ const faqs = [
   },
   {
     q: 'How does Saubh.Tech work?',
-    a: 'Saubh connects you with the right people for your needs. Whether you\'re looking for a job, a service provider, or just some advice, we can help you find what you\'re looking for. Our platform is easy to use and our team is always here to support you.',
+    a: "Saubh connects you with the right people for your needs. Whether you're looking for a job, a service provider, or just some advice, we can help you find what you're looking for. Our platform is easy to use and our team is always here to support you.",
   },
 ];
 
@@ -64,7 +64,6 @@ export default function FAQSection() {
           zIndex: 0,
         }}
       />
-      
       <div className="container" style={{ position: 'relative', zIndex: 1 }}>
         <div className="faq-header anim-up">
           <h2 id="faq-title" className="section-title">Frequently Asked Questions</h2>
@@ -81,16 +80,11 @@ export default function FAQSection() {
                 className="faq-q" 
                 onClick={() => toggle(i)}
                 aria-expanded={openIndex === i}
-                aria-controls={`faq-answer-${i}`}
               >
                 <span className="faq-question-text">{faq.q}</span>
                 <i className="fas fa-chevron-down"></i>
               </button>
-              <div 
-                id={`faq-answer-${i}`}
-                className="faq-a"
-                role="region"
-              >
+              <div className="faq-a">
                 <p>{faq.a}</p>
               </div>
             </div>

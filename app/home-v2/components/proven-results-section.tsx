@@ -30,7 +30,6 @@ function useCounter(end: number, dur: number, go: boolean, dec: boolean) {
 
 function StatCard({ s, i, go }: { s: typeof stats[0]; i: number; go: boolean }) {
   const count = useCounter(s.end, 2000, go, s.decimal);
-
   return (
     <div className="proven-card anim-up" style={{ transitionDelay: `${i * 0.1}s` }}>
       <div className="proven-num">
