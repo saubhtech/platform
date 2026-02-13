@@ -1,70 +1,44 @@
-'use client';
-
-import { useEffect, useRef } from 'react';
-
 export default function LearningSection() {
-  const sectionRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.querySelectorAll('.anim-up').forEach((el) =>
-              el.classList.add('visible')
-            );
-          }
-        });
-      },
-      { threshold: 0.1 }
-    );
-    if (sectionRef.current) observer.observe(sectionRef.current);
-    return () => observer.disconnect();
-  }, []);
+  const features = [
+    { emoji: '\uD83D\uDCDA', text: 'Study with contents and videos' },
+    { emoji: '\uD83D\uDC69\u200D\uD83C\uDFEB', text: 'Interactive trainer-led online classes' },
+    { emoji: '\uD83C\uDFC6', text: 'Certification to boost credibility' },
+  ];
 
   return (
-    <section ref={sectionRef} className="learning section-pad" id="learning" aria-labelledby="learning-title" style={{ position: 'relative', overflow: 'hidden' }}>
-      <div style={{
-        position: 'absolute', inset: 0, zIndex: 0,
-        backgroundImage: 'url(/images/Saubh-learning.png)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        opacity: 0.25,
-      }} />
-      <div style={{
-        position: 'absolute', inset: 0, zIndex: 0,
-        background: 'radial-gradient(ellipse at center, rgba(12,15,10,0.4) 0%, rgba(12,15,10,0.88) 85%)',
-      }} />
-      <div className="container" style={{ position: 'relative', zIndex: 1 }}>
-        <div className="learning-header anim-up">
-          <span className="section-tag"><i className="fas fa-graduation-cap"></i> Learning &amp; Skilling</span>
-          <h2 className="section-title">Invest in Your Future</h2>
+    <section className="py-20 bg-saubh-dark">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="text-center mb-12 anim-up">
+          <span className="inline-flex items-center gap-2 px-5 py-2 bg-saubh-card border border-saubh-border rounded-full font-heading text-[0.82rem] font-medium tracking-wider uppercase">
+            <i className="fas fa-graduation-cap text-saubh-orange" />
+            <span className="text-saubh-orange">Learning & Skilling</span>
+          </span>
+          <h2 className="font-heading font-bold text-3xl md:text-4xl mt-5 text-saubh-text">Invest in Your <span className="grad-text">Future</span></h2>
         </div>
-        <div className="learning-features">
-          <div className="learning-feat anim-up">
-            <i className="fas fa-book-open"></i>
-            <p>Study with contents and videos</p>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+          {features.map((feat) => (
+            <div key={feat.text} className="bg-saubh-card border border-saubh-border rounded-card p-10 text-center hover:border-white/20 transition-all anim-up">
+              <div className="text-4xl mb-4">{feat.emoji}</div>
+              <p className="text-saubh-muted text-sm">{feat.text}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="text-center anim-up">
+          <h3 className="font-heading font-bold text-xl text-saubh-text mb-5">Training Programs</h3>
+          <div className="flex flex-wrap justify-center gap-4 mb-8">
+            <span className="inline-flex items-center gap-2 px-5 py-2 bg-saubh-card border border-saubh-border rounded-full font-heading text-[0.82rem] font-medium tracking-wider uppercase text-saubh-muted">
+              <i className="fas fa-brain text-saubh-green" /> Life Counselling Professional (LCP)
+            </span>
+            <span className="inline-flex items-center gap-2 px-5 py-2 bg-saubh-card border border-saubh-border rounded-full font-heading text-[0.82rem] font-medium tracking-wider uppercase text-saubh-muted">
+              <i className="fas fa-chart-line text-saubh-orange" /> Business Consulting Professional (BCP)
+            </span>
           </div>
-          <div className="learning-feat anim-up" style={{ transitionDelay: '.1s' }}>
-            <i className="fas fa-chalkboard-user"></i>
-            <p>Interactive trainer-led online classes</p>
+          <div className="flex flex-wrap justify-center gap-4">
+            <a href="#" className="inline-flex items-center gap-2 px-8 py-3.5 rounded-btn btn-gradient-red text-white font-heading font-semibold text-sm no-underline hover:-translate-y-0.5 transition-transform"><i className="fas fa-play-circle" /> Join Free Training Session</a>
+            <a href="#" className="inline-flex items-center gap-2 px-8 py-3.5 rounded-btn border-[1.5px] border-saubh-green text-saubh-green font-heading font-semibold text-sm no-underline hover:-translate-y-0.5 transition-transform bg-transparent"><i className="fas fa-calendar-check" /> Schedule a Meeting</a>
           </div>
-          <div className="learning-feat anim-up" style={{ transitionDelay: '.2s' }}>
-            <i className="fas fa-certificate"></i>
-            <p>Certification to boost credibility</p>
-          </div>
-        </div>
-        <div style={{ textAlign: 'center', marginBottom: 16 }}>
-          <p style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-light)', marginBottom: 20 }}>Training Programs</p>
-        </div>
-        <div className="training-row">
-          <div className="training-badge"><i className="fas fa-heart-pulse"></i> Life Counselling Professional (LCP)</div>
-          <div className="training-badge"><i className="fas fa-chart-column"></i> Business Consulting Professional (BCP)</div>
-        </div>
-        <div className="btn-group" style={{ justifyContent: 'center' }}>
-          <a href="#training" className="btn btn-primary"><i className="fas fa-play-circle"></i> Join Free Training Session</a>
-          <a href="#meeting" className="btn btn-outline"><i className="fas fa-calendar-check"></i> Schedule a Meeting</a>
         </div>
       </div>
     </section>
