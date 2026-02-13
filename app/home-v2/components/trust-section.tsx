@@ -27,15 +27,9 @@ export default function TrustSection() {
 
   return (
     <section ref={sectionRef} className="trust-section section-pad" aria-labelledby="rp-title">
-
-      {/* BG Image */}
       <div className="trust-bg" />
-      {/* Heavy dark overlay */}
       <div className="trust-overlay" />
-
       <div className="container trust-container">
-
-        {/* Header */}
         <div className="trust-header">
           <span className="trust-tag anim-up">
             <i className="fas fa-bolt"></i> Real People. Real Work. Real Trust.
@@ -44,8 +38,6 @@ export default function TrustSection() {
             We Connect <span className="trust-shimmer">Real People</span> with <span className="trust-shimmer">Real Work</span>
           </h2>
         </div>
-
-        {/* Cards */}
         <div className="trust-grid">
           <div className="trust-card anim-up">
             <div className="trust-card-top">
@@ -58,7 +50,6 @@ export default function TrustSection() {
               <li><span className="chk chk-green">✓</span> Complete work, get escrow-guaranteed payments.</li>
             </ul>
           </div>
-
           <div className="trust-card anim-up" style={{ transitionDelay: '.15s' }}>
             <div className="trust-card-top">
               <div className="trust-icon trust-icon--coral"><i className="fas fa-user-tie"></i></div>
@@ -71,19 +62,16 @@ export default function TrustSection() {
             </ul>
           </div>
         </div>
-
-        {/* Buttons */}
         <div className="btn-group" style={{ justifyContent: 'center' }}>
           <a href="#offer" className="btn btn-outline"><i className="fas fa-hand-holding-heart"></i> Offer Service/Product</a>
           <a href="#post" className="btn btn-outline"><i className="fas fa-plus-circle"></i> Post Requirements</a>
           <a href="#demo" className="btn btn-ghost"><i className="fas fa-calendar-check"></i> Schedule a Demo</a>
         </div>
       </div>
-
       <style jsx>{`
         .trust-section { position: relative; overflow: hidden; background: #050705; }
         .trust-bg { position: absolute; inset: 0; z-index: 0; background-image: url('/red2 (1).png'); background-size: cover; background-position: center; background-repeat: no-repeat; opacity: 0.25; pointer-events: none; }
-        .trust-overlay { position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, rgba(5,7,5, 0.88) 0%, rgba(5,7,5, 0.5) 35%, rgba(5,7,5, 0.5) 65%, rgba(5,7,5, 0.88) 100%); pointer-events: none; }
+        .trust-overlay { position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, rgba(5,7,5,0.88) 0%, rgba(5,7,5,0.5) 35%, rgba(5,7,5,0.5) 65%, rgba(5,7,5,0.88) 100%); pointer-events: none; }
         .trust-container { position: relative; z-index: 2; }
         .trust-header { text-align: center; margin-bottom: 56px; }
         .trust-tag { display: inline-flex; align-items: center; gap: 8px; padding: 8px 20px; border-radius: 100px; font-family: var(--font-display); font-size: .8rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #8FD45E; margin-bottom: 20px; }
