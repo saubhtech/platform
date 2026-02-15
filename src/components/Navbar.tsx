@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { LOGO_SRC } from '@/lib/constants';
 
 const languages = [
@@ -96,9 +97,9 @@ export default function Navbar() {
               </div>
             </div>
 
-            <a href="/login" className="nav-cta">
+            <Link href="/login" className="nav-cta">
               <i className="fas fa-arrow-right-to-bracket"></i> Login
-            </a>
+            </Link>
           </div>
 
           <button
@@ -119,7 +120,7 @@ export default function Navbar() {
             <i className={link.icon}></i> {link.label}
           </a>
         ))}
-        <a
+        <Link
           href="/login"
           onClick={closeMenu}
           style={{
@@ -132,7 +133,7 @@ export default function Navbar() {
           }}
         >
           <i className="fas fa-arrow-right-to-bracket"></i> Login
-        </a>
+        </Link>
       </div>
     </>
   );
