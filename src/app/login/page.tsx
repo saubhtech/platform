@@ -100,14 +100,14 @@ export default function LoginPage() {
                 <label>Your Name:</label>
                 <div className="lg-input-wrap">
                   <i className="fas fa-user lg-input-icon"></i>
-                  <input type="text" placeholder="Your name" />
+                  <input type="text" placeholder="Your name" autoComplete="off" />
                 </div>
               </div>
               <div className="lg-field">
                 <label>WhatsApp Number:</label>
                 <div className="lg-input-wrap">
                   <i className="fab fa-whatsapp lg-input-icon" style={{ color: '#25D366' }}></i>
-                  <input type="tel" placeholder="Your WhatsApp number" />
+                  <input type="tel" placeholder="Your WhatsApp Number" autoComplete="off" />
                 </div>
               </div>
               <button type="submit" className="lg-btn lg-btn-green">
@@ -155,14 +155,14 @@ export default function LoginPage() {
                 <label>WhatsApp Number:</label>
                 <div className="lg-input-wrap">
                   <i className="fab fa-whatsapp lg-input-icon" style={{ color: '#25D366' }}></i>
-                  <input type="tel" placeholder="Your WhatsApp number" />
+                  <input type="tel" placeholder="Your WhatsApp Number" autoComplete="off" />
                 </div>
               </div>
               <div className="lg-field">
                 <label>Passcode:</label>
                 <div className="lg-input-wrap">
                   <i className="fas fa-lock lg-input-icon lg-icon-amber-i"></i>
-                  <input type="password" placeholder="••••" maxLength={4} />
+                  <input type="password" placeholder="••••" maxLength={4} autoComplete="off" />
                 </div>
               </div>
               <button type="submit" className="lg-btn lg-btn-amber">
