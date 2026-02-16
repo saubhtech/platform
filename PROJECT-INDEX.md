@@ -1,5 +1,5 @@
 # Saubh.Tech — Project Index
-> Last updated: February 16, 2026 (saubh-lang Phase 2 — i18n website integration)
+> Last updated: February 16, 2026 (i18n type-safety + stable React keys + direct dynamic imports)
 
 ## 🏗️ Infrastructure
 
@@ -16,7 +16,7 @@
 | **Process Manager** | PM2 |
 | **Container Runtime** | Docker + Docker Compose |
 | **Firewall** | UFW + fail2ban |
-| **Ports Open** | 80/443 (web), 5104 (SSH), 3000 (Next.js), 3100 (Lang API) |
+| **Ports Open** | 80/443 (web), 5104 (SSH), 3000 (Next.js) |
 
 ## 📂 Active Projects
 
@@ -28,120 +28,146 @@
 - **Package Manager**: pnpm
 - **Port**: 3000
 - **Domain**: https://saubh.tech
-- **Logo**: `public/logo.jpg` (source: `C:\Projects\saubh-logo.jpg`)
-- **Status**: ✅ Live (Feb 16, 2026 — with i18n Phase 2)
+- **Logo**: `public/logo.jpg`
+- **Status**: ✅ Live
 
-#### Component Architecture (src/components/)
-| Component | File | Interactive | i18n |
-|-----------|------|------------|------|
-| Navbar | `Navbar.tsx` | ✅ Mobile menu, lang dropdown, scroll effect | ✅ `useTranslation` |
-| Hero | `Hero.tsx` | Video background (`public/saubhtech.mp4`) | ✅ `useTranslation` |
-| Phygital | `Phygital.tsx` | Scroll animations | ✅ `useTranslation` |
-| Steps | `Steps.tsx` | Scroll animations | ✅ `useTranslation` |
-| RealPeople | `RealPeople.tsx` | Scroll animations | ✅ `useTranslation` |
-| Sectors | `Sectors.tsx` | 16 sector chips | ✅ `useTranslation` |
-| Branding | `Branding.tsx` | — | ✅ `useTranslation` |
-| ProvenResults | `ProvenResults.tsx` | — | ✅ `useTranslation` |
-| SaubhOS | `SaubhOS.tsx` | — | ✅ `useTranslation` |
-| Learning | `Learning.tsx` | — | ✅ `useTranslation` |
-| Blog | `Blog.tsx` | 6 article cards | ✅ `useTranslation` |
-| FAQ | `FAQ.tsx` | ✅ Accordion toggle | ✅ `useTranslation` |
-| Community | `Community.tsx` | 6 voice cards | ✅ `useTranslation` |
-| Pricing | `Pricing.tsx` | ✅ Tab switching (Q/H/A) | ✅ `useTranslation` |
-| Newsletter | `Newsletter.tsx` | ✅ Form handling | ✅ `useTranslation` |
-| Footer | `Footer.tsx` | — | ✅ `useTranslation` |
-| ScrollAnimations | `ScrollAnimations.tsx` | IntersectionObserver hook | — (no text) |
+---
 
-#### i18n Architecture (src/lib/i18n/)
+## 🌐 i18n System — Architecture
+
+### Translation Loading (Direct Dynamic Imports)
+```
+Page loads → useEffect detects ?lang=hi (or cookie)
+           → LANG_LOADERS['hi']() = import('./strings/hi')
+           → Webpack chunk loads (code-split, no API)
+           → Merge with English fallback: { ...enBase, ...hiStrings }
+           → All components re-render via React Context t() function
+```
+
+**No API dependency.** Translations are bundled as webpack chunks.
+
+### Type Safety (3-Layer Protection)
+| Layer | Mechanism | What it catches |
+|-------|-----------|-----------------|
+| **TypeScript** | `TranslationStrings` type from `en.ts` | `pnpm build` FAILS if any key missing |
+| **CLI Script** | `scripts/validate-i18n.ts` | Batch check all files, list exact missing keys |
+| **Runtime API** | `GET /api/lang/validate` | Live coverage % per deployed language |
+
+### React Keys Rule (Critical!)
+All `.map()` in components MUST use **stable non-translated keys** (`id`, `index`, or i18n key string). Never `key={t('...')}` — causes invisible sections when language switches due to `anim-up` animation conflict.
+
+### How to Add a New Language
+```
+1. Create: src/lib/i18n/strings/xx.ts
+   - Import type: import type { TranslationStrings } from './en';
+   - Use type: const xx: TranslationStrings = { ...212 keys... };
+   - TypeScript will ERROR if any key is missing
+
+2. Register loader in TranslationProvider.tsx:
+   const LANG_LOADERS: Record<string, LangLoader> = {
+     hi: () => import('./strings/hi'),
+     xx: () => import('./strings/xx'),  // ← add this line
+   };
+
+3. Deploy:
+   cd /data/projects/saubh-gig && git pull origin main && pnpm build && pm2 restart saubh-gig
+
+4. Test:
+   https://saubh.tech/?lang=xx
+```
+
+---
+
+## 📁 Key Files (Must-Read for New Sessions)
+
+### ⭐ Files Opus Must Read Before Any i18n Task
+| Priority | File | Purpose | How to Read |
+|----------|------|---------|-------------|
+| 1 | `PROJECT-INDEX.md` | This file — full project context | `github:get_file_contents owner=saubhtech repo=saubh-tech path=PROJECT-INDEX.md` |
+| 2 | `src/lib/i18n/strings/en.ts` | Master English strings (212 keys, source of truth) | `github:get_file_contents ...path=src/lib/i18n/strings/en.ts` |
+| 3 | `src/lib/i18n/TranslationProvider.tsx` | Translation loading + LANG_LOADERS map | `github:get_file_contents ...path=src/lib/i18n/TranslationProvider.tsx` |
+| 4 | `src/lib/i18n/strings/hi.ts` | Reference translation file (Hindi) — use as template | `github:get_file_contents ...path=src/lib/i18n/strings/hi.ts` |
+| 5 | `src/lib/i18n/languages.ts` | All 37 language definitions | `github:get_file_contents ...path=src/lib/i18n/languages.ts` |
+
+### Component Files (src/components/)
+| Component | File | React Key |
+|-----------|------|-----------|
+| Navbar | `Navbar.tsx` | N/A (static) |
+| Hero | `Hero.tsx` | N/A (static) |
+| Phygital | `Phygital.tsx` | `key={card.id}` ✅ |
+| Steps | `Steps.tsx` | `key={step.num}` ✅ |
+| RealPeople | `RealPeople.tsx` | `key={card.id}` ✅ |
+| Sectors | `Sectors.tsx` | `key={i}` ✅ |
+| Branding | `Branding.tsx` | `key={card.id}` ✅ |
+| ProvenResults | `ProvenResults.tsx` | `key={stat.num}` ✅ |
+| SaubhOS | `SaubhOS.tsx` | `key={card.id}` ✅ |
+| Learning | `Learning.tsx` | `key={feat.id}` ✅ |
+| Blog | `Blog.tsx` | `key={i}` ✅ |
+| FAQ | `FAQ.tsx` | `key={i}` ✅ |
+| Community | `Community.tsx` | `key={voice.id}` ✅ |
+| Pricing | `Pricing.tsx` | `key={plan.id}` ✅ |
+| Newsletter | `Newsletter.tsx` | N/A (static) |
+| Footer | `Footer.tsx` | `key={i18nKey}` ✅ |
+| ScrollAnimations | `ScrollAnimations.tsx` | N/A (no text) |
+
+### Other Key Files
 | File | Purpose |
 |------|---------|
-| `index.ts` | Barrel export for all i18n modules |
-| `languages.ts` | 37 language definitions, geo-mapping, Accept-Language parser |
-| `strings/en.ts` | Complete English strings dictionary (170+ keys) |
-| `TranslationProvider.tsx` | React Context: lang detection, API fetch, caching, `t()` function |
-
-#### i18n Language Detection Priority
-| Priority | Method | Source |
-|----------|--------|--------|
-| 1 | URL `?lang=` param | User shares translated link |
-| 2 | `saubh-lang` cookie | Returning visitor preference |
-| 3 | IP geolocation | saubh-lang `/api/lang/detect` (500ms timeout) |
-| 4 | `Accept-Language` header | Browser language setting |
-| 5 | Default: `en` | Fallback |
-
-#### Key Files
-| File | Purpose |
-|------|---------|
-| `src/app/page.tsx` | Main page — wraps with `<TranslationProvider>` |
+| `src/app/page.tsx` | Main page — wraps all components in `<TranslationProvider>` |
 | `src/app/layout.tsx` | Root layout, dynamic `<html lang>` from cookie, SEO metadata |
-| `src/app/globals.css` | All custom CSS (1550 lines, extracted from HTML) |
-| `src/middleware.ts` | Next.js middleware — geo-detect IP → set `saubh-lang` cookie |
-| `src/lib/i18n/TranslationProvider.tsx` | Core i18n: Context, API fetch, caching |
-| `src/lib/i18n/languages.ts` | 37 language configs with geo-mapping |
-| `src/lib/i18n/strings/en.ts` | English base strings (source of truth) |
+| `src/app/globals.css` | All custom CSS (~1550 lines) |
+| `src/app/api/lang/page/route.ts` | API route for translations (kept for external tools) |
+| `src/app/api/lang/validate/route.ts` | Runtime i18n validation endpoint |
+| `scripts/validate-i18n.ts` | CLI i18n validator |
 | `src/lib/constants.ts` | Shared constants (logo path) |
-| `postcss.config.mjs` | Empty — Tailwind PostCSS disabled to preserve custom CSS |
-| `next.config.ts` | Config with LANG_API env variable |
-| `public/logo.jpg` | Saubh.Tech logo (used in Navbar + Footer) |
-| `src/app/login/page.tsx` | Login/Register page (`/login` route) |
-
-#### Environment Variables
-| Variable | Where | Value |
-|----------|-------|-------|
-| `LANG_API_INTERNAL_URL` | Server `.env.local` | `http://localhost:3100` |
-| `NEXT_PUBLIC_LANG_API_URL` | Server `.env.local` | `/api/lang` |
+| `next.config.ts` | Next.js config |
 
 ---
 
-### 2. saubh-lang (Language Microservice)
-- **Local Path**: `C:\Projects\saubh-lang\`
-- **Server Path**: `/data/projects/saubh-lang/`
-- **GitHub**: https://github.com/saubhtech/saubh-lang (private)
-- **Stack**: Docker Compose — Node.js Gateway + Python FastAPI Services
-- **Port**: 3100 (API Gateway)
-- **Git**: `6f4d31a` Initial commit (Feb 15, 2026)
-- **Status**: 🔧 Phase 1 Complete — Phase 2 Website Integration Ready
+## 🌍 i18n Translation Status
 
-#### Language Support — 37 Languages
+### Completed Languages
+| # | Code | Language | Status | File |
+|---|------|----------|--------|------|
+| 1 | en | English | ✅ Master (212 keys) | `strings/en.ts` |
+| 2 | hi | Hindi | ✅ Complete (212 keys) | `strings/hi.ts` |
 
-**22 Indian (IndicTrans2):** hi, bn, ta, te, mr, gu, kn, ml, pa, or, as, ur, ne, sa, mai, kok, doi, sd, brx, sat, mni, ks
+### Pending — Indian Languages (22 total, prioritized by speaker count)
+| # | Code | Language | Speakers | Batch | Status |
+|---|------|----------|----------|-------|--------|
+| 3 | bn | Bengali | 230M | Batch 1 | ⏳ Pending |
+| 4 | te | Telugu | 83M | Batch 1 | ⏳ Pending |
+| 5 | mr | Marathi | 83M | Batch 1 | ⏳ Pending |
+| 6 | ta | Tamil | 78M | Batch 1 | ⏳ Pending |
+| 7 | gu | Gujarati | 56M | Batch 1 | ⏳ Pending |
+| 8 | kn | Kannada | 44M | Batch 2 | ⏳ Pending |
+| 9 | ml | Malayalam | 38M | Batch 2 | ⏳ Pending |
+| 10 | pa | Punjabi | 33M | Batch 2 | ⏳ Pending |
+| 11 | or | Odia | 35M | Batch 2 | ⏳ Pending |
+| 12 | as | Assamese | 15M | Batch 2 | ⏳ Pending |
+| 13 | ur | Urdu (RTL) | 70M | Batch 3 | ⏳ Pending |
+| 14 | ne | Nepali | 16M | Batch 3 | ⏳ Pending |
+| 15-23 | sa,mai,kok,doi,sd,ks,brx,sat,mni | Remaining | — | Batch 4 | ⏳ Pending |
 
-**15 International (NLLB):** en (direct), ar, zh, fr, de, ja, ko, pt, ru, es, th, vi, id, ms, tr
-
-#### Development Phases
-| Phase | Scope | Status |
-|-------|-------|--------|
-| 1 | Core Translation API + Docker setup | ✅ Code complete |
-| 2 | Website i18n integration | ✅ Complete (Feb 16, 2026) |
-| 3 | WhatsApp bot integration | Planned |
-| 4 | Chat widget + STT | Planned |
-| 5 | Polish, monitoring, load testing | Planned |
-
-#### Caddy Config (when ready)
-```
-saubh.tech {
-    reverse_proxy /api/lang/* localhost:3100
-    reverse_proxy * localhost:3000
-}
-```
+### Pending — International Languages (14 total)
+| # | Code | Language | Batch | Status |
+|---|------|----------|-------|--------|
+| 24 | es | Spanish | Batch 5 | ⏳ Pending |
+| 25 | fr | French | Batch 5 | ⏳ Pending |
+| 26 | ar | Arabic (RTL) | Batch 5 | ⏳ Pending |
+| 27 | zh | Chinese | Batch 5 | ⏳ Pending |
+| 28 | pt | Portuguese | Batch 6 | ⏳ Pending |
+| 29 | ru | Russian | Batch 6 | ⏳ Pending |
+| 30 | de | German | Batch 6 | ⏳ Pending |
+| 31 | ja | Japanese | Batch 6 | ⏳ Pending |
+| 32 | ko | Korean | Batch 7 | ⏳ Pending |
+| 33 | tr | Turkish | Batch 7 | ⏳ Pending |
+| 34 | th | Thai | Batch 7 | ⏳ Pending |
+| 35 | vi | Vietnamese | Batch 7 | ⏳ Pending |
+| 36 | id | Indonesian | Batch 7 | ⏳ Pending |
+| 37 | ms | Malay | Batch 7 | ⏳ Pending |
 
 ---
-
-## 📂 GitHub Repositories (saubhtech)
-
-| Repo | Type | Description | Status |
-|------|------|-------------|--------|
-| **saubh-tech** | Public | Main website (Next.js + i18n) | ✅ Live |
-| **saubh-lang** | Private | Language microservice (Docker) | 🔧 Building |
-| **saubh-opus** | Private | Monorepo (website, CRM, APIs) | Archived |
-| **chatgpt** | Private | ChatGPT related | Recent |
-| **whatsapp-crm-frontend** | Private | WhatsApp CRM UI | Paused |
-| **whatsapp-crm-frontend1** | Private | WhatsApp CRM UI v2 | Paused |
-| **learn-saubh-cms** | Public | Learning CMS | Paused |
-| **temp-assets** | Public | Temporary image assets | Utility |
-| **tata-webhook** | Public | Tata webhook | Utility |
-| **Zugnuu** | Public | Zugnuu project | Inactive |
-| **zuugnu-production** | Public | Zugnuu production | Inactive |
 
 ## 🔄 Development Workflow
 
@@ -155,106 +181,34 @@ Server (/data/projects/saubh-gig)
 Live (https://saubh.tech)
 ```
 
-```
-Local PC (C:\Projects\saubh-lang)
-    ↓ git push
-GitHub (saubhtech/saubh-lang)
-    ↓ git pull (on server)
-Server (/data/projects/saubh-lang)
-    ↓ docker compose up -d --build
-Live (https://saubh.tech/api/lang/*)
-```
-
-## 🛡️ Backup Strategy (3-Copy Rule)
-
-Every piece of code exists in **3 places** at all times: Local PC, GitHub, Google Drive.
-
-### Copy 1: Local PC (Real-time)
-| Item | Detail |
-|------|--------|
-| **Location** | `C:\Projects\saubh-tech\` + `C:\Projects\saubh-lang\` |
-| **Method** | Git commits (version history) |
-| **Frequency** | Every code change |
-| **Dated Backups** | `C:\Backups\SaubhTech\YYYY-MM-DD\` |
-| **Script** | `C:\Projects\saubh-tech\backup-local.ps1` |
-| **Retention** | 30 days of date-stamped zips |
-| **Run** | `powershell -ExecutionPolicy Bypass -File backup-local.ps1` |
-
-### Copy 2: GitHub (Every Push)
-| Item | Detail |
-|------|--------|
-| **Repos** | saubhtech/saubh-tech + saubhtech/saubh-lang |
-| **Method** | `git push origin main` |
-| **Frequency** | Every change |
-| **Version Tags** | `git tag v1.0-description` before major changes |
-
-### Copy 3: Google Drive (Daily Automated)
-| Item | Detail |
-|------|--------|
-| **Location** | `gdrive:SaubhTech-Backups/YYYY-MM-DD/` |
-| **Method** | rclone (server cron) |
-| **Script** | `/home/admin1/scripts/backup-server.sh` |
-| **Cron** | `30 18 * * *` (midnight IST = 18:30 UTC) |
-| **Retention** | 15 days on server, unlimited on Drive |
-| **Contents** | Source tar.gz + server configs + DB dump |
-
-## 📋 Server Commands Cheatsheet
+## 📋 Server Deploy Commands
 
 ```bash
 # SSH into server
 ssh -p 5104 admin1@103.67.236.186
 
-# Deploy saubh-tech (website)
+# Deploy saubh-tech
 cd /data/projects/saubh-gig
 git pull origin main
-pnpm install
 pnpm build
 pm2 restart saubh-gig
 
-# Deploy saubh-lang (language service)
-cd /data/projects/saubh-lang
-git pull origin main
-docker compose up -d --build
-
 # Check status
 pm2 status
-docker compose -f /data/projects/saubh-lang/docker-compose.yml ps
-pm2 logs saubh-gig
-```
-
-## 📋 Local Dev Commands
-
-```powershell
-# Start saubh-tech local development
-cd C:\Projects\saubh-tech
-pnpm dev
-
-# Test language switching locally
-# Visit: http://localhost:3000?lang=hi
-# Visit: http://localhost:3000?lang=bn
-# Visit: http://localhost:3000?lang=ar  (RTL test)
-
-# Push changes to GitHub
-git add .
-git commit -m "description of change"
-git push origin main
+pm2 logs saubh-gig --lines 20
 ```
 
 ## ⚠️ Lessons Learned
 
 1. **Always commit ALL project files to GitHub** — including `src/app/`, not just `app/`
-2. **Server backups must include `/data/projects/`** — not just `/home/admin1/`
-3. **Never edit live server directly** — always develop locally, test, then push
-4. **Tag before major changes**: `git tag before-change-description`
-5. **Next.js directory priority**: `app/` overrides `src/app/` when both exist — never have both
-6. **Tailwind PostCSS strips custom CSS** — if using custom CSS, remove `@tailwindcss/postcss` from postcss.config.mjs
-7. **Smart quotes break JS** — curly apostrophes in strings cause parse errors; use double quotes
-8. **Split HTML into React components** — avoid `dangerouslySetInnerHTML`; use proper components
-9. **Non-interactive SSH loses PATH** — `pnpm`, `pm2` not found via `ssh user@host "cmd"`. SSH in interactively
-10. **Chrome autofill overrides placeholders** — use `autoComplete="off"` and autofill CSS overrides
-11. **PowerShell `$` in SSH commands fails** — use single quotes to avoid variable expansion
-12. **Docker model volumes persist** — AI model weights in named volumes survive container rebuilds
-13. **i18n: Extract ALL strings to a central dictionary** — never hardcode text in components
-14. **i18n: Use cookie for language persistence** — URL params alone don't survive navigation
-15. **i18n: Always fall back to English** — if translation API is down, show English not blank
-16. **i18n: Set 500ms timeout for middleware API calls** — never slow down page load for geo-detect
+2. **Never edit live server directly** — always push to GitHub, pull on server
+3. **Tag before major changes**: `git tag before-change-description`
+4. **Smart quotes break JS** — curly apostrophes in strings cause parse errors
+5. **i18n: Extract ALL strings to en.ts** — never hardcode text in components
+6. **i18n: Use cookie for language persistence** — URL params alone don't survive navigation
+7. **i18n: Always fall back to English** — `{ ...enBase, ...langStrings }` merge
+8. **i18n: Use TranslationStrings type** — TypeScript enforces complete translations at build time
+9. **i18n: NEVER use translated text as React key** — causes invisible sections due to anim-up/ScrollAnimations conflict. Always use stable `id` or `index`
+10. **i18n: Use explicit LANG_LOADERS map** — not template literal `import(\`./strings/${code}\`)` which Turbopack can't resolve
+11. **i18n: en.ts uses `as const`** — need `const enBase: Record<string, string> = en` for dynamic key lookups in TranslationProvider
+12. **i18n: API route imports must match existing files** — never import a language file that hasn't been pushed yet
