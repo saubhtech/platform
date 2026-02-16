@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import './globals.css';
+import './mobile-lang.css';
 
 export const metadata: Metadata = {
   title: 'Saubh.Tech — Phygital Gig Marketplace | UGC & Branding Platform',
