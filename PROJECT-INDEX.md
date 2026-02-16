@@ -1,5 +1,5 @@
 # Saubh.Tech — Project Index
-> Last updated: February 16, 2026 (i18n type-safety + stable React keys + direct dynamic imports)
+> Last updated: February 16, 2026 (Bengali added, stable React keys, direct dynamic imports)
 
 ## 🏗️ Infrastructure
 
@@ -66,6 +66,7 @@ All `.map()` in components MUST use **stable non-translated keys** (`id`, `index
 2. Register loader in TranslationProvider.tsx:
    const LANG_LOADERS: Record<string, LangLoader> = {
      hi: () => import('./strings/hi'),
+     bn: () => import('./strings/bn'),
      xx: () => import('./strings/xx'),  // ← add this line
    };
 
@@ -131,15 +132,15 @@ All `.map()` in components MUST use **stable non-translated keys** (`id`, `index
 |---|------|----------|--------|------|
 | 1 | en | English | ✅ Master (212 keys) | `strings/en.ts` |
 | 2 | hi | Hindi | ✅ Complete (212 keys) | `strings/hi.ts` |
+| 3 | bn | Bengali | ✅ Complete (212 keys) | `strings/bn.ts` |
 
 ### Pending — Indian Languages (22 total, prioritized by speaker count)
 | # | Code | Language | Speakers | Batch | Status |
 |---|------|----------|----------|-------|--------|
-| 3 | bn | Bengali | 230M | Batch 1 | ⏳ Pending |
 | 4 | te | Telugu | 83M | Batch 1 | ⏳ Pending |
 | 5 | mr | Marathi | 83M | Batch 1 | ⏳ Pending |
 | 6 | ta | Tamil | 78M | Batch 1 | ⏳ Pending |
-| 7 | gu | Gujarati | 56M | Batch 1 | ⏳ Pending |
+| 7 | gu | Gujarati | 56M | Batch 2 | ⏳ Pending |
 | 8 | kn | Kannada | 44M | Batch 2 | ⏳ Pending |
 | 9 | ml | Malayalam | 38M | Batch 2 | ⏳ Pending |
 | 10 | pa | Punjabi | 33M | Batch 2 | ⏳ Pending |
@@ -209,6 +210,82 @@ pm2 logs saubh-gig --lines 20
 7. **i18n: Always fall back to English** — `{ ...enBase, ...langStrings }` merge
 8. **i18n: Use TranslationStrings type** — TypeScript enforces complete translations at build time
 9. **i18n: NEVER use translated text as React key** — causes invisible sections due to anim-up/ScrollAnimations conflict. Always use stable `id` or `index`
-10. **i18n: Use explicit LANG_LOADERS map** — not template literal `import(\`./strings/${code}\`)` which Turbopack can't resolve
+10. **i18n: Use explicit LANG_LOADERS map** — not template literal `` import(`./strings/${code}`) `` which Turbopack can't resolve
 11. **i18n: en.ts uses `as const`** — need `const enBase: Record<string, string> = en` for dynamic key lookups in TranslationProvider
 12. **i18n: API route imports must match existing files** — never import a language file that hasn't been pushed yet
+
+---
+
+## 🚀 New Session Prompt Template
+
+When starting a new Claude session for this project, paste the following prompt:
+
+---
+
+### PROMPT TO COPY:
+
+```
+Project: Saubh.Tech — Phygital Gig Marketplace
+Repo: github.com/saubhtech/saubh-tech (public, branch: main)
+Server: 103.67.236.186:5104, path: /data/projects/saubh-gig
+
+BEFORE doing anything, read these files in order using github:get_file_contents (owner=saubhtech, repo=saubh-tech):
+
+1. path=PROJECT-INDEX.md — Full project context, architecture, i18n status, lessons learned
+2. path=src/lib/i18n/strings/en.ts — Master English strings (212 keys, source of truth)
+3. path=src/lib/i18n/TranslationProvider.tsx — Translation loading + LANG_LOADERS map
+4. path=src/lib/i18n/languages.ts — All 37 language definitions
+
+For i18n translation tasks, also read:
+5. path=src/lib/i18n/strings/hi.ts — Reference translation (Hindi, use as template format)
+
+TASK: [describe your task here]
+
+RULES:
+- Never use translated text as React key (causes invisible sections)
+- Use TranslationStrings type for compile-time enforcement
+- Register new languages in LANG_LOADERS after pushing the .ts file
+- Deploy: cd /data/projects/saubh-gig && git pull origin main && pnpm build && pm2 restart saubh-gig
+```
+
+---
+
+### EXAMPLE: Adding a new language (e.g., Telugu)
+
+```
+Project: Saubh.Tech — Phygital Gig Marketplace
+Repo: github.com/saubhtech/saubh-tech (public, branch: main)
+Server: 103.67.236.186:5104, path: /data/projects/saubh-gig
+
+BEFORE doing anything, read these files using github:get_file_contents (owner=saubhtech, repo=saubh-tech):
+1. path=PROJECT-INDEX.md
+2. path=src/lib/i18n/strings/en.ts
+3. path=src/lib/i18n/TranslationProvider.tsx
+4. path=src/lib/i18n/strings/hi.ts
+
+TASK: Add Telugu (te) translation. Create strings/te.ts with all 212 keys translated.
+Register it in LANG_LOADERS. Update PROJECT-INDEX.md status.
+```
+
+### EXAMPLE: Fixing a component bug
+
+```
+Project: Saubh.Tech — Phygital Gig Marketplace
+Repo: github.com/saubhtech/saubh-tech (public, branch: main)
+
+BEFORE doing anything, read: path=PROJECT-INDEX.md
+
+TASK: The Pricing section cards are not rendering on mobile. Debug and fix.
+Read: src/components/Pricing.tsx and src/app/globals.css
+```
+
+### EXAMPLE: General website changes
+
+```
+Project: Saubh.Tech — Phygital Gig Marketplace
+Repo: github.com/saubhtech/saubh-tech (public, branch: main)
+
+BEFORE doing anything, read: path=PROJECT-INDEX.md
+
+TASK: [Add new blog section / Change hero text / Update pricing / etc.]
+```
