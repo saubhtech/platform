@@ -1,5 +1,5 @@
 # Saubh.Tech — Project Index
-> Last updated: February 16, 2026 (9 languages active: en, hi, bn, te, mr, ta, gu, kn, ml)
+> Last updated: February 16, 2026 (10 languages active: en, hi, bn, te, mr, ta, gu, kn, ml, pa)
 
 ## 🏗️ Infrastructure
 
@@ -139,12 +139,12 @@ All `.map()` in components MUST use **stable non-translated keys** (`id`, `index
 | 7 | gu | Gujarati | Gujarati | 212 | `strings/gu.ts` | ✅ Active |
 | 8 | kn | Kannada | Kannada | 212 | `strings/kn.ts` | ✅ Active |
 | 9 | ml | Malayalam | Malayalam | 212 | `strings/ml.ts` | ✅ Active |
+| 10 | pa | Punjabi | Gurmukhi | 212 | `strings/pa.ts` | ✅ Active |
 
-### ⏳ Pending — Indian Languages (remaining 14)
+### ⏳ Pending — Indian Languages (remaining 13)
 | # | Code | Language | Script | Speakers | Status |
 |---|------|----------|--------|----------|--------|
-| 10 | pa | Punjabi | Gurmukhi | 33M | ⏳ Next |
-| 11 | or | Odia | Odia | 35M | ⏳ Pending |
+| 11 | or | Odia | Odia | 35M | ⏳ Next |
 | 12 | as | Assamese | Bengali | 15M | ⏳ Pending |
 | 13 | ur | Urdu | Arabic (RTL) | 70M | ⏳ Pending |
 | 14 | ne | Nepali | Devanagari | 16M | ⏳ Pending |
@@ -269,72 +269,3 @@ RULES:
 ```
 
 ---
-
-### Example Prompts
-
-#### Adding a New Language (e.g., Punjabi)
-
-```
-Project: Saubh.Tech — Phygital Gig Marketplace
-Repo: github.com/saubhtech/saubh-tech (public, branch: main)
-Server: 103.67.236.186:5104, path: /data/projects/saubh-gig
-
-BEFORE doing anything, read these files using github:get_file_contents (owner=saubhtech, repo=saubh-tech):
-1. path=PROJECT-INDEX.md
-2. path=src/lib/i18n/strings/en.ts
-3. path=src/lib/i18n/TranslationProvider.tsx
-4. path=src/lib/i18n/strings/hi.ts
-
-TASK: Add Punjabi (pa) translation.
-- Create src/lib/i18n/strings/pa.ts with all 212 keys translated to Punjabi
-- Use TranslationStrings type for compile-time safety
-- Uncomment/add pa loader in LANG_LOADERS in TranslationProvider.tsx
-- Update PROJECT-INDEX.md status from ⏳ to ✅
-- Push all changes to main branch
-```
-
-#### Fixing a Component Bug
-
-```
-Project: Saubh.Tech — Phygital Gig Marketplace
-Repo: github.com/saubhtech/saubh-tech (public, branch: main)
-
-BEFORE doing anything, read: path=PROJECT-INDEX.md
-
-TASK: The Pricing section cards are not rendering on mobile. Debug and fix.
-Read: src/components/Pricing.tsx and src/app/globals.css
-```
-
-#### General Website Changes
-
-```
-Project: Saubh.Tech — Phygital Gig Marketplace
-Repo: github.com/saubhtech/saubh-tech (public, branch: main)
-
-BEFORE doing anything, read: path=PROJECT-INDEX.md
-
-TASK: [Add new blog section / Change hero text / Update pricing / etc.]
-```
-
-#### Adding Multiple Languages in One Session
-
-```
-Project: Saubh.Tech — Phygital Gig Marketplace
-Repo: github.com/saubhtech/saubh-tech (public, branch: main)
-
-BEFORE doing anything, read these files using github:get_file_contents (owner=saubhtech, repo=saubh-tech):
-1. path=PROJECT-INDEX.md
-2. path=src/lib/i18n/strings/en.ts
-3. path=src/lib/i18n/TranslationProvider.tsx
-4. path=src/lib/i18n/strings/hi.ts
-
-TASK: Add the following languages one by one:
-- Punjabi (pa), Odia (or), Assamese (as)
-
-For each language:
-1. Create strings/xx.ts with all 212 keys using TranslationStrings type
-2. Add loader to LANG_LOADERS in TranslationProvider.tsx
-3. Update PROJECT-INDEX.md status
-
-Push all changes when done.
-```
