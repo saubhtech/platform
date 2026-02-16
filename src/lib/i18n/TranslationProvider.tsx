@@ -43,11 +43,18 @@ type LangLoader = () => Promise<{ default: Record<string, string> }>;
 
 const LANG_LOADERS: Record<string, LangLoader> = {
   hi: () => import('./strings/hi'),
-  // bn: () => import('./strings/bn'),
-  // ta: () => import('./strings/ta'),
+  bn: () => import('./strings/bn'),
   // te: () => import('./strings/te'),
   // mr: () => import('./strings/mr'),
+  // ta: () => import('./strings/ta'),
   // gu: () => import('./strings/gu'),
+  // kn: () => import('./strings/kn'),
+  // ml: () => import('./strings/ml'),
+  // pa: () => import('./strings/pa'),
+  // or: () => import('./strings/or'),
+  // as: () => import('./strings/as'),
+  // ur: () => import('./strings/ur'),
+  // ne: () => import('./strings/ne'),
 };
 
 // ─── Provider ───
