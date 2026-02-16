@@ -11,28 +11,31 @@ export default function Pricing() {
 
   const plans = [
     {
+      id: 'starter',
       tier: t('pricing.starter.tier'),
       name: t('pricing.starter.name'),
       desc: t('pricing.starter.desc'),
-      prices: { quarterly: '₹15,999', half: '₹29,999', annual: '₹55,999' },
+      prices: { quarterly: '\u20b915,999', half: '\u20b929,999', annual: '\u20b955,999' },
       features: [t('pricing.starter.f1'), t('pricing.starter.f2'), t('pricing.starter.f3')],
       popular: false,
       delay: '0s',
     },
     {
+      id: 'growth',
       tier: t('pricing.growth.tier'),
       name: t('pricing.growth.name'),
       desc: t('pricing.growth.desc'),
-      prices: { quarterly: '₹35,999', half: '₹67,999', annual: '₹1,25,999' },
+      prices: { quarterly: '\u20b935,999', half: '\u20b967,999', annual: '\u20b91,25,999' },
       features: [t('pricing.growth.f1'), t('pricing.growth.f2'), t('pricing.growth.f3')],
       popular: true,
       delay: '.1s',
     },
     {
+      id: 'pro',
       tier: t('pricing.pro.tier'),
       name: t('pricing.pro.name'),
       desc: t('pricing.pro.desc'),
-      prices: { quarterly: '₹74,999', half: '₹1,39,999', annual: '₹2,59,999' },
+      prices: { quarterly: '\u20b974,999', half: '\u20b91,39,999', annual: '\u20b92,59,999' },
       features: [t('pricing.pro.f1'), t('pricing.pro.f2'), t('pricing.pro.f3'), t('pricing.pro.f4')],
       popular: false,
       delay: '.2s',
@@ -71,7 +74,7 @@ export default function Pricing() {
         <div className="pricing-grid">
           {plans.map((plan) => (
             <div
-              key={plan.tier}
+              key={plan.id}
               className={`price-card anim-up${plan.popular ? ' popular' : ''}`}
               style={{ transitionDelay: plan.delay }}
             >
@@ -85,8 +88,8 @@ export default function Pricing() {
                 </div>
               </div>
               <div className="price-features">
-                {plan.features.map((feat) => (
-                  <div key={feat} className="price-feat">
+                {plan.features.map((feat, i) => (
+                  <div key={i} className="price-feat">
                     <i className="fas fa-check-circle"></i> {feat}
                   </div>
                 ))}

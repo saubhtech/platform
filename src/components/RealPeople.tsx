@@ -7,12 +7,14 @@ export default function RealPeople() {
 
   const cards = [
     {
+      id: 'providers',
       icon: 'fas fa-briefcase',
       title: t('rp.providers.title'),
       items: [t('rp.providers.1'), t('rp.providers.2'), t('rp.providers.3')],
       delay: '0s',
     },
     {
+      id: 'clients',
       icon: 'fas fa-user-tie',
       title: t('rp.clients.title'),
       items: [t('rp.clients.1'), t('rp.clients.2'), t('rp.clients.3')],
@@ -31,7 +33,7 @@ export default function RealPeople() {
         <div className="rp-grid">
           {cards.map((card) => (
             <div
-              key={card.title}
+              key={card.id}
               className="rp-card anim-up"
               style={{ transitionDelay: card.delay }}
             >

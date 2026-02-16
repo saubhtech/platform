@@ -15,6 +15,7 @@ export default function Community() {
   const { t } = useTranslation();
 
   const voices = [1, 2, 3, 4, 5, 6].map((n, i) => ({
+    id: `v${n}`,
     gradient: gradients[i],
     text: t(`community.v${n}.text`),
     author: t(`community.v${n}.author`),
@@ -37,7 +38,7 @@ export default function Community() {
         </div>
         <div className="community-row">
           {voices.map((voice) => (
-            <div key={voice.author} className="voice-card">
+            <div key={voice.id} className="voice-card">
               <div className="voice-thumb" style={{ background: voice.gradient }}>
                 <div className="play-btn">
                   <i className="fas fa-play"></i>

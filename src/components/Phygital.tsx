@@ -6,9 +6,9 @@ export default function Phygital() {
   const { t } = useTranslation();
 
   const cards = [
-    { icon: 'fas fa-handshake', title: t('phygital.card1'), delay: '0s' },
-    { icon: 'fas fa-rocket', title: t('phygital.card2'), delay: '.1s' },
-    { icon: 'fas fa-arrows-turn-to-dots', title: t('phygital.card3'), delay: '.2s' },
+    { id: 'trust', icon: 'fas fa-handshake', title: t('phygital.card1'), delay: '0s' },
+    { id: 'scale', icon: 'fas fa-rocket', title: t('phygital.card2'), delay: '.1s' },
+    { id: 'synergy', icon: 'fas fa-arrows-turn-to-dots', title: t('phygital.card3'), delay: '.2s' },
   ];
 
   return (
@@ -22,7 +22,7 @@ export default function Phygital() {
         <div className="phygital-grid">
           {cards.map((card) => (
             <div
-              key={card.title}
+              key={card.id}
               className="phygital-card anim-up"
               style={{ transitionDelay: card.delay }}
             >

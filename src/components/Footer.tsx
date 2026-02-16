@@ -13,31 +13,12 @@ const socials = [
   { href: '#', label: 'Pinterest', icon: 'fab fa-pinterest-p' },
 ];
 
+const communityKeys = ['footer.community.about', 'footer.community.founders', 'footer.community.advisor', 'footer.community.team', 'footer.community.earnings'] as const;
+const businessKeys = ['footer.business.comm', 'footer.business.marketing', 'footer.business.hr', 'footer.business.counselling'] as const;
+const legalKeys = ['footer.legal.privacy', 'footer.legal.terms', 'footer.legal.escrow', 'footer.legal.refund', 'footer.legal.payment'] as const;
+
 export default function Footer() {
   const { t } = useTranslation();
-
-  const communityLinks = [
-    t('footer.community.about'),
-    t('footer.community.founders'),
-    t('footer.community.advisor'),
-    t('footer.community.team'),
-    t('footer.community.earnings'),
-  ];
-
-  const businessLinks = [
-    t('footer.business.comm'),
-    t('footer.business.marketing'),
-    t('footer.business.hr'),
-    t('footer.business.counselling'),
-  ];
-
-  const legalLinks = [
-    t('footer.legal.privacy'),
-    t('footer.legal.terms'),
-    t('footer.legal.escrow'),
-    t('footer.legal.refund'),
-    t('footer.legal.payment'),
-  ];
 
   return (
     <footer className="footer" role="contentinfo">
@@ -83,24 +64,24 @@ export default function Footer() {
           {/* Community */}
           <div className="footer-col">
             <h4>{t('footer.community')}</h4>
-            {communityLinks.map((link) => (
-              <a key={link} href="#">{link}</a>
+            {communityKeys.map((key) => (
+              <a key={key} href="#">{t(key)}</a>
             ))}
           </div>
 
           {/* Business */}
           <div className="footer-col">
             <h4>{t('footer.business')}</h4>
-            {businessLinks.map((link) => (
-              <a key={link} href="#">{link}</a>
+            {businessKeys.map((key) => (
+              <a key={key} href="#">{t(key)}</a>
             ))}
           </div>
 
           {/* Legal */}
           <div className="footer-col">
             <h4>{t('footer.legal')}</h4>
-            {legalLinks.map((link) => (
-              <a key={link} href="#">{link}</a>
+            {legalKeys.map((key) => (
+              <a key={key} href="#">{t(key)}</a>
             ))}
           </div>
         </div>

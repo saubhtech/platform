@@ -6,14 +6,14 @@ export default function Learning() {
   const { t } = useTranslation();
 
   const features = [
-    { icon: 'fas fa-book-open', text: t('learning.feat1'), delay: '0s' },
-    { icon: 'fas fa-chalkboard-user', text: t('learning.feat2'), delay: '.1s' },
-    { icon: 'fas fa-certificate', text: t('learning.feat3'), delay: '.2s' },
+    { id: 'study', icon: 'fas fa-book-open', text: t('learning.feat1'), delay: '0s' },
+    { id: 'classes', icon: 'fas fa-chalkboard-user', text: t('learning.feat2'), delay: '.1s' },
+    { id: 'cert', icon: 'fas fa-certificate', text: t('learning.feat3'), delay: '.2s' },
   ];
 
   const programs = [
-    { icon: 'fas fa-heart-pulse', name: t('learning.prog1') },
-    { icon: 'fas fa-chart-column', name: t('learning.prog2') },
+    { id: 'lcp', icon: 'fas fa-heart-pulse', name: t('learning.prog1') },
+    { id: 'bcp', icon: 'fas fa-chart-column', name: t('learning.prog2') },
   ];
 
   return (
@@ -27,7 +27,7 @@ export default function Learning() {
         </div>
         <div className="learning-features">
           {features.map((feat) => (
-            <div key={feat.text} className="learning-feat anim-up" style={{ transitionDelay: feat.delay }}>
+            <div key={feat.id} className="learning-feat anim-up" style={{ transitionDelay: feat.delay }}>
               <i className={feat.icon}></i>
               <p>{feat.text}</p>
             </div>
@@ -48,7 +48,7 @@ export default function Learning() {
         </div>
         <div className="training-row">
           {programs.map((prog) => (
-            <div key={prog.name} className="training-badge">
+            <div key={prog.id} className="training-badge">
               <i className={prog.icon}></i> {prog.name}
             </div>
           ))}

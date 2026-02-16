@@ -7,6 +7,7 @@ export default function Branding() {
 
   const cards = [
     {
+      id: 'aggregation',
       icon: 'fas fa-layer-group',
       title: t('branding.card1.title'),
       subtitle: t('branding.card1.subtitle'),
@@ -14,6 +15,7 @@ export default function Branding() {
       delay: '0s',
     },
     {
+      id: 'amplification',
       icon: 'fas fa-tower-broadcast',
       title: t('branding.card2.title'),
       subtitle: t('branding.card2.subtitle'),
@@ -21,6 +23,7 @@ export default function Branding() {
       delay: '.1s',
     },
     {
+      id: 'automation',
       icon: 'fas fa-gears',
       title: t('branding.card3.title'),
       subtitle: t('branding.card3.subtitle'),
@@ -46,7 +49,7 @@ export default function Branding() {
         <div className="branding-grid">
           {cards.map((card) => (
             <div
-              key={card.title}
+              key={card.id}
               className="branding-card anim-up"
               style={{ transitionDelay: card.delay }}
             >
