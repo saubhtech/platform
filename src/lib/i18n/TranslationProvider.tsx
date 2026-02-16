@@ -36,22 +36,19 @@ function setCookie(name: string, value: string, days: number = 365) {
 // ─── In-memory translation cache ───
 const translationCache = new Map<string, Record<string, string>>();
 
-// ─── Dynamic import loader ───
-// Each language file becomes a separate webpack chunk (code-split).
-// No API roundtrip needed — translations load directly as JS modules.
-async function importLanguage(code: string): Promise<Record<string, string> | null> {
-  try {
-    // Webpack sees this pattern and creates a chunk per language file.
-    // Only the requested language is downloaded.
-    const mod = await import(
-      /* webpackChunkName: "i18n-[request]" */
-      `./strings/${code}`
-    );
-    return mod.default as Record<string, string>;
-  } catch {
-    return null;
-  }
-}
+// ─── Language Loaders (explicit, Turbopack-safe) ───
+// Each loader creates a separate webpack chunk via code-splitting.
+// ⚠️ ADDING A NEW LANGUAGE? Just add its loader line here.
+type LangLoader = () => Promise<{ default: Record<string, string> }>;
+
+const LANG_LOADERS: Record<string, LangLoader> = {
+  hi: () => import('./strings/hi'),
+  // bn: () => import('./strings/bn'),
+  // ta: () => import('./strings/ta'),
+  // te: () => import('./strings/te'),
+  // mr: () => import('./strings/mr'),
+  // gu: () => import('./strings/gu'),
+};
 
 // ─── Provider ───
 export function TranslationProvider({ children }: { children: ReactNode }) {
@@ -73,22 +70,24 @@ export function TranslationProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    const loader = LANG_LOADERS[code];
+    if (!loader) {
+      console.warn(`[i18n] No loader for '${code}', using English`);
+      setStrings(enBase);
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const langStrings = await importLanguage(code);
-
-      if (langStrings) {
-        // Merge with English base (missing keys fall back to English)
-        const merged = { ...enBase, ...langStrings };
-        translationCache.set(code, merged);
-        setStrings(merged);
-      } else {
-        console.warn(`[i18n] Language '${code}' not available, using English`);
-        setStrings(enBase);
-      }
-    } catch {
-      console.warn(`[i18n] Failed to load '${code}', using English`);
+      const mod = await loader();
+      const langStrings = mod.default as Record<string, string>;
+      // Merge with English base (missing keys fall back to English)
+      const merged = { ...enBase, ...langStrings };
+      translationCache.set(code, merged);
+      setStrings(merged);
+    } catch (err) {
+      console.warn(`[i18n] Failed to load '${code}', using English`, err);
       setStrings(enBase);
     } finally {
       setLoading(false);
