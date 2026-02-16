@@ -56,7 +56,7 @@ const LANG_LOADERS: Record<string, LangLoader> = {
   as: () => import('./strings/as'),
   ur: () => import('./strings/ur'),
   // ─── Pending Languages (add loader when .ts file is pushed) ───
-  // ne: () => import('./strings/ne'),
+  ne: () => import('./strings/ne'),
   // sa: () => import('./strings/sa'),
   // mai: () => import('./strings/mai'),
   // kok: () => import('./strings/kok'),
@@ -68,7 +68,7 @@ const LANG_LOADERS: Record<string, LangLoader> = {
   // mni: () => import('./strings/mni'),
   // ar: () => import('./strings/ar'),
   // zh: () => import('./strings/zh'),
-  // fr: () => import('./strings/fr'),
+  fr: () => import('./strings/fr'),
   // de: () => import('./strings/de'),
   // ja: () => import('./strings/ja'),
   // ko: () => import('./strings/ko'),

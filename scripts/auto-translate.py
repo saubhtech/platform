@@ -627,8 +627,8 @@ def main():
         sys.exit(1)
 
     try:
-        global BATCH_SIZE
-        BATCH_SIZE = args.batch_size
+
+        # batch_size handled via args
 
         changed_langs = []
         for lang in target_langs:
