@@ -5,10 +5,9 @@ import hi from '@/lib/i18n/strings/hi';
 import bn from '@/lib/i18n/strings/bn';
 import ta from '@/lib/i18n/strings/ta';
 import te from '@/lib/i18n/strings/te';
-import mr from '@/lib/i18n/strings/mr';
 
 const TRANSLATIONS: Record<string, Record<string, string>> = {
-  hi, bn, ta, te, mr,
+  hi, bn, ta, te,
 };
 
 export async function POST(req: NextRequest) {
