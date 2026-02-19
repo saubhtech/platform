@@ -31,7 +31,7 @@ describe('Me (e2e)', () => {
     const user = await prisma.user.create({
       data: {
         email: `testuser-${Date.now()}@e2e.test`,
-        preferredLocale: 'hi-in',
+        preferredLocale: 'hi',
       },
     });
     userId = user.id;
@@ -70,7 +70,7 @@ describe('Me (e2e)', () => {
       .set('x-business-id', businessId)
       .expect(200);
 
-    expect(res.body).toHaveProperty('preferredLocale', 'hi-in');
+    expect(res.body).toHaveProperty('preferredLocale', 'hi');
     expect(res.body).toHaveProperty('id', userId);
     expect(res.body).toHaveProperty('email');
     expect(res.body).toHaveProperty('role', 'MEMBER');
@@ -83,15 +83,15 @@ describe('Me (e2e)', () => {
       .patch('/api/me/preferences')
       .set('x-user-id', userId)
       .set('x-business-id', businessId)
-      .send({ preferred_locale: 'ta-in' })
+      .send({ preferred_locale: 'ta' })
       .expect(200);
 
-    expect(res.body).toHaveProperty('preferredLocale', 'ta-in');
+    expect(res.body).toHaveProperty('preferredLocale', 'ta');
 
     // Reset back for other tests
     await prisma.user.update({
       where: { id: userId },
-      data: { preferredLocale: 'hi-in' },
+      data: { preferredLocale: 'hi' },
     });
   });
 
