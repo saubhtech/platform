@@ -85,8 +85,8 @@ typecheck: ## Type-check shared package
 
 # ─── Testing ─────────────────────────────────────────────────────────────────
 
-test-e2e: ## Run end-to-end tests (stub — wire to Playwright/Cypress)
-	@echo "⚠️  test-e2e: not yet wired. Add your test runner command here."
+test-e2e: ## Run API e2e tests against postgres_test (port 5433)
+	cd apps/api && pnpm test:e2e
 
 # ─── i18n ────────────────────────────────────────────────────────────────────
 
