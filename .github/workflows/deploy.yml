@@ -1,0 +1,52 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 5104
+          script_stop: true
+          script: |
+            set -e
+            cd /data/projects/platform
+
+            echo "── Pulling latest code ──"
+            git pull origin main
+
+            echo "── Installing dependencies ──"
+            pnpm install --frozen-lockfile
+
+            echo "── Building apps ──"
+            pnpm --filter @saubhtech/web build
+            pnpm --filter @saubhtech/admin build
+            pnpm --filter @saubhtech/api build
+
+            echo "── Running database migrations ──"
+            pnpm --filter @saubhtech/api prisma:migrate:prod
+
+            echo "── Restarting PM2 processes ──"
+            pm2 reload ecosystem.config.js --update-env
+
+            echo "── Verifying health ──"
+            sleep 5
+            curl -sf http://localhost:3000/api/healthz || echo "⚠️  Web health check failed"
+            curl -sf http://localhost:3001/api/healthz || echo "⚠️  API health check failed"
+
+            echo "✅ Deploy complete"
