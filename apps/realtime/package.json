@@ -1,0 +1,30 @@
+{
+  "name": "@saubhtech/realtime",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Saubh.Tech — WebSocket gateway (NestJS + Socket.io)",
+  "scripts": {
+    "dev": "nest start --watch --port 3002",
+    "build": "nest build",
+    "start": "node dist/main",
+    "start:prod": "node dist/main"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "@nestjs/platform-express": "^11.0.0",
+    "@nestjs/platform-socket.io": "^11.0.0",
+    "@nestjs/websockets": "^11.0.0",
+    "@saubhtech/shared": "workspace:*",
+    "ioredis": "^5.0.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1",
+    "socket.io": "^4.8.0"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.0",
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.0"
+  }
+}
