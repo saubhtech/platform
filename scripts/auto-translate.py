@@ -14,7 +14,7 @@ Usage:
   python3 auto-translate.py --status           # Show translation coverage
 
 Cron (every 6 hours):
-  0 */6 * * * cd /data/projects/saubh-gig && python3 scripts/auto-translate.py --log >> /var/log/saubh-i18n.log 2>&1
+  0 */6 * * * cd /data/projects/platform && python3 scripts/auto-translate.py --log >> /var/log/saubh-i18n.log 2>&1
 """
 
 import os
@@ -31,9 +31,10 @@ from typing import Dict, List, Optional, Tuple, Set
 
 # ─── Configuration ───────────────────────────────────────────────────────────
 
-PROJECT_DIR = Path("/data/projects/saubh-gig")
-STRINGS_DIR = PROJECT_DIR / "src" / "lib" / "i18n" / "strings"
-PROVIDER_FILE = PROJECT_DIR / "src" / "lib" / "i18n" / "TranslationProvider.tsx"
+PROJECT_DIR = Path("/data/projects/platform")
+WEB_DIR = PROJECT_DIR / "apps" / "web"
+STRINGS_DIR = WEB_DIR / "src" / "lib" / "i18n" / "strings"
+PROVIDER_FILE = WEB_DIR / "src" / "lib" / "i18n" / "TranslationProvider.tsx"
 EN_FILE = STRINGS_DIR / "en.ts"
 LOCK_FILE = PROJECT_DIR / ".auto-translate.lock"
 LOG_FILE = Path("/var/log/saubh-i18n.log")
@@ -371,7 +372,7 @@ def run_build() -> bool:
     """Run pnpm build and return True if successful."""
     logger.info("Running pnpm build...")
     result = subprocess.run(
-        ["pnpm", "build"],
+        ["pnpm", "--filter", "@saubhtech/web", "build"],
         cwd=str(PROJECT_DIR),
         capture_output=True,
         text=True,
@@ -425,7 +426,7 @@ def restart_pm2():
     """Restart PM2 process."""
     try:
         subprocess.run(
-            ["pm2", "restart", "saubh-gig"],
+            ["pm2", "restart", "saubh-web"],
             cwd=str(PROJECT_DIR), check=True, capture_output=True, timeout=15
         )
         logger.info("PM2 restarted")
