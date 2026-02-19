@@ -1,0 +1,256 @@
+// ─── Saubh.Tech Platform — Prisma Schema ────────────────────────────────────
+// All models scoped by businessId for multi-tenant safety.
+// IDs: cuid(). Timestamps: DateTime with defaults.
+// ─────────────────────────────────────────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ──────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+enum MemberRole {
+  ADMIN
+  MEMBER
+  OBSERVER
+}
+
+enum ConversationType {
+  DM
+  GROUP
+  BROADCAST
+}
+
+enum CallDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum CallStatus {
+  INITIATED
+  RINGING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  BUSY
+  NO_ANSWER
+  CANCELLED
+}
+
+// ─── Core Models ────────────────────────────────────────────────────────────
+
+model Business {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  clients          Client[]
+  memberships      UserMembership[]
+  conversations    Conversation[]
+  telephonyNumbers TelephonyNumber[]
+  telephonyCalls   TelephonyCall[]
+
+  @@index([slug])
+}
+
+model Client {
+  id         String   @id @default(cuid())
+  businessId String
+  name       String
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  business         Business          @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  memberships      UserMembership[]
+  conversations    Conversation[]
+  telephonyNumbers TelephonyNumber[]
+  telephonyCalls   TelephonyCall[]
+
+  @@index([businessId])
+}
+
+model User {
+  id              String   @id @default(cuid())
+  email           String   @unique
+  keycloakId      String?  @unique
+  preferredLocale String   @default("en")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  memberships           UserMembership[]
+  conversationMembers   ConversationMember[]
+  sentMessages          Message[]
+
+  @@index([email])
+  @@index([keycloakId])
+}
+
+model UserMembership {
+  id         String   @id @default(cuid())
+  userId     String
+  businessId String
+  clientId   String?
+  role       UserRole @default(MEMBER)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  client   Client?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, businessId, clientId])
+  @@index([userId])
+  @@index([businessId])
+  @@index([clientId])
+}
+
+// ─── Chat Models ────────────────────────────────────────────────────────────
+
+model Conversation {
+  id         String           @id @default(cuid())
+  businessId String
+  clientId   String?
+  type       ConversationType @default(DM)
+  title      String?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  // Relations
+  business Business             @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  client   Client?              @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  members  ConversationMember[]
+  messages Message[]
+
+  @@index([businessId])
+  @@index([clientId])
+  @@index([businessId, type])
+}
+
+model ConversationMember {
+  id             String     @id @default(cuid())
+  conversationId String
+  userId         String
+  role           MemberRole @default(MEMBER)
+  joinedAt       DateTime   @default(now())
+
+  // Relations
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([conversationId])
+  @@index([userId])
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  senderId       String
+  content        String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  conversation Conversation       @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User               @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  attachments  MessageAttachment[]
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([conversationId, createdAt])
+}
+
+model MessageAttachment {
+  id        String   @id @default(cuid())
+  messageId String
+  objectKey String
+  mimeType  String
+  size      Int
+  createdAt DateTime @default(now())
+
+  // Relations
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+}
+
+// ─── Telephony Models ───────────────────────────────────────────────────────
+
+model TelephonyNumber {
+  id               String   @id @default(cuid())
+  businessId       String
+  clientId         String?
+  provider         String
+  providerNumberId String
+  e164             String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  client   Client?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  @@unique([provider, providerNumberId])
+  @@index([businessId])
+  @@index([clientId])
+  @@index([e164])
+}
+
+model TelephonyCall {
+  id             String        @id @default(cuid())
+  businessId     String
+  clientId       String?
+  direction      CallDirection
+  from           String
+  to             String
+  status         CallStatus    @default(INITIATED)
+  startedAt      DateTime      @default(now())
+  endedAt        DateTime?
+  providerCallId String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  // Relations
+  business Business         @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  client   Client?          @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  events   TelephonyEvent[]
+
+  @@index([businessId])
+  @@index([clientId])
+  @@index([providerCallId])
+  @@index([businessId, status])
+}
+
+model TelephonyEvent {
+  id        String   @id @default(cuid())
+  callId    String
+  eventType String
+  payload   Json     @default("{}")
+  createdAt DateTime @default(now())
+
+  // Relations
+  call TelephonyCall @relation(fields: [callId], references: [id], onDelete: Cascade)
+
+  @@index([callId])
+  @@index([callId, eventType])
+}
