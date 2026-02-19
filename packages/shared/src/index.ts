@@ -1,4 +1,4 @@
 // @saubhtech/shared — barrel export
-export * from './types';
-export * from './constants';
-export * from './utils';
+export * from './types/index';
+export * from './constants/index';
+export * from './utils/index';
