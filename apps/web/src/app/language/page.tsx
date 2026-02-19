@@ -42,7 +42,7 @@ const ALL_LANGS: { code: string; name: string; native: string; engine: string }[
   { code: 'mai', name: 'Maithili', native: 'मैथिली', engine: 'indictrans2' },
   { code: 'kok', name: 'Konkani', native: 'कोंकणी', engine: 'indictrans2' },
   { code: 'doi', name: 'Dogri', native: 'डोगरी', engine: 'indictrans2' },
-  { code: 'sd', name: 'Sindhi', native: 'سنۅي', engine: 'indictrans2' },
+  { code: 'sd', name: 'Sindhi', native: 'سنڌي', engine: 'indictrans2' },
   { code: 'ks', name: 'Kashmiri', native: 'कॉशुर', engine: 'indictrans2' },
   { code: 'brx', name: 'Bodo', native: 'बड़ो', engine: 'indictrans2' },
   { code: 'sat', name: 'Santali', native: 'ᱥᱟᱱᱛᱟᱲᱤ', engine: 'indictrans2' },
