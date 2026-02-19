@@ -47,12 +47,18 @@ describe('Me (e2e)', () => {
   });
 
   afterAll(async () => {
-    // ─── Cleanup seed data ────────────────────────────────────────────
-    await prisma.userMembership.deleteMany({ where: { id: membershipId } });
-    await prisma.user.deleteMany({ where: { id: userId } });
-    await prisma.business.deleteMany({
-      where: { id: { in: [businessId, otherBusinessId] } },
-    });
+    // ─── Cleanup seed data (safe if app never booted) ─────────────────
+    if (prisma) {
+      try {
+        await prisma.userMembership.deleteMany({ where: { id: membershipId } });
+        await prisma.user.deleteMany({ where: { id: userId } });
+        await prisma.business.deleteMany({
+          where: { id: { in: [businessId, otherBusinessId] } },
+        });
+      } catch {
+        // ignore cleanup errors
+      }
+    }
     await closeApp();
   });
 
