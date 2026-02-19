@@ -10,6 +10,7 @@
     "dev:web": "pnpm --filter @saubhtech/web dev",
     "build:web": "pnpm --filter @saubhtech/web build",
     "lint": "pnpm -r lint",
+    "typecheck": "pnpm --filter @saubhtech/shared typecheck",
     "clean": "pnpm -r exec rm -rf .next node_modules dist",
     "validate-i18n": "npx ts-node scripts/validate-i18n.ts"
   },
