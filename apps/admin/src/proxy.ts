@@ -6,6 +6,7 @@ import {
 } from '@saubhtech/shared';
 
 const COOKIE_MAX_AGE = 365 * 24 * 60 * 60; // 1 year
+const AUTH_COOKIE = 'saubh_admin_session';
 
 // ─── Lang code → URL locale (Indian languages only for now) ─────────
 const LANG_TO_LOCALE: Record<string, string> = {
@@ -21,10 +22,17 @@ const CF_COUNTRY_TO_LOCALE: Record<string, string> = {
   IN: 'en-in', BD: 'bn-in', NP: 'ne-in', PK: 'ur-in', LK: 'ta-in',
 };
 
+// ─── Public paths that don't require auth ───────────────────────────
+const PUBLIC_PATHS = ['/login', '/api/auth'];
+
+function isPublicPath(pathname: string): boolean {
+  return PUBLIC_PATHS.some((path) => pathname.includes(path));
+}
+
 // ─── Proxy (Next.js 16 convention, replaces middleware.ts) ──────────
-// Locale-in-URL routing for admin portal.
+// Handles both locale-in-URL routing and Keycloak auth checks.
 //
-// Detection priority:
+// Locale detection priority:
 //   1. Cookie saubh_locale (if valid)
 //   2. Accept-Language header
 //   3. Cloudflare cf-ipcountry
@@ -33,19 +41,30 @@ const CF_COUNTRY_TO_LOCALE: Record<string, string> = {
 export default function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // ─── Skip: static assets, API, internal Next.js routes ──────────
+  // ─── Skip: static assets, internal Next.js routes ───────────────
   if (
     pathname.startsWith('/_next') ||
-    pathname.startsWith('/api') ||
     pathname === '/favicon.ico'
   ) {
     return NextResponse.next();
   }
 
+  // ─── Skip auth check for API routes (they handle their own auth) ─
+  if (pathname.startsWith('/api')) {
+    return NextResponse.next();
+  }
+
   // ─── Check if path already has a valid locale prefix ────────────
   const firstSegment = pathname.split('/')[1] ?? '';
+  const hasLocale = SUPPORTED_LOCALES_SET.has(firstSegment);
 
-  if (SUPPORTED_LOCALES_SET.has(firstSegment)) {
+  if (hasLocale) {
+    // ─── Auth check (skip for public paths like /login) ───────────
+    if (!isPublicPath(pathname)) {
+      const authResult = checkAuth(req, firstSegment);
+      if (authResult) return authResult;
+    }
+
     const res = NextResponse.next();
     res.cookies.set(COOKIE_NAME, firstSegment, {
       path: '/',
@@ -68,6 +87,42 @@ export default function proxy(req: NextRequest) {
     sameSite: 'lax',
   });
   return res;
+}
+
+// ─── Auth check ─────────────────────────────────────────────────────
+function checkAuth(
+  req: NextRequest,
+  locale: string,
+): NextResponse | null {
+  const session = req.cookies.get(AUTH_COOKIE);
+
+  // No session → redirect to login
+  if (!session) {
+    return NextResponse.redirect(
+      new URL(`/${locale}/login`, req.url),
+    );
+  }
+
+  // Check token expiry
+  try {
+    const data = JSON.parse(session.value);
+    if (data.expiresAt && Date.now() >= data.expiresAt) {
+      const response = NextResponse.redirect(
+        new URL(`/${locale}/login?error=Session+expired`, req.url),
+      );
+      response.cookies.delete(AUTH_COOKIE);
+      return response;
+    }
+  } catch {
+    // Malformed cookie → clear and redirect
+    const response = NextResponse.redirect(
+      new URL(`/${locale}/login`, req.url),
+    );
+    response.cookies.delete(AUTH_COOKIE);
+    return response;
+  }
+
+  return null; // Auth OK, continue
 }
 
 // ─── Locale detection chain ─────────────────────────────────────────
@@ -109,5 +164,5 @@ function detectLocale(req: NextRequest): string {
 
 // ─── Matcher ────────────────────────────────────────────────────────
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };
