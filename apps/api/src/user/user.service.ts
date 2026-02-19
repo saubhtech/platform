@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { SUPPORTED_LOCALES } from '@saubhtech/shared';
+import { SUPPORTED_LOCALES } from '../constants/locales';
 import { UpdatePreferencesDto } from './dto/update-preferences.dto';
 
 @Injectable()
@@ -52,7 +52,7 @@ export class UserService {
 
   /**
    * Update user locale preference.
-   * Validates locale against SUPPORTED_LOCALES from @saubhtech/shared.
+   * Validates locale against SUPPORTED_LOCALES.
    * Scoped by businessId for tenant safety.
    */
   async updatePreferences(
