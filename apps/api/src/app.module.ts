@@ -5,6 +5,7 @@ import { UserModule } from './user/user.module';
 import { WebhookModule } from './webhook/webhook.module';
 import { AuthModule } from './auth/auth.module';
 import { AdminModule } from './admin/admin.module';
+import { MasterModule } from './master/master.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { AdminModule } from './admin/admin.module';
     WebhookModule,
     AuthModule,
     AdminModule,
+    MasterModule,
   ],
 })
 export class AppModule {}

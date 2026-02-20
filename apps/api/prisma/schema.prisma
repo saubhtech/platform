@@ -4,12 +4,14 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  schemas  = ["public", "master"]
 }
 
 // ─── Enums ──────────────────────────────────────────────────────────────────
@@ -19,23 +21,31 @@ enum UserRole {
   ADMIN
   MEMBER
   VIEWER
+
+  @@schema("public")
 }
 
 enum MemberRole {
   ADMIN
   MEMBER
   OBSERVER
+
+  @@schema("public")
 }
 
 enum ConversationType {
   DM
   GROUP
   BROADCAST
+
+  @@schema("public")
 }
 
 enum CallDirection {
   INBOUND
   OUTBOUND
+
+  @@schema("public")
 }
 
 enum CallStatus {
@@ -47,6 +57,8 @@ enum CallStatus {
   BUSY
   NO_ANSWER
   CANCELLED
+
+  @@schema("public")
 }
 
 // ─── Core Models ────────────────────────────────────────────────────────────
@@ -67,6 +79,7 @@ model Business {
   telephonyCalls   TelephonyCall[]
 
   @@index([slug])
+  @@schema("public")
 }
 
 model Client {
@@ -85,6 +98,7 @@ model Client {
   telephonyCalls   TelephonyCall[]
 
   @@index([businessId])
+  @@schema("public")
 }
 
 model User {
@@ -102,6 +116,7 @@ model User {
 
   @@index([email])
   @@index([keycloakId])
+  @@schema("public")
 }
 
 model UserMembership {
@@ -122,6 +137,7 @@ model UserMembership {
   @@index([userId])
   @@index([businessId])
   @@index([clientId])
+  @@schema("public")
 }
 
 // ─── Chat Models ────────────────────────────────────────────────────────────
@@ -144,6 +160,7 @@ model Conversation {
   @@index([businessId])
   @@index([clientId])
   @@index([businessId, type])
+  @@schema("public")
 }
 
 model ConversationMember {
@@ -160,6 +177,7 @@ model ConversationMember {
   @@unique([conversationId, userId])
   @@index([conversationId])
   @@index([userId])
+  @@schema("public")
 }
 
 model Message {
@@ -178,6 +196,7 @@ model Message {
   @@index([conversationId])
   @@index([senderId])
   @@index([conversationId, createdAt])
+  @@schema("public")
 }
 
 model MessageAttachment {
@@ -192,6 +211,7 @@ model MessageAttachment {
   message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
   @@index([messageId])
+  @@schema("public")
 }
 
 // ─── Telephony Models ───────────────────────────────────────────────────────
@@ -214,6 +234,7 @@ model TelephonyNumber {
   @@index([businessId])
   @@index([clientId])
   @@index([e164])
+  @@schema("public")
 }
 
 model TelephonyCall {
@@ -239,6 +260,7 @@ model TelephonyCall {
   @@index([clientId])
   @@index([providerCallId])
   @@index([businessId, status])
+  @@schema("public")
 }
 
 model TelephonyEvent {
@@ -253,4 +275,176 @@ model TelephonyEvent {
 
   @@index([callId])
   @@index([callId, eventType])
+  @@schema("public")
+}
+
+// ─── Master Schema: Geographic Hierarchy ────────────────────────────────────
+
+model Country {
+  countryCode String @id @map("country_code") @db.Char(2)
+  country     String @db.VarChar(100)
+  iso3        String @db.Char(3)
+  isd         String @db.VarChar(10)
+  flag        String @db.VarChar(8)
+
+  states    MasterState[]
+  districts District[]
+  postals   Postal[]
+  places    Place[]
+
+  @@map("country")
+  @@schema("master")
+}
+
+model MasterState {
+  stateid     Int    @id @default(autoincrement())
+  state       String @db.VarChar(100)
+  stateCode   String @map("state_code") @db.Char(2)
+  countryCode String @map("country_code") @db.Char(2)
+  region      String? @db.VarChar(100)
+
+  country   Country    @relation(fields: [countryCode], references: [countryCode], onDelete: Cascade)
+  districts District[]
+  postals   Postal[]
+  places    Place[]
+
+  @@index([countryCode])
+  @@index([stateCode, countryCode])
+  @@map("state")
+  @@schema("master")
+}
+
+model District {
+  districtid  Int    @id @default(autoincrement())
+  district    String @db.VarChar(100)
+  stateid     Int
+  countryCode String @map("country_code") @db.Char(2)
+
+  state   MasterState @relation(fields: [stateid], references: [stateid], onDelete: Cascade)
+  country Country     @relation(fields: [countryCode], references: [countryCode], onDelete: Cascade)
+  postals Postal[]
+  places  Place[]
+
+  @@index([stateid])
+  @@index([countryCode])
+  @@map("district")
+  @@schema("master")
+}
+
+model Postal {
+  postid      Int    @id @default(autoincrement())
+  pincode     String @db.VarChar(10)
+  postoffice  String @db.VarChar(150)
+  districtid  Int
+  stateid     Int
+  countryCode String @map("country_code") @db.Char(2)
+
+  district District    @relation(fields: [districtid], references: [districtid], onDelete: Cascade)
+  state    MasterState @relation(fields: [stateid], references: [stateid], onDelete: Cascade)
+  country  Country     @relation(fields: [countryCode], references: [countryCode], onDelete: Cascade)
+
+  @@index([pincode])
+  @@index([districtid])
+  @@index([stateid])
+  @@index([countryCode])
+  @@map("postal")
+  @@schema("master")
+}
+
+model Place {
+  placeid     BigInt @id @default(autoincrement())
+  countryCode String @map("country_code") @db.Char(2)
+  stateid     Int
+  districtid  Int
+  pincode     String @db.VarChar(10)
+  place       String @db.VarChar(200)
+  userid      BigInt?
+
+  country  Country     @relation(fields: [countryCode], references: [countryCode], onDelete: Cascade)
+  state    MasterState @relation(fields: [stateid], references: [stateid], onDelete: Cascade)
+  district District    @relation(fields: [districtid], references: [districtid], onDelete: Cascade)
+
+  @@index([countryCode])
+  @@index([stateid])
+  @@index([districtid])
+  @@index([pincode])
+  @@map("place")
+  @@schema("master")
+}
+
+// ─── Master Schema: Organizational Hierarchy ────────────────────────────────
+
+model Locality {
+  localityid  Int    @id @default(autoincrement())
+  locality    String @db.VarChar(200)
+  placeid     Int[]  @default([])
+  localAgency BigInt? @map("local_agency")
+
+  @@map("locality")
+  @@schema("master")
+}
+
+model Area {
+  areaid     Int    @id @default(autoincrement())
+  area       String @db.VarChar(200)
+  localityid Int[]  @default([])
+  areaAgency BigInt? @map("area_agency")
+
+  @@map("area")
+  @@schema("master")
+}
+
+model Division {
+  divisionid    Int    @id @default(autoincrement())
+  division      String @db.VarChar(200)
+  areaid        Int[]  @default([])
+  divisionAgency BigInt? @map("division_agency")
+
+  @@map("division")
+  @@schema("master")
+}
+
+model MasterRegion {
+  regionid      Int    @id @default(autoincrement())
+  region        String @db.VarChar(200)
+  divisionid    Int[]  @default([])
+  regionAgency  BigInt? @map("region_agency")
+
+  @@map("region")
+  @@schema("master")
+}
+
+model Zone {
+  zoneid     Int    @id @default(autoincrement())
+  zoneCode   String @map("zone_code") @db.Char(2)
+  zone       String @db.VarChar(200)
+  regionid   Int[]  @default([])
+  zoneAgency BigInt? @map("zone_agency")
+
+  @@map("zone")
+  @@schema("master")
+}
+
+// ─── Master Schema: Industry Classification ─────────────────────────────────
+
+model Sector {
+  sectorid Int    @id @default(autoincrement())
+  sector   String @db.VarChar(200)
+
+  fields Field[]
+
+  @@map("sector")
+  @@schema("master")
+}
+
+model Field {
+  fieldid  Int    @id @default(autoincrement())
+  field    String @db.VarChar(200)
+  sectorid Int
+
+  sector Sector @relation(fields: [sectorid], references: [sectorid], onDelete: Cascade)
+
+  @@index([sectorid])
+  @@map("field")
+  @@schema("master")
 }
