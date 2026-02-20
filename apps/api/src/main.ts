@@ -2,6 +2,20 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 
+// ─── BigInt JSON serialization ────────────────────────────────────────────
+// Prisma returns BigInt for bigint/bigserial columns (e.g. placeid, userid).
+// JSON.stringify() cannot serialize BigInt natively and throws TypeError.
+// This polyfill converts BigInt to Number (safe up to 2^53) or String.
+(BigInt.prototype as unknown as { toJSON: () => unknown }).toJSON = function () {
+  const val = this as unknown as bigint;
+  // Safe integer range: return as number for cleaner JSON
+  if (val >= Number.MIN_SAFE_INTEGER && val <= Number.MAX_SAFE_INTEGER) {
+    return Number(val);
+  }
+  // Beyond safe range: return as string
+  return val.toString();
+};
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
