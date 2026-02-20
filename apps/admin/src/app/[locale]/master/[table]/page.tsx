@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 
-/* ─── Table Configurations ──────────────────────────────────────────── */
 const TABLE_CONFIG: Record<string, {
   label: string; singular: string; idField: string;
   columns: { key: string; label: string; editable?: boolean; type?: string }[];
@@ -12,10 +11,10 @@ const TABLE_CONFIG: Record<string, {
     label: 'Countries', singular: 'Country', idField: 'countryCode', endpoint: '/api/master/countries',
     columns: [
       { key: 'countryCode', label: 'Code', type: 'char2' },
+      { key: 'flag', label: 'Flag', editable: true },
       { key: 'country', label: 'Country', editable: true },
       { key: 'iso3', label: 'ISO3', editable: true, type: 'char3' },
       { key: 'isd', label: 'ISD', editable: true },
-      { key: 'flag', label: 'Flag', editable: true },
     ],
   },
   states: {
@@ -124,7 +123,6 @@ const TABLE_CONFIG: Record<string, {
 
 const PAGE_SIZES = [10, 20, 50, 100];
 
-/* ─── Component ─────────────────────────────────────────────────────── */
 export default function MasterTablePage({ params }: { params: Promise<{ locale: string; table: string }> }) {
   const [resolvedParams, setResolvedParams] = useState<{ locale: string; table: string } | null>(null);
   const [allRows, setAllRows] = useState<Record<string, unknown>[]>([]);
@@ -134,10 +132,8 @@ export default function MasterTablePage({ params }: { params: Promise<{ locale: 
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-
-  // Pagination & search
   const [search, setSearch] = useState('');
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => { params.then(setResolvedParams); }, [params]);
@@ -159,20 +155,17 @@ export default function MasterTablePage({ params }: { params: Promise<{ locale: 
 
   useEffect(() => { if (config) fetchRows(); }, [config, fetchRows]);
 
-  // Filter rows by search
   const filteredRows = useMemo(() => {
     if (!search.trim() || !config) return allRows;
     const q = search.toLowerCase();
     return allRows.filter(row =>
       config.columns.some(col => {
         const val = row[col.key];
-        if (val == null) return false;
-        return String(val).toLowerCase().includes(q);
+        return val != null && String(val).toLowerCase().includes(q);
       })
     );
   }, [allRows, search, config]);
 
-  // Paginated rows
   const totalFiltered = filteredRows.length;
   const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
   const safePage = Math.min(currentPage, totalPages);
@@ -181,7 +174,6 @@ export default function MasterTablePage({ params }: { params: Promise<{ locale: 
     return filteredRows.slice(start, start + pageSize);
   }, [filteredRows, safePage, pageSize]);
 
-  // Reset page when search or pageSize changes
   useEffect(() => { setCurrentPage(1); }, [search, pageSize]);
 
   if (!resolvedParams) return <div style={{ color: 'rgba(255,255,255,0.3)', padding: '40px' }}>Loading...</div>;
@@ -223,7 +215,6 @@ export default function MasterTablePage({ params }: { params: Promise<{ locale: 
         else if (col.type === 'intarray') body[col.key] = val ? val.split(',').map(v => parseInt(v.trim())).filter(n => !isNaN(n)) : [];
         else body[col.key] = val || undefined;
       });
-
       const url = editingId ? `${config.endpoint}/${editingId}` : config.endpoint;
       const res = await fetch(url, {
         method: editingId ? 'PATCH' : 'POST',
@@ -241,7 +232,6 @@ export default function MasterTablePage({ params }: { params: Promise<{ locale: 
 
   const globalIndex = (localIdx: number) => (safePage - 1) * pageSize + localIdx + 1;
 
-  // Pagination range
   const getPageRange = () => {
     const pages: (number | string)[] = [];
     if (totalPages <= 7) {
@@ -255,6 +245,9 @@ export default function MasterTablePage({ params }: { params: Promise<{ locale: 
     }
     return pages;
   };
+
+  const startRecord = (safePage - 1) * pageSize + 1;
+  const endRecord = Math.min(safePage * pageSize, totalFiltered);
 
   return (
     <div>
@@ -299,23 +292,26 @@ export default function MasterTablePage({ params }: { params: Promise<{ locale: 
         </div>
       )}
 
-      {/* Toolbar: Search + Page Size */}
+      {/* Toolbar: Page Size dropdown + Search */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', gap: '12px', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)' }}>View</span>
-          {PAGE_SIZES.map(s => (
-            <button key={s} onClick={() => setPageSize(s)}
-              style={{ ...pageSizeBtn, ...(pageSize === s ? pageSizeActive : {}) }}>
-              {s}
-            </button>
-          ))}
-          <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)' }}>records</span>
+          <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)' }}>Show</span>
+          <select
+            value={pageSize}
+            onChange={e => setPageSize(Number(e.target.value))}
+            style={selectStyle}
+          >
+            {PAGE_SIZES.map(s => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+          <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)' }}>records</span>
         </div>
         <div style={{ position: 'relative' }}>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search..."
-            style={{ ...inputStyle, width: '220px', paddingLeft: '32px' }} />
-          <svg style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', opacity: 0.35 }}
-            width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+            style={{ ...inputStyle, width: '240px', paddingLeft: '34px' }} />
+          <svg style={{ position: 'absolute', left: '11px', top: '50%', transform: 'translateY(-50%)', opacity: 0.4 }}
+            width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
             <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
           </svg>
         </div>
@@ -327,18 +323,18 @@ export default function MasterTablePage({ params }: { params: Promise<{ locale: 
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
-                <th style={{ ...thStyle, width: '50px' }}>#</th>
-                {config.columns.map(col => (
-                  <th key={col.key} style={thStyle}>{col.label}</th>
+                <th style={{ ...thStyle, width: '56px', textAlign: 'center' }}>#</th>
+                {config.columns.map((col, ci) => (
+                  <th key={`${col.key}-${ci}`} style={{ ...thStyle, ...(col.key === 'flag' && col.label === 'Flag' ? { width: '60px', textAlign: 'center' } : {}) }}>{col.label}</th>
                 ))}
-                <th style={{ ...thStyle, width: '120px' }}>Actions</th>
+                <th style={{ ...thStyle, width: '120px', textAlign: 'center' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={config.columns.length + 2} style={{ ...tdStyle, textAlign: 'center', color: 'rgba(255,255,255,0.3)' }}>Loading...</td></tr>
+                <tr><td colSpan={config.columns.length + 2} style={{ ...tdStyle, textAlign: 'center', color: 'rgba(255,255,255,0.3)', padding: '40px 16px' }}>Loading...</td></tr>
               ) : paginatedRows.length === 0 ? (
-                <tr><td colSpan={config.columns.length + 2} style={{ ...tdStyle, textAlign: 'center', color: 'rgba(255,255,255,0.25)' }}>
+                <tr><td colSpan={config.columns.length + 2} style={{ ...tdStyle, textAlign: 'center', color: 'rgba(255,255,255,0.25)', padding: '40px 16px' }}>
                   {search ? 'No matching records.' : 'No records yet. Click "+ Add New" to create one.'}
                 </td></tr>
               ) : (
@@ -346,15 +342,18 @@ export default function MasterTablePage({ params }: { params: Promise<{ locale: 
                   <tr key={String(row[config.idField] ?? i)} style={{ transition: 'background 0.15s' }}
                     onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                    <td style={{ ...tdStyle, color: 'rgba(255,255,255,0.25)', fontSize: '12px' }}>{globalIndex(i)}</td>
-                    {config.columns.map(col => (
-                      <td key={col.key} style={{ ...tdStyle, ...(col.key === 'flag' ? { fontSize: '20px' } : {}) }}>
+                    <td style={snStyle}>{globalIndex(i)}</td>
+                    {config.columns.map((col, ci) => (
+                      <td key={`${col.key}-${ci}`} style={{
+                        ...tdStyle,
+                        ...(col.key === 'flag' && col.label === 'Flag' ? { fontSize: '26px', textAlign: 'center', lineHeight: '1', padding: '6px 16px' } : {}),
+                      }}>
                         {Array.isArray(row[col.key]) ? (row[col.key] as number[]).join(', ') : String(row[col.key] ?? '')}
                       </td>
                     ))}
-                    <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
+                    <td style={{ ...tdStyle, whiteSpace: 'nowrap', textAlign: 'center' }}>
                       <button onClick={() => handleEdit(row)} style={btnSmall}>Edit</button>
-                      <button onClick={() => handleDelete(row)} style={{ ...btnSmall, color: '#ef4444', borderColor: 'rgba(239,68,68,0.2)' }}>Delete</button>
+                      <button onClick={() => handleDelete(row)} style={{ ...btnSmall, color: '#ef4444', borderColor: 'rgba(239,68,68,0.2)' }}>Del</button>
                     </td>
                   </tr>
                 ))
@@ -364,22 +363,24 @@ export default function MasterTablePage({ params }: { params: Promise<{ locale: 
         </div>
       </div>
 
-      {/* Footer: Record count + Pagination */}
+      {/* Footer: Record info + Pagination */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '14px', flexWrap: 'wrap', gap: '12px' }}>
-        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.25)' }}>
-          {totalFiltered === allRows.length
-            ? `${allRows.length} record${allRows.length !== 1 ? 's' : ''}`
-            : `${totalFiltered} of ${allRows.length} records (filtered)`}
+        <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.35)' }}>
+          {totalFiltered > 0
+            ? `Showing ${startRecord}\u2013${endRecord} of ${totalFiltered}${totalFiltered !== allRows.length ? ` (filtered from ${allRows.length})` : ''}`
+            : `${allRows.length} total records`}
         </div>
         {totalPages > 1 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={safePage <= 1} style={pageBtn}>&#8249;</button>
+            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={safePage <= 1}
+              style={{ ...pageBtn, ...(safePage <= 1 ? pageBtnDisabled : {}) }}>&#8249; Prev</button>
             {getPageRange().map((p, i) =>
               typeof p === 'string'
-                ? <span key={`e${i}`} style={{ color: 'rgba(255,255,255,0.2)', fontSize: '12px', padding: '0 4px' }}>&#8230;</span>
+                ? <span key={`e${i}`} style={{ color: 'rgba(255,255,255,0.15)', fontSize: '12px', padding: '0 2px' }}>&#8230;</span>
                 : <button key={p} onClick={() => setCurrentPage(p)} style={{ ...pageBtn, ...(p === safePage ? pageActive : {}) }}>{p}</button>
             )}
-            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={safePage >= totalPages} style={pageBtn}>&#8250;</button>
+            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={safePage >= totalPages}
+              style={{ ...pageBtn, ...(safePage >= totalPages ? pageBtnDisabled : {}) }}>Next &#8250;</button>
           </div>
         )}
       </div>
@@ -400,11 +401,16 @@ const btnGhost: React.CSSProperties = {
 const btnSmall: React.CSSProperties = {
   padding: '4px 12px', borderRadius: '8px', background: 'transparent',
   color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: 500,
-  border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', marginRight: '6px',
+  border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', marginRight: '4px',
 };
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '8px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.04)',
   border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: '13px', outline: 'none', boxSizing: 'border-box',
+};
+const selectStyle: React.CSSProperties = {
+  padding: '6px 10px', borderRadius: '8px', background: 'rgba(255,255,255,0.06)',
+  border: '1px solid rgba(255,255,255,0.12)', color: '#fff', fontSize: '13px', outline: 'none',
+  cursor: 'pointer',
 };
 const labelStyle: React.CSSProperties = {
   fontSize: '11px', fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase',
@@ -419,6 +425,11 @@ const tdStyle: React.CSSProperties = {
   padding: '10px 16px', fontSize: '13px', color: 'rgba(255,255,255,0.7)',
   borderBottom: '1px solid rgba(255,255,255,0.04)',
 };
+const snStyle: React.CSSProperties = {
+  padding: '10px 16px', fontSize: '13px', fontWeight: 600, color: 'rgba(255,255,255,0.6)',
+  borderBottom: '1px solid rgba(255,255,255,0.04)', textAlign: 'center',
+  fontVariantNumeric: 'tabular-nums',
+};
 const errorBox: React.CSSProperties = {
   padding: '12px 16px', borderRadius: '10px', background: 'rgba(239,68,68,0.1)',
   border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444', fontSize: '13px', marginBottom: '16px',
@@ -427,19 +438,14 @@ const formContainer: React.CSSProperties = {
   padding: '20px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)',
   border: '1px solid rgba(255,255,255,0.08)', marginBottom: '20px',
 };
-const pageSizeBtn: React.CSSProperties = {
-  padding: '4px 10px', borderRadius: '6px', background: 'rgba(255,255,255,0.04)',
-  border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)',
-  fontSize: '12px', cursor: 'pointer', fontWeight: 500, transition: 'all 0.15s',
-};
-const pageSizeActive: React.CSSProperties = {
-  background: 'rgba(99,102,241,0.15)', borderColor: 'rgba(99,102,241,0.3)', color: '#a5b4fc',
-};
 const pageBtn: React.CSSProperties = {
-  padding: '4px 10px', borderRadius: '6px', background: 'rgba(255,255,255,0.04)',
-  border: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)',
-  fontSize: '12px', cursor: 'pointer', minWidth: '30px', textAlign: 'center',
+  padding: '5px 12px', borderRadius: '7px', background: 'rgba(255,255,255,0.04)',
+  border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)',
+  fontSize: '12px', cursor: 'pointer', minWidth: '32px', textAlign: 'center', fontWeight: 500,
 };
 const pageActive: React.CSSProperties = {
   background: 'rgba(99,102,241,0.2)', borderColor: 'rgba(99,102,241,0.4)', color: '#a5b4fc', fontWeight: 600,
+};
+const pageBtnDisabled: React.CSSProperties = {
+  opacity: 0.3, cursor: 'default',
 };
