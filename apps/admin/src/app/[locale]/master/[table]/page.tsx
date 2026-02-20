@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
 const TABLE_CONFIG: Record<string, {
   label: string; singular: string; idField: string;
   columns: { key: string; label: string; editable?: boolean; type?: string }[];
   endpoint: string;
+  parentFilter?: { key: string; parentEndpoint: string; parentIdField: string; parentLabelField: string; parentFlagField?: string };
 }> = {
   countries: {
     label: 'Countries', singular: 'Country', idField: 'countryCode', endpoint: '/api/master/countries',
@@ -26,6 +27,13 @@ const TABLE_CONFIG: Record<string, {
       { key: 'countryCode', label: 'Country', editable: true, type: 'char2' },
       { key: 'region', label: 'Region', editable: true },
     ],
+    parentFilter: {
+      key: 'countryCode',
+      parentEndpoint: '/api/master/countries',
+      parentIdField: 'countryCode',
+      parentLabelField: 'country',
+      parentFlagField: 'flag',
+    },
   },
   districts: {
     label: 'Districts', singular: 'District', idField: 'districtid', endpoint: '/api/master/districts',
@@ -123,6 +131,129 @@ const TABLE_CONFIG: Record<string, {
 
 const PAGE_SIZES = [10, 20, 50, 100];
 
+/* ─── Custom searchable dropdown with flags ─────────────────────────── */
+function CountrySelect({ countries, value, onChange }: {
+  countries: { code: string; name: string; flag: string }[];
+  value: string;
+  onChange: (code: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState('');
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const selected = countries.find(c => c.code === value);
+  const filtered = q.trim()
+    ? countries.filter(c => c.name.toLowerCase().includes(q.toLowerCase()) || c.code.toLowerCase().includes(q.toLowerCase()))
+    : countries;
+
+  return (
+    <div ref={ref} style={{ position: 'relative', minWidth: '280px' }}>
+      {/* Trigger */}
+      <button
+        onClick={() => { setOpen(!open); setQ(''); }}
+        style={{
+          display: 'flex', alignItems: 'center', gap: '10px', width: '100%',
+          padding: '8px 14px', borderRadius: '10px',
+          background: value ? 'rgba(99,102,241,0.1)' : 'rgba(255,255,255,0.04)',
+          border: value ? '1px solid rgba(99,102,241,0.3)' : '1px solid rgba(255,255,255,0.12)',
+          color: '#fff', fontSize: '13px', cursor: 'pointer', textAlign: 'left',
+          transition: 'all 0.15s',
+        }}
+      >
+        {selected ? (
+          <>
+            <span style={{ fontSize: '20px', lineHeight: '1' }}>{selected.flag}</span>
+            <span style={{ fontWeight: 500 }}>{selected.name}</span>
+            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', marginLeft: '2px' }}>({selected.code})</span>
+          </>
+        ) : (
+          <span style={{ color: 'rgba(255,255,255,0.4)' }}>🌍 All Countries</span>
+        )}
+        <svg style={{ marginLeft: 'auto', opacity: 0.4, flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}
+          width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </button>
+
+      {/* Dropdown */}
+      {open && (
+        <div style={{
+          position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 50,
+          borderRadius: '12px', overflow: 'hidden',
+          background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)',
+          boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
+          maxHeight: '320px', display: 'flex', flexDirection: 'column',
+        }}>
+          {/* Search input */}
+          <div style={{ padding: '8px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+            <input
+              autoFocus
+              value={q}
+              onChange={e => setQ(e.target.value)}
+              placeholder="Search country..."
+              style={{
+                width: '100%', padding: '8px 12px', borderRadius: '8px',
+                background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)',
+                color: '#fff', fontSize: '13px', outline: 'none', boxSizing: 'border-box',
+              }}
+            />
+          </div>
+          {/* Options */}
+          <div style={{ overflowY: 'auto', flex: 1 }}>
+            {/* All Countries option */}
+            <button
+              onClick={() => { onChange(''); setOpen(false); }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '10px', width: '100%',
+                padding: '9px 14px', border: 'none', cursor: 'pointer', textAlign: 'left',
+                background: !value ? 'rgba(99,102,241,0.15)' : 'transparent',
+                color: '#fff', fontSize: '13px', transition: 'background 0.1s',
+              }}
+              onMouseEnter={e => { if (value) e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+              onMouseLeave={e => { if (value) e.currentTarget.style.background = 'transparent'; }}
+            >
+              <span style={{ fontSize: '18px' }}>🌍</span>
+              <span style={{ fontWeight: 500, color: 'rgba(255,255,255,0.6)' }}>All Countries</span>
+            </button>
+            {filtered.map(c => (
+              <button
+                key={c.code}
+                onClick={() => { onChange(c.code); setOpen(false); }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '10px', width: '100%',
+                  padding: '9px 14px', border: 'none', cursor: 'pointer', textAlign: 'left',
+                  background: c.code === value ? 'rgba(99,102,241,0.15)' : 'transparent',
+                  color: '#fff', fontSize: '13px', transition: 'background 0.1s',
+                }}
+                onMouseEnter={e => { if (c.code !== value) e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+                onMouseLeave={e => { if (c.code !== value) e.currentTarget.style.background = 'transparent'; }}
+              >
+                <span style={{ fontSize: '18px', lineHeight: '1' }}>{c.flag}</span>
+                <span style={{ fontWeight: 500 }}>{c.name}</span>
+                <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '11px' }}>{c.code}</span>
+              </button>
+            ))}
+            {filtered.length === 0 && (
+              <div style={{ padding: '16px', textAlign: 'center', color: 'rgba(255,255,255,0.25)', fontSize: '13px' }}>
+                No countries found
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── Main Component ────────────────────────────────────────────────── */
 export default function MasterTablePage({ params }: { params: Promise<{ locale: string; table: string }> }) {
   const [resolvedParams, setResolvedParams] = useState<{ locale: string; table: string } | null>(null);
   const [allRows, setAllRows] = useState<Record<string, unknown>[]>([]);
@@ -136,9 +267,23 @@ export default function MasterTablePage({ params }: { params: Promise<{ locale: 
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
+  // Parent filter state (country selector for states page)
+  const [parentItems, setParentItems] = useState<Record<string, unknown>[]>([]);
+  const [parentFilter, setParentFilter] = useState('');
+
   useEffect(() => { params.then(setResolvedParams); }, [params]);
 
   const config = resolvedParams ? TABLE_CONFIG[resolvedParams.table] : null;
+
+  // Fetch parent items (countries) when parentFilter config exists
+  useEffect(() => {
+    if (!config?.parentFilter) { setParentItems([]); return; }
+    const pf = config.parentFilter;
+    fetch(pf.parentEndpoint)
+      .then(r => r.json())
+      .then(data => setParentItems(Array.isArray(data) ? data : []))
+      .catch(() => setParentItems([]));
+  }, [config]);
 
   const fetchRows = useCallback(async () => {
     if (!config) return;
@@ -155,16 +300,38 @@ export default function MasterTablePage({ params }: { params: Promise<{ locale: 
 
   useEffect(() => { if (config) fetchRows(); }, [config, fetchRows]);
 
+  // Build parent lookup for display
+  const parentCountries = useMemo(() => {
+    if (!config?.parentFilter) return [];
+    const pf = config.parentFilter;
+    return parentItems
+      .map(item => ({
+        code: String(item[pf.parentIdField] ?? ''),
+        name: String(item[pf.parentLabelField] ?? ''),
+        flag: pf.parentFlagField ? String(item[pf.parentFlagField] ?? '') : '',
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [parentItems, config]);
+
+  // Filtered rows: parent filter → then search
   const filteredRows = useMemo(() => {
-    if (!search.trim() || !config) return allRows;
-    const q = search.toLowerCase();
-    return allRows.filter(row =>
-      config.columns.some(col => {
-        const val = row[col.key];
-        return val != null && String(val).toLowerCase().includes(q);
-      })
-    );
-  }, [allRows, search, config]);
+    let rows = allRows;
+    // Apply parent filter (country)
+    if (parentFilter && config?.parentFilter) {
+      rows = rows.filter(row => String(row[config.parentFilter!.key]) === parentFilter);
+    }
+    // Apply text search
+    if (search.trim() && config) {
+      const q = search.toLowerCase();
+      rows = rows.filter(row =>
+        config.columns.some(col => {
+          const val = row[col.key];
+          return val != null && String(val).toLowerCase().includes(q);
+        })
+      );
+    }
+    return rows;
+  }, [allRows, parentFilter, search, config]);
 
   const totalFiltered = filteredRows.length;
   const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
@@ -174,7 +341,7 @@ export default function MasterTablePage({ params }: { params: Promise<{ locale: 
     return filteredRows.slice(start, start + pageSize);
   }, [filteredRows, safePage, pageSize]);
 
-  useEffect(() => { setCurrentPage(1); }, [search, pageSize]);
+  useEffect(() => { setCurrentPage(1); }, [search, pageSize, parentFilter]);
 
   if (!resolvedParams) return <div style={{ color: 'rgba(255,255,255,0.3)', padding: '40px' }}>Loading...</div>;
   if (!config) return <div style={{ color: '#ef4444', padding: '40px' }}>Unknown table: {resolvedParams.table}</div>;
@@ -182,6 +349,8 @@ export default function MasterTablePage({ params }: { params: Promise<{ locale: 
   const handleNew = () => {
     const empty: Record<string, string> = {};
     config.columns.forEach(c => { if (c.editable || c.key === config.idField) empty[c.key] = ''; });
+    // Pre-fill country if filter is active
+    if (parentFilter && config.parentFilter) empty[config.parentFilter.key] = parentFilter;
     setFormData(empty); setEditingId(null); setShowForm(true);
   };
 
@@ -249,6 +418,9 @@ export default function MasterTablePage({ params }: { params: Promise<{ locale: 
   const startRecord = (safePage - 1) * pageSize + 1;
   const endRecord = Math.min(safePage * pageSize, totalFiltered);
 
+  // Find selected country info for subtitle
+  const selectedCountryInfo = parentFilter ? parentCountries.find(c => c.code === parentFilter) : null;
+
   return (
     <div>
       {/* Header */}
@@ -259,12 +431,41 @@ export default function MasterTablePage({ params }: { params: Promise<{ locale: 
           </a>
           <h1 style={{ fontSize: '24px', fontWeight: 700, fontFamily: '"Syne", sans-serif', color: '#fff', margin: '4px 0 0' }}>
             {config.label}
+            {selectedCountryInfo && (
+              <span style={{ fontSize: '16px', fontWeight: 400, color: 'rgba(255,255,255,0.4)', marginLeft: '12px' }}>
+                {selectedCountryInfo.flag} {selectedCountryInfo.name}
+              </span>
+            )}
           </h1>
         </div>
         <button onClick={handleNew} style={btnPrimary}>+ Add New</button>
       </div>
 
       {error && <div style={errorBox}>{error}</div>}
+
+      {/* Country Filter Bar (only for tables with parentFilter) */}
+      {config.parentFilter && parentCountries.length > 0 && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '12px',
+          marginBottom: '16px', padding: '12px 16px',
+          borderRadius: '12px', background: 'rgba(255,255,255,0.02)',
+          border: '1px solid rgba(255,255,255,0.06)',
+        }}>
+          <span style={{ fontSize: '12px', fontWeight: 600, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
+            Filter by Country
+          </span>
+          <CountrySelect
+            countries={parentCountries}
+            value={parentFilter}
+            onChange={setParentFilter}
+          />
+          {parentFilter && (
+            <span style={{ fontSize: '12px', color: 'rgba(99,102,241,0.7)', whiteSpace: 'nowrap' }}>
+              {filteredRows.length} state{filteredRows.length !== 1 ? 's' : ''}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Form */}
       {showForm && (
@@ -335,7 +536,7 @@ export default function MasterTablePage({ params }: { params: Promise<{ locale: 
                 <tr><td colSpan={config.columns.length + 2} style={{ ...tdStyle, textAlign: 'center', color: 'rgba(255,255,255,0.3)', padding: '40px 16px' }}>Loading...</td></tr>
               ) : paginatedRows.length === 0 ? (
                 <tr><td colSpan={config.columns.length + 2} style={{ ...tdStyle, textAlign: 'center', color: 'rgba(255,255,255,0.25)', padding: '40px 16px' }}>
-                  {search ? 'No matching records.' : 'No records yet. Click "+ Add New" to create one.'}
+                  {search || parentFilter ? 'No matching records.' : 'No records yet. Click "+ Add New" to create one.'}
                 </td></tr>
               ) : (
                 paginatedRows.map((row, i) => (
