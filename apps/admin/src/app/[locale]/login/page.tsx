@@ -15,59 +15,59 @@ export default function LoginPage() {
   };
 
   return (
-    &lt;>
+    <>
       {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-      &lt;link
-        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&amp;family=Plus+Jakarta+Sans:wght@400;500;600&amp;display=swap"
+      <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap"
         rel="stylesheet"
       />
 
-      &lt;div style={styles.wrapper}>
+      <div style={styles.wrapper}>
         {/* Animated background orbs */}
-        &lt;div style={styles.orbContainer}>
-          &lt;div style={{ ...styles.orb, ...styles.orb1 }} />
-          &lt;div style={{ ...styles.orb, ...styles.orb2 }} />
-          &lt;div style={{ ...styles.orb, ...styles.orb3 }} />
-        &lt;/div>
+        <div style={styles.orbContainer}>
+          <div style={{ ...styles.orb, ...styles.orb1 }} />
+          <div style={{ ...styles.orb, ...styles.orb2 }} />
+          <div style={{ ...styles.orb, ...styles.orb3 }} />
+        </div>
 
         {/* Noise texture overlay */}
-        &lt;div style={styles.noiseOverlay} />
+        <div style={styles.noiseOverlay} />
 
         {/* Grid pattern */}
-        &lt;div style={styles.gridPattern} />
+        <div style={styles.gridPattern} />
 
         {/* Content */}
-        &lt;div style={styles.content}>
+        <div style={styles.content}>
           {/* Brand mark */}
-          &lt;div style={styles.brandMark}>
-            &lt;div style={styles.logoGlow} />
-            &lt;div style={styles.logo}>S&lt;/div>
-          &lt;/div>
+          <div style={styles.brandMark}>
+            <div style={styles.logoGlow} />
+            <div style={styles.logo}>S</div>
+          </div>
 
           {/* Title */}
-          &lt;h1 style={styles.title}>
-            &lt;span style={styles.titleGradient}>Saubh&lt;/span>
-            &lt;span style={styles.titleDot}>.&lt;/span>
-            &lt;span style={styles.titleTech}>Tech&lt;/span>
-          &lt;/h1>
-          &lt;p style={styles.subtitle}>ADMIN CONSOLE&lt;/p>
+          <h1 style={styles.title}>
+            <span style={styles.titleGradient}>Saubh</span>
+            <span style={styles.titleDot}>.</span>
+            <span style={styles.titleTech}>Tech</span>
+          </h1>
+          <p style={styles.subtitle}>ADMIN CONSOLE</p>
 
           {/* Glass card */}
-          &lt;div style={styles.card}>
+          <div style={styles.card}>
             {/* Error banner */}
-            {error &amp;&amp; (
-              &lt;div style={styles.errorBanner}>
-                &lt;svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, marginTop: 2 }}>
-                  &lt;circle cx="8" cy="8" r="7" stroke="#ff4d6a" strokeWidth="1.5" />
-                  &lt;path d="M8 4.5V9" stroke="#ff4d6a" strokeWidth="1.5" strokeLinecap="round" />
-                  &lt;circle cx="8" cy="11.5" r="0.75" fill="#ff4d6a" />
-                &lt;/svg>
-                &lt;span style={styles.errorText}>{decodeURIComponent(error)}&lt;/span>
-              &lt;/div>
+            {error && (
+              <div style={styles.errorBanner}>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, marginTop: 2 }}>
+                  <circle cx="8" cy="8" r="7" stroke="#ff4d6a" strokeWidth="1.5" />
+                  <path d="M8 4.5V9" stroke="#ff4d6a" strokeWidth="1.5" strokeLinecap="round" />
+                  <circle cx="8" cy="11.5" r="0.75" fill="#ff4d6a" />
+                </svg>
+                <span style={styles.errorText}>{decodeURIComponent(error)}</span>
+              </div>
             )}
 
             {/* Login button */}
-            &lt;button
+            <button
               onClick={handleLogin}
               onMouseEnter={() => setHovering(true)}
               onMouseLeave={() => setHovering(false)}
@@ -76,14 +76,14 @@ export default function LoginPage() {
                 ...(hovering ? styles.loginButtonHover : {}),
               }}
             >
-              &lt;div style={styles.buttonInner}>
-                &lt;svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  &lt;path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-                  &lt;polyline points="10 17 15 12 10 7" />
-                  &lt;line x1="15" y1="12" x2="3" y2="12" />
-                &lt;/svg>
-                &lt;span>Sign in with SSO&lt;/span>
-                &lt;svg
+              <div style={styles.buttonInner}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                  <polyline points="10 17 15 12 10 7" />
+                  <line x1="15" y1="12" x2="3" y2="12" />
+                </svg>
+                <span>Sign in with SSO</span>
+                <svg
                   width="16"
                   height="16"
                   viewBox="0 0 16 16"
@@ -96,32 +96,32 @@ export default function LoginPage() {
                     transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
                   }}
                 >
-                  &lt;path d="M3 8h10M9 4l4 4-4 4" />
-                &lt;/svg>
-              &lt;/div>
-            &lt;/button>
+                  <path d="M3 8h10M9 4l4 4-4 4" />
+                </svg>
+              </div>
+            </button>
 
-            &lt;div style={styles.divider}>
-              &lt;div style={styles.dividerLine} />
-              &lt;span style={styles.dividerText}>SECURED BY KEYCLOAK&lt;/span>
-              &lt;div style={styles.dividerLine} />
-            &lt;/div>
+            <div style={styles.divider}>
+              <div style={styles.dividerLine} />
+              <span style={styles.dividerText}>SECURED BY KEYCLOAK</span>
+              <div style={styles.dividerLine} />
+            </div>
 
-            &lt;p style={styles.accessNote}>
+            <p style={styles.accessNote}>
               Only authorized admins can access this panel.
-              &lt;br />
+              <br />
               Contact your Super Admin for access.
-            &lt;/p>
-          &lt;/div>
+            </p>
+          </div>
 
           {/* Footer */}
-          &lt;p style={styles.footer}>
-            &amp;copy; {new Date().getFullYear()} Saubh.Tech &amp;middot; All rights reserved
-          &lt;/p>
-        &lt;/div>
+          <p style={styles.footer}>
+            &copy; {new Date().getFullYear()} Saubh.Tech &middot; All rights reserved
+          </p>
+        </div>
 
         {/* CSS Animations */}
-        &lt;style>{`
+        <style>{`
           @keyframes float1 {
             0%, 100% { transform: translate(0, 0) scale(1); }
             25% { transform: translate(80px, -60px) scale(1.1); }
@@ -147,13 +147,13 @@ export default function LoginPage() {
             from { opacity: 0; transform: translateY(24px); }
             to { opacity: 1; transform: translateY(0); }
           }
-        `}&lt;/style>
-      &lt;/div>
-    &lt;/>
+        `}</style>
+      </div>
+    </>
   );
 }
 
-const styles: Record&lt;string, React.CSSProperties> = {
+const styles: Record<string, React.CSSProperties> = {
   wrapper: {
     minHeight: '100vh',
     width: '100%',
