@@ -2,331 +2,333 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
-const TABLE_CONFIG: Record<string, {
-  label: string; singular: string; idField: string;
-  columns: { key: string; label: string; editable?: boolean; type?: string }[];
-  endpoint: string;
-  parentFilter?: { key: string; parentEndpoint: string; parentIdField: string; parentLabelField: string; parentFlagField?: string };
-}> = {
+/* ═══════════════════════════════════════════════════════════════════════
+   TABLE CONFIGURATION — mirrors the HTML's TABLES array with full
+   FK references, cascading dependencies, and horizontal grouping.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+type FieldDef = {
+  name: string; label: string; editable?: boolean;
+  type?: 'char2' | 'char3' | 'varchar' | 'int' | 'bigint' | 'intarray' | 'fk' | 'fk_multi';
+  required?: boolean; hideInForm?: boolean;
+  // FK config
+  ref?: string; refPk?: string; refLabel?: string;
+  dependsOn?: string; horizontalGroup?: string;
+  // special
+  pincodeValidation?: boolean;
+};
+
+type TableDef = {
+  key: string; label: string; singular: string; idField: string;
+  autoPk: boolean; endpoint: string; icon: string;
+  fields: FieldDef[];
+};
+
+const TABLES: Record<string, TableDef> = {
   countries: {
-    label: 'Countries', singular: 'Country', idField: 'countryCode', endpoint: '/api/master/countries',
-    columns: [
-      { key: 'countryCode', label: 'Code', type: 'char2' },
-      { key: 'flag', label: 'Flag', editable: true },
-      { key: 'country', label: 'Country', editable: true },
-      { key: 'iso3', label: 'ISO3', editable: true, type: 'char3' },
-      { key: 'isd', label: 'ISD', editable: true },
+    key: 'countries', label: 'Countries', singular: 'Country', idField: 'countryCode',
+    autoPk: false, endpoint: '/api/master/countries', icon: '🌍',
+    fields: [
+      { name: 'countryCode', label: 'Country Code', type: 'char2', required: true },
+      { name: 'flag', label: 'Flag', editable: true, type: 'varchar' },
+      { name: 'country', label: 'Country', editable: true, type: 'varchar', required: true },
+      { name: 'iso3', label: 'ISO3', editable: true, type: 'char3' },
+      { name: 'isd', label: 'ISD', editable: true, type: 'varchar' },
     ],
   },
   states: {
-    label: 'States', singular: 'State', idField: 'stateid', endpoint: '/api/master/states',
-    columns: [
-      { key: 'stateid', label: 'ID' },
-      { key: 'state', label: 'State', editable: true },
-      { key: 'stateCode', label: 'Code', editable: true, type: 'char2' },
-      { key: 'countryCode', label: 'Country', editable: true, type: 'char2' },
-      { key: 'region', label: 'Region', editable: true },
+    key: 'states', label: 'States', singular: 'State', idField: 'stateid',
+    autoPk: true, endpoint: '/api/master/states', icon: '🗺️',
+    fields: [
+      { name: 'stateid', label: 'ID', hideInForm: true },
+      { name: 'countryCode', label: 'Country', type: 'fk', ref: 'countries', refPk: 'countryCode', refLabel: 'country', required: true, editable: true },
+      { name: 'state', label: 'State', type: 'varchar', required: true, editable: true },
+      { name: 'stateCode', label: 'State Code', type: 'char2', editable: true },
+      { name: 'region', label: 'Region', type: 'varchar', editable: true },
     ],
-    parentFilter: {
-      key: 'countryCode',
-      parentEndpoint: '/api/master/countries',
-      parentIdField: 'countryCode',
-      parentLabelField: 'country',
-      parentFlagField: 'flag',
-    },
   },
   districts: {
-    label: 'Districts', singular: 'District', idField: 'districtid', endpoint: '/api/master/districts',
-    columns: [
-      { key: 'districtid', label: 'ID' },
-      { key: 'district', label: 'District', editable: true },
-      { key: 'stateid', label: 'State ID', editable: true, type: 'int' },
-      { key: 'countryCode', label: 'Country', editable: true, type: 'char2' },
+    key: 'districts', label: 'Districts', singular: 'District', idField: 'districtid',
+    autoPk: true, endpoint: '/api/master/districts', icon: '📍',
+    fields: [
+      { name: 'districtid', label: 'ID', hideInForm: true },
+      { name: 'countryCode', label: 'Country', type: 'fk', ref: 'countries', refPk: 'countryCode', refLabel: 'country', required: true, editable: true, horizontalGroup: 'geo' },
+      { name: 'stateid', label: 'State', type: 'fk', ref: 'states', refPk: 'stateid', refLabel: 'state', required: true, editable: true, dependsOn: 'countryCode', horizontalGroup: 'geo' },
+      { name: 'district', label: 'District', type: 'varchar', required: true, editable: true },
     ],
   },
   postals: {
-    label: 'Postals', singular: 'Postal', idField: 'postid', endpoint: '/api/master/postals',
-    columns: [
-      { key: 'postid', label: 'ID' },
-      { key: 'pincode', label: 'Pincode', editable: true },
-      { key: 'postoffice', label: 'Post Office', editable: true },
-      { key: 'districtid', label: 'District ID', editable: true, type: 'int' },
-      { key: 'stateid', label: 'State ID', editable: true, type: 'int' },
-      { key: 'countryCode', label: 'Country', editable: true, type: 'char2' },
+    key: 'postals', label: 'Postals', singular: 'Postal', idField: 'postid',
+    autoPk: true, endpoint: '/api/master/postals', icon: '📮',
+    fields: [
+      { name: 'postid', label: 'ID', hideInForm: true },
+      { name: 'countryCode', label: 'Country', type: 'fk', ref: 'countries', refPk: 'countryCode', refLabel: 'country', required: true, editable: true, horizontalGroup: 'geo3' },
+      { name: 'stateid', label: 'State', type: 'fk', ref: 'states', refPk: 'stateid', refLabel: 'state', required: true, editable: true, dependsOn: 'countryCode', horizontalGroup: 'geo3' },
+      { name: 'districtid', label: 'District', type: 'fk', ref: 'districts', refPk: 'districtid', refLabel: 'district', required: true, editable: true, dependsOn: 'stateid', horizontalGroup: 'geo3' },
+      { name: 'pincode', label: 'Pincode', type: 'varchar', required: true, editable: true },
+      { name: 'postoffice', label: 'Post Office', type: 'varchar', required: true, editable: true },
     ],
   },
   places: {
-    label: 'Places', singular: 'Place', idField: 'placeid', endpoint: '/api/master/places',
-    columns: [
-      { key: 'placeid', label: 'ID' },
-      { key: 'place', label: 'Place', editable: true },
-      { key: 'pincode', label: 'Pincode', editable: true },
-      { key: 'districtid', label: 'District ID', editable: true, type: 'int' },
-      { key: 'stateid', label: 'State ID', editable: true, type: 'int' },
-      { key: 'countryCode', label: 'Country', editable: true, type: 'char2' },
+    key: 'places', label: 'Places', singular: 'Place', idField: 'placeid',
+    autoPk: true, endpoint: '/api/master/places', icon: '🏘️',
+    fields: [
+      { name: 'placeid', label: 'ID', hideInForm: true },
+      { name: 'countryCode', label: 'Country', type: 'fk', ref: 'countries', refPk: 'countryCode', refLabel: 'country', required: true, editable: true, horizontalGroup: 'geo3' },
+      { name: 'stateid', label: 'State', type: 'fk', ref: 'states', refPk: 'stateid', refLabel: 'state', required: true, editable: true, dependsOn: 'countryCode', horizontalGroup: 'geo3' },
+      { name: 'districtid', label: 'District', type: 'fk', ref: 'districts', refPk: 'districtid', refLabel: 'district', required: true, editable: true, dependsOn: 'stateid', horizontalGroup: 'geo3' },
+      { name: 'pincode', label: 'Pincode', type: 'varchar', editable: true, pincodeValidation: true },
+      { name: 'place', label: 'Place', type: 'varchar', required: true, editable: true },
     ],
   },
   localities: {
-    label: 'Localities', singular: 'Locality', idField: 'localityid', endpoint: '/api/master/localities',
-    columns: [
-      { key: 'localityid', label: 'ID' },
-      { key: 'locality', label: 'Locality', editable: true },
-      { key: 'placeid', label: 'Place IDs', editable: true, type: 'intarray' },
-      { key: 'localAgency', label: 'Agency', editable: true, type: 'bigint' },
+    key: 'localities', label: 'Localities', singular: 'Locality', idField: 'localityid',
+    autoPk: true, endpoint: '/api/master/localities', icon: '📌',
+    fields: [
+      { name: 'localityid', label: 'ID', hideInForm: true },
+      { name: 'locality', label: 'Locality', type: 'varchar', required: true, editable: true },
+      { name: 'placeid', label: 'Places', type: 'intarray', editable: true },
+      { name: 'localAgency', label: 'Local Agency', type: 'bigint', editable: true },
     ],
   },
   areas: {
-    label: 'Areas', singular: 'Area', idField: 'areaid', endpoint: '/api/master/areas',
-    columns: [
-      { key: 'areaid', label: 'ID' },
-      { key: 'area', label: 'Area', editable: true },
-      { key: 'localityid', label: 'Locality IDs', editable: true, type: 'intarray' },
-      { key: 'areaAgency', label: 'Agency', editable: true, type: 'bigint' },
+    key: 'areas', label: 'Areas', singular: 'Area', idField: 'areaid',
+    autoPk: true, endpoint: '/api/master/areas', icon: '🧭',
+    fields: [
+      { name: 'areaid', label: 'ID', hideInForm: true },
+      { name: 'area', label: 'Area', type: 'varchar', required: true, editable: true },
+      { name: 'localityid', label: 'Localities', type: 'intarray', editable: true },
+      { name: 'areaAgency', label: 'Area Agency', type: 'bigint', editable: true },
     ],
   },
   divisions: {
-    label: 'Divisions', singular: 'Division', idField: 'divisionid', endpoint: '/api/master/divisions',
-    columns: [
-      { key: 'divisionid', label: 'ID' },
-      { key: 'division', label: 'Division', editable: true },
-      { key: 'areaid', label: 'Area IDs', editable: true, type: 'intarray' },
-      { key: 'divisionAgency', label: 'Agency', editable: true, type: 'bigint' },
+    key: 'divisions', label: 'Divisions', singular: 'Division', idField: 'divisionid',
+    autoPk: true, endpoint: '/api/master/divisions', icon: '🏢',
+    fields: [
+      { name: 'divisionid', label: 'ID', hideInForm: true },
+      { name: 'division', label: 'Division', type: 'varchar', required: true, editable: true },
+      { name: 'areaid', label: 'Areas', type: 'intarray', editable: true },
+      { name: 'divisionAgency', label: 'Division Agency', type: 'bigint', editable: true },
     ],
   },
   regions: {
-    label: 'Regions', singular: 'Region', idField: 'regionid', endpoint: '/api/master/regions',
-    columns: [
-      { key: 'regionid', label: 'ID' },
-      { key: 'region', label: 'Region', editable: true },
-      { key: 'divisionid', label: 'Division IDs', editable: true, type: 'intarray' },
-      { key: 'regionAgency', label: 'Agency', editable: true, type: 'bigint' },
+    key: 'regions', label: 'Regions', singular: 'Region', idField: 'regionid',
+    autoPk: true, endpoint: '/api/master/regions', icon: '🌐',
+    fields: [
+      { name: 'regionid', label: 'ID', hideInForm: true },
+      { name: 'region', label: 'Region', type: 'varchar', required: true, editable: true },
+      { name: 'divisionid', label: 'Divisions', type: 'intarray', editable: true },
+      { name: 'regionAgency', label: 'Region Agency', type: 'bigint', editable: true },
     ],
   },
   zones: {
-    label: 'Zones', singular: 'Zone', idField: 'zoneid', endpoint: '/api/master/zones',
-    columns: [
-      { key: 'zoneid', label: 'ID' },
-      { key: 'zoneCode', label: 'Code', editable: true, type: 'char2' },
-      { key: 'zone', label: 'Zone', editable: true },
-      { key: 'regionid', label: 'Region IDs', editable: true, type: 'intarray' },
-      { key: 'zoneAgency', label: 'Agency', editable: true, type: 'bigint' },
+    key: 'zones', label: 'Zones', singular: 'Zone', idField: 'zoneid',
+    autoPk: true, endpoint: '/api/master/zones', icon: '🧩',
+    fields: [
+      { name: 'zoneid', label: 'ID', hideInForm: true },
+      { name: 'zoneCode', label: 'Zone Code', type: 'char2', editable: true },
+      { name: 'zone', label: 'Zone', type: 'varchar', required: true, editable: true },
+      { name: 'regionid', label: 'Regions', type: 'intarray', editable: true },
+      { name: 'zoneAgency', label: 'Zone Agency', type: 'bigint', editable: true },
     ],
   },
   sectors: {
-    label: 'Sectors', singular: 'Sector', idField: 'sectorid', endpoint: '/api/master/sectors',
-    columns: [
-      { key: 'sectorid', label: 'ID' },
-      { key: 'sector', label: 'Sector', editable: true },
+    key: 'sectors', label: 'Sectors', singular: 'Sector', idField: 'sectorid',
+    autoPk: true, endpoint: '/api/master/sectors', icon: '🏷️',
+    fields: [
+      { name: 'sectorid', label: 'ID', hideInForm: true },
+      { name: 'sector', label: 'Sector', type: 'varchar', required: true, editable: true },
     ],
   },
   fields: {
-    label: 'Fields', singular: 'Field', idField: 'fieldid', endpoint: '/api/master/fields',
-    columns: [
-      { key: 'fieldid', label: 'ID' },
-      { key: 'field', label: 'Field', editable: true },
-      { key: 'sectorid', label: 'Sector ID', editable: true, type: 'int' },
+    key: 'fields', label: 'Fields', singular: 'Field', idField: 'fieldid',
+    autoPk: true, endpoint: '/api/master/fields', icon: '🛠️',
+    fields: [
+      { name: 'fieldid', label: 'ID', hideInForm: true },
+      { name: 'sectorid', label: 'Sector', type: 'fk', ref: 'sectors', refPk: 'sectorid', refLabel: 'sector', editable: true, horizontalGroup: 'sf' },
+      { name: 'field', label: 'Field', type: 'varchar', required: true, editable: true, horizontalGroup: 'sf' },
     ],
   },
 };
 
 const PAGE_SIZES = [10, 20, 50, 100];
 
-/* ─── Flag image helper (CDN-based, works on all platforms) ─────────── */
+/* ═══════════════════════════════════════════════════════════════════════
+   UTILITY COMPONENTS
+   ═══════════════════════════════════════════════════════════════════════ */
+
 function FlagImg({ code, size = 24 }: { code: string; size?: number }) {
   const lc = code?.toLowerCase();
   if (!lc || lc.length !== 2) return <span style={{ opacity: 0.3 }}>—</span>;
-  const w = size;
-  const h = Math.round(size * 0.75);
+  const w = size; const h = Math.round(size * 0.75);
   return (
-    <img
-      src={`https://flagcdn.com/${w}x${h}/${lc}.png`}
+    <img src={`https://flagcdn.com/${w}x${h}/${lc}.png`}
       srcSet={`https://flagcdn.com/${w * 2}x${h * 2}/${lc}.png 2x`}
-      width={w}
-      height={h}
-      alt={code}
+      width={w} height={h} alt={code}
       style={{ display: 'inline-block', verticalAlign: 'middle', borderRadius: '2px', objectFit: 'cover' }}
-      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-    />
+      onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
   );
 }
 
-/* ─── Custom searchable dropdown with flags ─────────────────────────── */
-function CountrySelect({ countries, value, onChange }: {
-  countries: { code: string; name: string; flag: string }[];
+/* Searchable FK dropdown */
+function FKSelect({ label, options, value, onChange, disabled, placeholder }: {
+  label: string;
+  options: { value: string; label: string; code?: string }[];
   value: string;
-  onChange: (code: string) => void;
+  onChange: (v: string) => void;
+  disabled?: boolean;
+  placeholder?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+    const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
   }, []);
 
-  const selected = countries.find(c => c.code === value);
+  const selected = options.find(o => String(o.value) === String(value));
   const filtered = q.trim()
-    ? countries.filter(c => c.name.toLowerCase().includes(q.toLowerCase()) || c.code.toLowerCase().includes(q.toLowerCase()))
-    : countries;
+    ? options.filter(o => o.label.toLowerCase().includes(q.toLowerCase()) || String(o.value).toLowerCase().includes(q.toLowerCase()))
+    : options;
 
   return (
-    <div ref={ref} style={{ position: 'relative', minWidth: '280px' }}>
-      {/* Trigger */}
-      <button
-        onClick={() => { setOpen(!open); setQ(''); }}
-        style={{
-          display: 'flex', alignItems: 'center', gap: '10px', width: '100%',
-          padding: '8px 14px', borderRadius: '10px',
-          background: value ? 'rgba(99,102,241,0.1)' : 'rgba(255,255,255,0.04)',
-          border: value ? '1px solid rgba(99,102,241,0.3)' : '1px solid rgba(255,255,255,0.12)',
-          color: '#fff', fontSize: '13px', cursor: 'pointer', textAlign: 'left',
-          transition: 'all 0.15s',
-        }}
-      >
-        {selected ? (
-          <>
-            <FlagImg code={selected.code} size={24} />
-            <span style={{ fontWeight: 500 }}>{selected.name}</span>
-            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', marginLeft: '2px' }}>({selected.code})</span>
-          </>
-        ) : (
-          <span style={{ color: 'rgba(255,255,255,0.4)' }}>All Countries</span>
-        )}
-        <svg style={{ marginLeft: 'auto', opacity: 0.4, flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}
-          width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
-          <path d="M6 9l6 6 6-6" />
-        </svg>
-      </button>
+    <div>
+      <label style={S.label}>{label}</label>
+      <div ref={ref} style={{ position: 'relative' }}>
+        <button type="button" disabled={disabled}
+          onClick={() => { if (!disabled) { setOpen(!open); setQ(''); } }}
+          style={{
+            ...S.input, display: 'flex', alignItems: 'center', gap: '8px',
+            cursor: disabled ? 'not-allowed' : 'pointer', textAlign: 'left',
+            opacity: disabled ? 0.4 : 1,
+            borderColor: open ? 'rgba(99,102,241,0.5)' : 'rgba(255,255,255,0.1)',
+          }}>
+          {selected ? (
+            <>
+              {selected.code && <FlagImg code={selected.code} size={18} />}
+              <span style={{ flex: 1 }}>{selected.label}</span>
+              <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.25)' }}>{selected.value}</span>
+            </>
+          ) : (
+            <span style={{ color: 'rgba(255,255,255,0.3)', flex: 1 }}>
+              {disabled ? 'Select dependency first' : placeholder || `Select ${label}`}
+            </span>
+          )}
+          <svg style={{ opacity: 0.3, flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none' }}
+            width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
 
-      {/* Dropdown */}
-      {open && (
-        <div style={{
-          position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 50,
-          borderRadius: '12px', overflow: 'hidden',
-          background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)',
-          boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
-          maxHeight: '320px', display: 'flex', flexDirection: 'column',
-        }}>
-          {/* Search input */}
-          <div style={{ padding: '8px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-            <input
-              autoFocus
-              value={q}
-              onChange={e => setQ(e.target.value)}
-              placeholder="Search country..."
-              style={{
-                width: '100%', padding: '8px 12px', borderRadius: '8px',
-                background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)',
-                color: '#fff', fontSize: '13px', outline: 'none', boxSizing: 'border-box',
-              }}
-            />
-          </div>
-          {/* Options */}
-          <div style={{ overflowY: 'auto', flex: 1 }}>
-            {/* All Countries option */}
-            <button
-              onClick={() => { onChange(''); setOpen(false); }}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '10px', width: '100%',
-                padding: '9px 14px', border: 'none', cursor: 'pointer', textAlign: 'left',
-                background: !value ? 'rgba(99,102,241,0.15)' : 'transparent',
-                color: '#fff', fontSize: '13px', transition: 'background 0.1s',
-              }}
-              onMouseEnter={e => { if (value) e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
-              onMouseLeave={e => { if (value) e.currentTarget.style.background = 'transparent'; }}
-            >
-              <span style={{ fontSize: '16px', lineHeight: '1' }}>🌐</span>
-              <span style={{ fontWeight: 500, color: 'rgba(255,255,255,0.6)' }}>All Countries</span>
-            </button>
-            {filtered.map(c => (
-              <button
-                key={c.code}
-                onClick={() => { onChange(c.code); setOpen(false); }}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '10px', width: '100%',
-                  padding: '9px 14px', border: 'none', cursor: 'pointer', textAlign: 'left',
-                  background: c.code === value ? 'rgba(99,102,241,0.15)' : 'transparent',
-                  color: '#fff', fontSize: '13px', transition: 'background 0.1s',
-                }}
-                onMouseEnter={e => { if (c.code !== value) e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
-                onMouseLeave={e => { if (c.code !== value) e.currentTarget.style.background = 'transparent'; }}
-              >
-                <FlagImg code={c.code} size={20} />
-                <span style={{ fontWeight: 500 }}>{c.name}</span>
-                <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '11px' }}>{c.code}</span>
+        {open && !disabled && (
+          <div style={{
+            position: 'absolute', top: 'calc(100% + 2px)', left: 0, right: 0, zIndex: 60,
+            borderRadius: '10px', overflow: 'hidden',
+            background: '#1e1e36', border: '1px solid rgba(255,255,255,0.12)',
+            boxShadow: '0 12px 40px rgba(0,0,0,0.6)', maxHeight: '260px',
+            display: 'flex', flexDirection: 'column',
+          }}>
+            <div style={{ padding: '6px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <input autoFocus value={q} onChange={e => setQ(e.target.value)}
+                placeholder="Search..." onClick={e => e.stopPropagation()}
+                style={{ ...S.input, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', fontSize: '12px', padding: '6px 10px' }} />
+            </div>
+            <div style={{ overflowY: 'auto', flex: 1 }}>
+              {/* Clear option */}
+              <button type="button" onClick={() => { onChange(''); setOpen(false); }}
+                style={{ ...S.dropOption, color: 'rgba(255,255,255,0.35)' }}>
+                — None —
               </button>
-            ))}
-            {filtered.length === 0 && (
-              <div style={{ padding: '16px', textAlign: 'center', color: 'rgba(255,255,255,0.25)', fontSize: '13px' }}>
-                No countries found
-              </div>
-            )}
+              {filtered.map(o => (
+                <button key={o.value} type="button"
+                  onClick={() => { onChange(String(o.value)); setOpen(false); }}
+                  style={{
+                    ...S.dropOption,
+                    background: String(o.value) === String(value) ? 'rgba(99,102,241,0.15)' : 'transparent',
+                  }}
+                  onMouseEnter={e => { if (String(o.value) !== String(value)) e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+                  onMouseLeave={e => { if (String(o.value) !== String(value)) e.currentTarget.style.background = 'transparent'; }}>
+                  {o.code && <FlagImg code={o.code} size={16} />}
+                  <span style={{ flex: 1, fontWeight: 500 }}>{o.label}</span>
+                  <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)' }}>{o.value}</span>
+                </button>
+              ))}
+              {filtered.length === 0 && (
+                <div style={{ padding: '12px', textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: '12px' }}>
+                  No results
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
 
-/* ─── Cell renderer (handles flag column specially) ──────────────────── */
-function CellValue({ row, col, tableName }: { row: Record<string, unknown>; col: { key: string; label: string }; tableName: string }) {
-  const val = row[col.key];
-  // Flag column in countries table → render as image using countryCode
-  if (col.key === 'flag' && col.label === 'Flag' && tableName === 'countries') {
-    const code = String(row['countryCode'] ?? '');
-    return <FlagImg code={code} size={28} />;
-  }
-  // Country code column in states/districts → show flag + code
-  if (col.key === 'countryCode' && tableName !== 'countries') {
-    const code = String(val ?? '');
-    return (
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-        <FlagImg code={code} size={18} />
-        <span>{code}</span>
-      </span>
-    );
-  }
-  if (Array.isArray(val)) return <>{(val as number[]).join(', ')}</>;
-  return <>{String(val ?? '')}</>;
-}
+/* ═══════════════════════════════════════════════════════════════════════
+   MAIN COMPONENT
+   ═══════════════════════════════════════════════════════════════════════ */
 
-/* ─── Main Component ────────────────────────────────────────────────── */
 export default function MasterTablePage({ params }: { params: Promise<{ locale: string; table: string }> }) {
   const [resolvedParams, setResolvedParams] = useState<{ locale: string; table: string } | null>(null);
   const [allRows, setAllRows] = useState<Record<string, unknown>[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState<Record<string, string>>({});
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+  const [statusMsg, setStatusMsg] = useState<{ text: string; error: boolean } | null>(null);
   const [search, setSearch] = useState('');
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(20);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Parent filter state (country selector for states page)
-  const [parentItems, setParentItems] = useState<Record<string, unknown>[]>([]);
-  const [parentFilter, setParentFilter] = useState('');
+  // Form state
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState<Record<string, unknown>>({});
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  // FK reference data cache
+  const [refCache, setRefCache] = useState<Record<string, Record<string, unknown>[]>>({});
 
   useEffect(() => { params.then(setResolvedParams); }, [params]);
 
-  const config = resolvedParams ? TABLE_CONFIG[resolvedParams.table] : null;
-  const tableName = resolvedParams?.table ?? '';
+  const config = resolvedParams ? TABLES[resolvedParams.table] : null;
 
-  // Fetch parent items (countries) when parentFilter config exists
+  // Auto-clear status
   useEffect(() => {
-    if (!config?.parentFilter) { setParentItems([]); return; }
-    const pf = config.parentFilter;
-    fetch(pf.parentEndpoint)
-      .then(r => r.json())
-      .then(data => setParentItems(Array.isArray(data) ? data : []))
-      .catch(() => setParentItems([]));
+    if (!statusMsg) return;
+    const t = setTimeout(() => setStatusMsg(null), 3500);
+    return () => clearTimeout(t);
+  }, [statusMsg]);
+
+  // Fetch FK reference data for tables that need it
+  useEffect(() => {
+    if (!config) return;
+    const refs = new Set<string>();
+    config.fields.forEach(f => { if (f.ref) refs.add(f.ref); });
+    if (refs.size === 0) return;
+
+    const fetchRefs = async () => {
+      const cache: Record<string, Record<string, unknown>[]> = {};
+      for (const refTable of refs) {
+        const refConfig = TABLES[refTable];
+        if (!refConfig) continue;
+        try {
+          const res = await fetch(refConfig.endpoint);
+          if (res.ok) {
+            const data = await res.json();
+            cache[refTable] = Array.isArray(data) ? data : [];
+          }
+        } catch { /* ignore */ }
+      }
+      setRefCache(cache);
+    };
+    fetchRefs();
   }, [config]);
 
+  // Fetch rows
   const fetchRows = useCallback(async () => {
     if (!config) return;
     setLoading(true); setError('');
@@ -342,38 +344,58 @@ export default function MasterTablePage({ params }: { params: Promise<{ locale: 
 
   useEffect(() => { if (config) fetchRows(); }, [config, fetchRows]);
 
-  // Build parent lookup for display
-  const parentCountries = useMemo(() => {
-    if (!config?.parentFilter) return [];
-    const pf = config.parentFilter;
-    return parentItems
-      .map(item => ({
-        code: String(item[pf.parentIdField] ?? ''),
-        name: String(item[pf.parentLabelField] ?? ''),
-        flag: pf.parentFlagField ? String(item[pf.parentFlagField] ?? '') : '',
-      }))
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }, [parentItems, config]);
+  // Name lookups for FK display
+  const lookupName = useCallback((refTable: string, pk: string, pkVal: unknown): string => {
+    const rows = refCache[refTable] || [];
+    const refCfg = TABLES[refTable];
+    if (!refCfg) return String(pkVal ?? '');
+    const row = rows.find(r => String(r[pk]) === String(pkVal));
+    if (!row) return String(pkVal ?? '');
+    const labelField = refCfg.fields.find(f => f.name !== refCfg.idField && f.type === 'varchar' && !f.hideInForm);
+    return String(row[labelField?.name || refCfg.idField] ?? pkVal);
+  }, [refCache]);
 
-  // Filtered rows: parent filter → then search
-  const filteredRows = useMemo(() => {
-    let rows = allRows;
-    // Apply parent filter (country)
-    if (parentFilter && config?.parentFilter) {
-      rows = rows.filter(row => String(row[config.parentFilter!.key]) === parentFilter);
+  // FK options resolver with cascading dependency
+  const getOptions = useCallback((field: FieldDef): { value: string; label: string; code?: string }[] => {
+    if (!field.ref || !field.refPk || !field.refLabel) return [];
+    let source = refCache[field.ref] || [];
+
+    // Apply cascade filter
+    if (field.dependsOn) {
+      const depVal = formData[field.dependsOn];
+      if (!depVal && depVal !== 0) return [];
+      // Filter by the dependency field
+      source = source.filter(r => String(r[field.dependsOn!]) === String(depVal));
     }
-    // Apply text search
-    if (search.trim() && config) {
+
+    return source.map(r => ({
+      value: String(r[field.refPk!] ?? ''),
+      label: String(r[field.refLabel!] ?? ''),
+      code: field.ref === 'countries' ? String(r['countryCode'] ?? '') : undefined,
+    })).sort((a, b) => a.label.localeCompare(b.label));
+  }, [refCache, formData]);
+
+  // Filtered + paginated rows
+  const filteredRows = useMemo(() => {
+    if (!config) return [];
+    let rows = allRows;
+    if (search.trim()) {
       const q = search.toLowerCase();
       rows = rows.filter(row =>
-        config.columns.some(col => {
-          const val = row[col.key];
-          return val != null && String(val).toLowerCase().includes(q);
+        config.fields.some(f => {
+          const val = row[f.name];
+          if (val == null) return false;
+          // Also search FK display names
+          if (f.ref && f.refPk && f.refLabel) {
+            const name = lookupName(f.ref, f.refPk, val);
+            if (name.toLowerCase().includes(q)) return true;
+          }
+          return String(val).toLowerCase().includes(q);
         })
       );
     }
     return rows;
-  }, [allRows, parentFilter, search, config]);
+  }, [allRows, search, config, lookupName]);
 
   const totalFiltered = filteredRows.length;
   const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
@@ -383,23 +405,27 @@ export default function MasterTablePage({ params }: { params: Promise<{ locale: 
     return filteredRows.slice(start, start + pageSize);
   }, [filteredRows, safePage, pageSize]);
 
-  useEffect(() => { setCurrentPage(1); }, [search, pageSize, parentFilter]);
+  useEffect(() => { setCurrentPage(1); }, [search, pageSize]);
 
   if (!resolvedParams) return <div style={{ color: 'rgba(255,255,255,0.3)', padding: '40px' }}>Loading...</div>;
   if (!config) return <div style={{ color: '#ef4444', padding: '40px' }}>Unknown table: {resolvedParams.table}</div>;
 
+  /* ─── Form handlers ─────────────────────────────────────────────── */
   const handleNew = () => {
-    const empty: Record<string, string> = {};
-    config.columns.forEach(c => { if (c.editable || c.key === config.idField) empty[c.key] = ''; });
-    if (parentFilter && config.parentFilter) empty[config.parentFilter.key] = parentFilter;
+    const empty: Record<string, unknown> = {};
+    config.fields.forEach(f => {
+      if (f.type === 'intarray') empty[f.name] = [];
+      else empty[f.name] = '';
+    });
     setFormData(empty); setEditingId(null); setShowForm(true);
   };
 
   const handleEdit = (row: Record<string, unknown>) => {
-    const data: Record<string, string> = {};
-    config.columns.forEach(c => {
-      const val = row[c.key];
-      data[c.key] = Array.isArray(val) ? val.join(', ') : String(val ?? '');
+    const data: Record<string, unknown> = {};
+    config.fields.forEach(f => {
+      const val = row[f.name];
+      if (f.type === 'intarray') data[f.name] = Array.isArray(val) ? val : [];
+      else data[f.name] = val ?? '';
     });
     setFormData(data); setEditingId(String(row[config.idField])); setShowForm(true);
   };
@@ -409,22 +435,33 @@ export default function MasterTablePage({ params }: { params: Promise<{ locale: 
     try {
       const res = await fetch(`${config.endpoint}/${row[config.idField]}`, { method: 'DELETE' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setStatusMsg({ text: `${config.singular} deleted`, error: false });
       fetchRows();
-    } catch (e: unknown) { alert(e instanceof Error ? e.message : 'Delete failed'); }
+    } catch (e: unknown) {
+      setStatusMsg({ text: e instanceof Error ? e.message : 'Delete failed', error: true });
+    }
   };
 
   const handleSave = async () => {
     setSaving(true);
     try {
       const body: Record<string, unknown> = {};
-      config.columns.forEach(col => {
-        if (!editingId && !col.editable && col.key !== config.idField) return;
-        if (editingId && !col.editable) return;
-        const val = formData[col.key] ?? '';
-        if (col.type === 'int' || col.type === 'bigint') body[col.key] = val ? parseInt(val) : undefined;
-        else if (col.type === 'intarray') body[col.key] = val ? val.split(',').map(v => parseInt(v.trim())).filter(n => !isNaN(n)) : [];
-        else body[col.key] = val || undefined;
+      config.fields.forEach(f => {
+        if (f.hideInForm) return;
+        if (editingId && !f.editable && f.name !== config.idField) return;
+        const val = formData[f.name];
+        if (f.type === 'int' || f.type === 'bigint') body[f.name] = val ? parseInt(String(val)) : undefined;
+        else if (f.type === 'intarray') {
+          if (typeof val === 'string') body[f.name] = val ? val.split(',').map(v => parseInt(v.trim())).filter(n => !isNaN(n)) : [];
+          else body[f.name] = Array.isArray(val) ? val : [];
+        }
+        else if (f.type === 'fk') {
+          if (f.ref === 'countries') body[f.name] = val ? String(val).toUpperCase() : undefined;
+          else body[f.name] = val ? (isNaN(Number(val)) ? val : Number(val)) : undefined;
+        }
+        else body[f.name] = val || undefined;
       });
+
       const url = editingId ? `${config.endpoint}/${editingId}` : config.endpoint;
       const res = await fetch(url, {
         method: editingId ? 'PATCH' : 'POST',
@@ -435,18 +472,32 @@ export default function MasterTablePage({ params }: { params: Promise<{ locale: 
         const err = await res.json().catch(() => ({}));
         throw new Error(err.message || `HTTP ${res.status}`);
       }
+      setStatusMsg({ text: editingId ? `${config.singular} updated` : `${config.singular} created`, error: false });
       setShowForm(false); fetchRows();
-    } catch (e: unknown) { alert(e instanceof Error ? e.message : 'Save failed'); }
-    finally { setSaving(false); }
+    } catch (e: unknown) {
+      setStatusMsg({ text: e instanceof Error ? e.message : 'Save failed', error: true });
+    } finally { setSaving(false); }
   };
 
-  const globalIndex = (localIdx: number) => (safePage - 1) * pageSize + localIdx + 1;
+  const updateField = (name: string, value: unknown) => {
+    setFormData(prev => {
+      const next = { ...prev, [name]: value };
+      // Clear dependent fields when parent changes
+      config.fields.forEach(f => {
+        if (f.dependsOn === name) {
+          next[f.name] = f.type === 'intarray' ? [] : '';
+        }
+      });
+      return next;
+    });
+  };
+
+  const globalIndex = (i: number) => (safePage - 1) * pageSize + i + 1;
 
   const getPageRange = () => {
     const pages: (number | string)[] = [];
-    if (totalPages <= 7) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else {
+    if (totalPages <= 7) { for (let i = 1; i <= totalPages; i++) pages.push(i); }
+    else {
       pages.push(1);
       if (safePage > 3) pages.push('...');
       for (let i = Math.max(2, safePage - 1); i <= Math.min(totalPages - 1, safePage + 1); i++) pages.push(i);
@@ -456,11 +507,117 @@ export default function MasterTablePage({ params }: { params: Promise<{ locale: 
     return pages;
   };
 
-  const startRecord = (safePage - 1) * pageSize + 1;
-  const endRecord = Math.min(safePage * pageSize, totalFiltered);
+  /* ─── Render form fields with horizontal grouping ───────────────── */
+  const renderFormFields = () => {
+    const rendered = new Set<string>();
+    const elements: React.ReactNode[] = [];
 
-  // Find selected country info for subtitle
-  const selectedCountryInfo = parentFilter ? parentCountries.find(c => c.code === parentFilter) : null;
+    config.fields.forEach(f => {
+      if (rendered.has(f.name) || f.hideInForm) return;
+      if (!f.editable && f.name !== config.idField) return;
+      if (editingId && !f.editable) return;
+
+      // Horizontal group
+      if (f.horizontalGroup) {
+        const groupKey = `__grp__${f.horizontalGroup}`;
+        if (rendered.has(groupKey)) return;
+        rendered.add(groupKey);
+        const groupFields = config.fields.filter(gf => gf.horizontalGroup === f.horizontalGroup && !gf.hideInForm);
+        groupFields.forEach(gf => rendered.add(gf.name));
+
+        elements.push(
+          <div key={groupKey} style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: `repeat(${groupFields.length}, 1fr)`, gap: '10px' }}>
+            {groupFields.map(gf => renderSingleField(gf))}
+          </div>
+        );
+        return;
+      }
+
+      rendered.add(f.name);
+      elements.push(renderSingleField(f));
+    });
+
+    return elements;
+  };
+
+  const renderSingleField = (f: FieldDef) => {
+    // FK field → searchable dropdown
+    if (f.type === 'fk') {
+      const opts = getOptions(f);
+      const disabled = !!f.dependsOn && !formData[f.dependsOn];
+      return (
+        <FKSelect
+          key={f.name}
+          label={f.label}
+          options={opts}
+          value={String(formData[f.name] ?? '')}
+          onChange={v => updateField(f.name, v)}
+          disabled={disabled}
+        />
+      );
+    }
+
+    // Array/multi fields
+    if (f.type === 'intarray') {
+      const val = formData[f.name];
+      const display = Array.isArray(val) ? val.join(', ') : String(val ?? '');
+      return (
+        <div key={f.name}>
+          <label style={S.label}>{f.label}</label>
+          <input value={display}
+            onChange={e => updateField(f.name, e.target.value)}
+            placeholder="1, 2, 3" style={S.input} />
+        </div>
+      );
+    }
+
+    // Regular input
+    return (
+      <div key={f.name}>
+        <label style={S.label}>{f.label}{f.required && <span style={{ color: '#f43f5e' }}> *</span>}</label>
+        <input
+          value={String(formData[f.name] ?? '')}
+          onChange={e => updateField(f.name, e.target.value)}
+          placeholder={f.label}
+          maxLength={f.type === 'char2' ? 2 : f.type === 'char3' ? 3 : undefined}
+          style={{
+            ...S.input,
+            ...(f.type === 'char2' || f.type === 'char3' ? { textTransform: 'uppercase' as const, fontFamily: 'monospace', letterSpacing: '0.1em' } : {}),
+          }}
+        />
+      </div>
+    );
+  };
+
+  /* ─── Render cell value with FK name lookups + flag images ────── */
+  const renderCell = (row: Record<string, unknown>, f: FieldDef) => {
+    const val = row[f.name];
+
+    // Flag column → CDN image from countryCode
+    if (f.name === 'flag' && f.label === 'Flag' && config.key === 'countries') {
+      return <FlagImg code={String(row['countryCode'] ?? '')} size={28} />;
+    }
+
+    // FK single → display name
+    if (f.type === 'fk' && f.ref && f.refPk && f.refLabel) {
+      const name = lookupName(f.ref, f.refPk, val);
+      const isCountry = f.ref === 'countries';
+      return (
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+          {isCountry && <FlagImg code={String(val ?? '')} size={16} />}
+          <span>{name}</span>
+          {isCountry && <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)' }}>{String(val ?? '')}</span>}
+        </span>
+      );
+    }
+
+    // FK multi / int array
+    if (f.type === 'intarray' && Array.isArray(val)) {
+      return <span>{(val as number[]).join(', ')}</span>;
+    }
+
+    return <span>{String(val ?? '')}</span>;
+  };
 
   return (
     <div>
@@ -471,87 +628,68 @@ export default function MasterTablePage({ params }: { params: Promise<{ locale: 
             &#8592; Master Data
           </a>
           <h1 style={{ fontSize: '24px', fontWeight: 700, fontFamily: '"Syne", sans-serif', color: '#fff', margin: '4px 0 0' }}>
+            <span style={{ marginRight: '10px' }}>{config.icon}</span>
             {config.label}
-            {selectedCountryInfo && (
-              <span style={{ fontSize: '16px', fontWeight: 400, color: 'rgba(255,255,255,0.4)', marginLeft: '12px', verticalAlign: 'middle' }}>
-                <FlagImg code={selectedCountryInfo.code} size={20} /> {selectedCountryInfo.name}
-              </span>
-            )}
+            <span style={{ fontSize: '14px', fontWeight: 400, color: 'rgba(255,255,255,0.25)', marginLeft: '12px' }}>
+              ({totalFiltered}{totalFiltered !== allRows.length ? ` / ${allRows.length}` : ''})
+            </span>
           </h1>
         </div>
-        <button onClick={handleNew} style={btnPrimary}>+ Add New</button>
+        <button onClick={handleNew} style={S.btnPrimary}>+ Add {config.singular}</button>
       </div>
 
-      {error && <div style={errorBox}>{error}</div>}
-
-      {/* Country Filter Bar (only for tables with parentFilter) */}
-      {config.parentFilter && parentCountries.length > 0 && (
+      {/* Status message */}
+      {statusMsg && (
         <div style={{
-          display: 'flex', alignItems: 'center', gap: '12px',
-          marginBottom: '16px', padding: '12px 16px',
-          borderRadius: '12px', background: 'rgba(255,255,255,0.02)',
-          border: '1px solid rgba(255,255,255,0.06)',
+          ...S.statusBar,
+          background: statusMsg.error ? 'rgba(239,68,68,0.1)' : 'rgba(34,197,94,0.1)',
+          borderColor: statusMsg.error ? 'rgba(239,68,68,0.2)' : 'rgba(34,197,94,0.2)',
+          color: statusMsg.error ? '#ef4444' : '#22c55e',
         }}>
-          <span style={{ fontSize: '12px', fontWeight: 600, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
-            Filter by Country
-          </span>
-          <CountrySelect
-            countries={parentCountries}
-            value={parentFilter}
-            onChange={setParentFilter}
-          />
-          {parentFilter && (
-            <span style={{ fontSize: '12px', color: 'rgba(99,102,241,0.7)', whiteSpace: 'nowrap' }}>
-              {filteredRows.length} state{filteredRows.length !== 1 ? 's' : ''}
-            </span>
-          )}
+          {statusMsg.error ? '✕' : '✓'} {statusMsg.text}
         </div>
       )}
 
-      {/* Form */}
+      {error && <div style={S.statusBar}>{error}</div>}
+
+      {/* ── Form Card ──────────────────────────────────────────────── */}
       {showForm && (
-        <div style={formContainer}>
-          <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#fff', margin: '0 0 16px', fontFamily: '"Syne", sans-serif' }}>
-            {editingId ? 'Edit Record' : 'New Record'}
-          </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px' }}>
-            {config.columns.map(col => {
-              if (editingId && !col.editable) return null;
-              if (!editingId && !col.editable && col.key !== config.idField) return null;
-              return (
-                <div key={col.key}>
-                  <label style={labelStyle}>{col.label}</label>
-                  <input value={formData[col.key] || ''} onChange={e => setFormData(p => ({ ...p, [col.key]: e.target.value }))}
-                    placeholder={col.type === 'intarray' ? '1, 2, 3' : col.label} style={inputStyle} />
-                </div>
-              );
-            })}
+        <div style={S.card}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+            <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#fff', margin: 0, fontFamily: '"Syne", sans-serif' }}>
+              {editingId ? `Edit ${config.singular}` : `New ${config.singular}`}
+            </h3>
+            <button onClick={() => setShowForm(false)} style={{ ...S.btnGhost, padding: '4px 12px', fontSize: '18px', lineHeight: 1 }}>×</button>
           </div>
+          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', marginBottom: '14px' }}>
+            Primary key: <code style={{ color: 'rgba(99,102,241,0.7)' }}>{config.idField}</code>
+            {config.autoPk ? ' (auto-generated)' : ' (manual entry)'}
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>
+            {renderFormFields()}
+          </div>
+
           <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
-            <button onClick={handleSave} disabled={saving} style={btnPrimary}>{saving ? 'Saving...' : editingId ? 'Update' : 'Create'}</button>
-            <button onClick={() => setShowForm(false)} style={btnGhost}>Cancel</button>
+            <button onClick={handleSave} disabled={saving} style={S.btnPrimary}>
+              {saving ? 'Saving...' : editingId ? `Update ${config.singular}` : `Add ${config.singular}`}
+            </button>
+            <button onClick={() => setShowForm(false)} style={S.btnGhost}>Cancel</button>
           </div>
         </div>
       )}
 
-      {/* Toolbar: Page Size dropdown + Search */}
+      {/* ── Toolbar ────────────────────────────────────────────────── */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', gap: '12px', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)' }}>Show</span>
-          <select
-            value={pageSize}
-            onChange={e => setPageSize(Number(e.target.value))}
-            style={selectStyle}
-          >
-            {PAGE_SIZES.map(s => (
-              <option key={s} value={s}>{s}</option>
-            ))}
+          <select value={pageSize} onChange={e => setPageSize(Number(e.target.value))} style={S.select}>
+            {PAGE_SIZES.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
-          <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)' }}>records</span>
         </div>
         <div style={{ position: 'relative' }}>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search..."
-            style={{ ...inputStyle, width: '240px', paddingLeft: '34px' }} />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search records..."
+            style={{ ...S.input, width: '260px', paddingLeft: '34px' }} />
           <svg style={{ position: 'absolute', left: '11px', top: '50%', transform: 'translateY(-50%)', opacity: 0.4 }}
             width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
             <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
@@ -559,70 +697,72 @@ export default function MasterTablePage({ params }: { params: Promise<{ locale: 
         </div>
       </div>
 
-      {/* Table */}
+      {/* ── Records Table ──────────────────────────────────────────── */}
       <div style={{ borderRadius: '14px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.06)' }}>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
-                <th style={{ ...thStyle, width: '56px', textAlign: 'center' }}>#</th>
-                {config.columns.map((col, ci) => (
-                  <th key={`${col.key}-${ci}`} style={{ ...thStyle, ...(col.key === 'flag' && col.label === 'Flag' ? { width: '60px', textAlign: 'center' } : {}) }}>{col.label}</th>
+                <th style={{ ...S.th, width: '50px', textAlign: 'center' }}>#</th>
+                {config.fields.map((f, i) => (
+                  <th key={`${f.name}-${i}`} style={{
+                    ...S.th,
+                    ...(f.name === 'flag' ? { width: '56px', textAlign: 'center' } : {}),
+                  }}>{f.label}</th>
                 ))}
-                <th style={{ ...thStyle, width: '120px', textAlign: 'center' }}>Actions</th>
+                <th style={{ ...S.th, width: '120px', textAlign: 'center' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={config.columns.length + 2} style={{ ...tdStyle, textAlign: 'center', color: 'rgba(255,255,255,0.3)', padding: '40px 16px' }}>Loading...</td></tr>
+                <tr><td colSpan={config.fields.length + 2} style={{ ...S.td, textAlign: 'center', color: 'rgba(255,255,255,0.3)', padding: '40px' }}>Loading...</td></tr>
               ) : paginatedRows.length === 0 ? (
-                <tr><td colSpan={config.columns.length + 2} style={{ ...tdStyle, textAlign: 'center', color: 'rgba(255,255,255,0.25)', padding: '40px 16px' }}>
-                  {search || parentFilter ? 'No matching records.' : 'No records yet. Click "+ Add New" to create one.'}
+                <tr><td colSpan={config.fields.length + 2} style={{ ...S.td, textAlign: 'center', color: 'rgba(255,255,255,0.25)', padding: '40px' }}>
+                  {search ? 'No matching records.' : `No ${config.label.toLowerCase()} yet. Click "+ Add ${config.singular}" to create one.`}
                 </td></tr>
-              ) : (
-                paginatedRows.map((row, i) => (
-                  <tr key={String(row[config.idField] ?? i)} style={{ transition: 'background 0.15s' }}
-                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
-                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                    <td style={snStyle}>{globalIndex(i)}</td>
-                    {config.columns.map((col, ci) => (
-                      <td key={`${col.key}-${ci}`} style={{
-                        ...tdStyle,
-                        ...(col.key === 'flag' && col.label === 'Flag' ? { textAlign: 'center', padding: '6px 16px' } : {}),
-                      }}>
-                        <CellValue row={row} col={col} tableName={tableName} />
-                      </td>
-                    ))}
-                    <td style={{ ...tdStyle, whiteSpace: 'nowrap', textAlign: 'center' }}>
-                      <button onClick={() => handleEdit(row)} style={btnSmall}>Edit</button>
-                      <button onClick={() => handleDelete(row)} style={{ ...btnSmall, color: '#ef4444', borderColor: 'rgba(239,68,68,0.2)' }}>Del</button>
+              ) : paginatedRows.map((row, i) => (
+                <tr key={String(row[config.idField] ?? i)}
+                  style={{ transition: 'background 0.15s' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                  <td style={S.sn}>{globalIndex(i)}</td>
+                  {config.fields.map((f, ci) => (
+                    <td key={`${f.name}-${ci}`} style={{
+                      ...S.td,
+                      ...(f.name === 'flag' ? { textAlign: 'center', padding: '6px 12px' } : {}),
+                    }}>
+                      {renderCell(row, f)}
                     </td>
-                  </tr>
-                ))
-              )}
+                  ))}
+                  <td style={{ ...S.td, whiteSpace: 'nowrap', textAlign: 'center' }}>
+                    <button onClick={() => handleEdit(row)} style={{ ...S.btnMini, color: '#93c5fd', borderColor: 'rgba(96,165,250,0.2)', background: 'rgba(59,130,246,0.08)' }}>Edit</button>
+                    <button onClick={() => handleDelete(row)} style={{ ...S.btnMini, color: '#fca5a5', borderColor: 'rgba(239,68,68,0.2)', background: 'rgba(239,68,68,0.08)' }}>Del</button>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Footer: Record info + Pagination */}
+      {/* ── Pagination Footer ──────────────────────────────────────── */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '14px', flexWrap: 'wrap', gap: '12px' }}>
         <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.35)' }}>
           {totalFiltered > 0
-            ? `Showing ${startRecord}\u2013${endRecord} of ${totalFiltered}${totalFiltered !== allRows.length ? ` (filtered from ${allRows.length})` : ''}`
+            ? `Showing ${(safePage - 1) * pageSize + 1}\u2013${Math.min(safePage * pageSize, totalFiltered)} of ${totalFiltered}${totalFiltered !== allRows.length ? ` (filtered from ${allRows.length})` : ''}`
             : `${allRows.length} total records`}
         </div>
         {totalPages > 1 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={safePage <= 1}
-              style={{ ...pageBtn, ...(safePage <= 1 ? pageBtnDisabled : {}) }}>&#8249; Prev</button>
+              style={{ ...S.pageBtn, ...(safePage <= 1 ? S.pageDis : {}) }}>&#8249; Prev</button>
             {getPageRange().map((p, i) =>
               typeof p === 'string'
                 ? <span key={`e${i}`} style={{ color: 'rgba(255,255,255,0.15)', fontSize: '12px', padding: '0 2px' }}>&#8230;</span>
-                : <button key={p} onClick={() => setCurrentPage(p)} style={{ ...pageBtn, ...(p === safePage ? pageActive : {}) }}>{p}</button>
+                : <button key={p} onClick={() => setCurrentPage(p)} style={{ ...S.pageBtn, ...(p === safePage ? S.pageActive : {}) }}>{p}</button>
             )}
             <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={safePage >= totalPages}
-              style={{ ...pageBtn, ...(safePage >= totalPages ? pageBtnDisabled : {}) }}>Next &#8250;</button>
+              style={{ ...S.pageBtn, ...(safePage >= totalPages ? S.pageDis : {}) }}>Next &#8250;</button>
           </div>
         )}
       </div>
@@ -630,64 +770,69 @@ export default function MasterTablePage({ params }: { params: Promise<{ locale: 
   );
 }
 
-/* ─── Styles ────────────────────────────────────────────────────────── */
-const btnPrimary: React.CSSProperties = {
-  padding: '8px 20px', borderRadius: '10px', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-  color: '#fff', fontSize: '13px', fontWeight: 600, border: 'none', cursor: 'pointer',
-};
-const btnGhost: React.CSSProperties = {
-  padding: '8px 20px', borderRadius: '10px', background: 'transparent',
-  color: 'rgba(255,255,255,0.5)', fontSize: '13px', fontWeight: 500,
-  border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer',
-};
-const btnSmall: React.CSSProperties = {
-  padding: '4px 12px', borderRadius: '8px', background: 'transparent',
-  color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: 500,
-  border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', marginRight: '4px',
-};
-const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '8px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.04)',
-  border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: '13px', outline: 'none', boxSizing: 'border-box',
-};
-const selectStyle: React.CSSProperties = {
-  padding: '6px 10px', borderRadius: '8px', background: 'rgba(255,255,255,0.06)',
-  border: '1px solid rgba(255,255,255,0.12)', color: '#fff', fontSize: '13px', outline: 'none',
-  cursor: 'pointer',
-};
-const labelStyle: React.CSSProperties = {
-  fontSize: '11px', fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase',
-  letterSpacing: '0.05em', display: 'block', marginBottom: '6px',
-};
-const thStyle: React.CSSProperties = {
-  padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: 600,
-  color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.06em',
-  background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.06)',
-};
-const tdStyle: React.CSSProperties = {
-  padding: '10px 16px', fontSize: '13px', color: 'rgba(255,255,255,0.7)',
-  borderBottom: '1px solid rgba(255,255,255,0.04)',
-};
-const snStyle: React.CSSProperties = {
-  padding: '10px 16px', fontSize: '13px', fontWeight: 600, color: 'rgba(255,255,255,0.6)',
-  borderBottom: '1px solid rgba(255,255,255,0.04)', textAlign: 'center',
-  fontVariantNumeric: 'tabular-nums',
-};
-const errorBox: React.CSSProperties = {
-  padding: '12px 16px', borderRadius: '10px', background: 'rgba(239,68,68,0.1)',
-  border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444', fontSize: '13px', marginBottom: '16px',
-};
-const formContainer: React.CSSProperties = {
-  padding: '20px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)',
-  border: '1px solid rgba(255,255,255,0.08)', marginBottom: '20px',
-};
-const pageBtn: React.CSSProperties = {
-  padding: '5px 12px', borderRadius: '7px', background: 'rgba(255,255,255,0.04)',
-  border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)',
-  fontSize: '12px', cursor: 'pointer', minWidth: '32px', textAlign: 'center', fontWeight: 500,
-};
-const pageActive: React.CSSProperties = {
-  background: 'rgba(99,102,241,0.2)', borderColor: 'rgba(99,102,241,0.4)', color: '#a5b4fc', fontWeight: 600,
-};
-const pageBtnDisabled: React.CSSProperties = {
-  opacity: 0.3, cursor: 'default',
+/* ═══════════════════════════════════════════════════════════════════════
+   STYLES
+   ═══════════════════════════════════════════════════════════════════════ */
+
+const S: Record<string, React.CSSProperties> = {
+  card: {
+    padding: '20px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)',
+    border: '1px solid rgba(255,255,255,0.08)', marginBottom: '16px',
+  },
+  statusBar: {
+    padding: '10px 16px', borderRadius: '10px', fontSize: '13px', marginBottom: '14px',
+    background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444',
+  },
+  label: {
+    fontSize: '11px', fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase',
+    letterSpacing: '0.05em', display: 'block', marginBottom: '5px',
+  },
+  input: {
+    width: '100%', padding: '8px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: '13px', outline: 'none', boxSizing: 'border-box',
+  },
+  select: {
+    padding: '6px 10px', borderRadius: '8px', background: 'rgba(255,255,255,0.06)',
+    border: '1px solid rgba(255,255,255,0.12)', color: '#fff', fontSize: '13px', outline: 'none', cursor: 'pointer',
+  },
+  dropOption: {
+    display: 'flex', alignItems: 'center', gap: '8px', width: '100%',
+    padding: '8px 12px', border: 'none', cursor: 'pointer', textAlign: 'left',
+    background: 'transparent', color: '#fff', fontSize: '12px', transition: 'background 0.1s',
+  },
+  btnPrimary: {
+    padding: '8px 20px', borderRadius: '10px', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+    color: '#fff', fontSize: '13px', fontWeight: 600, border: 'none', cursor: 'pointer',
+  },
+  btnGhost: {
+    padding: '8px 20px', borderRadius: '10px', background: 'transparent',
+    color: 'rgba(255,255,255,0.5)', fontSize: '13px', fontWeight: 500,
+    border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer',
+  },
+  btnMini: {
+    padding: '4px 10px', borderRadius: '7px', background: 'transparent',
+    fontSize: '11px', fontWeight: 500, border: '1px solid', cursor: 'pointer', marginRight: '4px',
+  },
+  th: {
+    padding: '11px 14px', textAlign: 'left', fontSize: '11px', fontWeight: 600,
+    color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.06em',
+    background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.06)',
+  },
+  td: {
+    padding: '9px 14px', fontSize: '13px', color: 'rgba(255,255,255,0.7)',
+    borderBottom: '1px solid rgba(255,255,255,0.04)',
+  },
+  sn: {
+    padding: '9px 14px', fontSize: '13px', fontWeight: 600, color: 'rgba(255,255,255,0.5)',
+    borderBottom: '1px solid rgba(255,255,255,0.04)', textAlign: 'center', fontVariantNumeric: 'tabular-nums',
+  },
+  pageBtn: {
+    padding: '5px 12px', borderRadius: '7px', background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)',
+    fontSize: '12px', cursor: 'pointer', minWidth: '32px', textAlign: 'center', fontWeight: 500,
+  },
+  pageActive: {
+    background: 'rgba(99,102,241,0.2)', borderColor: 'rgba(99,102,241,0.4)', color: '#a5b4fc', fontWeight: 600,
+  },
+  pageDis: { opacity: 0.3, cursor: 'default' },
 };
