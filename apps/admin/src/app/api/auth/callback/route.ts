@@ -58,14 +58,15 @@ export async function GET(req: NextRequest) {
       expiresAt: Date.now() + tokens.expires_in * 1000,
     };
 
-    // Set session cookie and redirect to dashboard
+    // Set session cookie — use refresh token lifetime (30min default)
+    const cookieMaxAge = tokens.refresh_expires_in || 1800;
     const response = NextResponse.redirect(`${ADMIN_URL}/${state}`);
     response.cookies.set(AUTH_COOKIE, JSON.stringify(session), {
       httpOnly: true,
       secure: true,
       sameSite: 'lax',
       path: '/',
-      maxAge: tokens.expires_in,
+      maxAge: cookieMaxAge,
     });
 
     return response;

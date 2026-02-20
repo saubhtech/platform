@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
+import { getSessionWithRefresh } from '@/lib/auth';
 
 const API_URL = process.env.API_INTERNAL_URL || 'http://localhost:3001';
 
@@ -7,9 +7,9 @@ async function proxyRequest(
   req: NextRequest,
   context: { params: Promise<{ path: string[] }> },
 ) {
-  const session = await getSession();
+  const session = await getSessionWithRefresh();
   if (!session) {
-    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ message: 'Unauthorized - please log in again' }, { status: 401 });
   }
 
   const { path } = await context.params;

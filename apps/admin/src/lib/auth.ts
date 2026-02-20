@@ -38,6 +38,7 @@ export interface TokenResponse {
   refresh_token: string;
   id_token: string;
   expires_in: number;
+  refresh_expires_in: number;
   token_type: string;
 }
 
@@ -57,6 +58,26 @@ export async function exchangeCodeForTokens(code: string): Promise<TokenResponse
   if (!res.ok) {
     const error = await res.text();
     throw new Error(`Token exchange failed: ${error}`);
+  }
+
+  return res.json();
+}
+
+export async function refreshAccessToken(refreshToken: string): Promise<TokenResponse> {
+  const res = await fetch(`${REALM_URL}/protocol/openid-connect/token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'refresh_token',
+      client_id: KEYCLOAK_CLIENT_ID,
+      client_secret: KEYCLOAK_CLIENT_SECRET,
+      refresh_token: refreshToken,
+    }),
+  });
+
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(`Token refresh failed: ${error}`);
   }
 
   return res.json();
@@ -107,13 +128,63 @@ export async function getSession(): Promise<SessionData | null> {
 
   try {
     const session: SessionData = JSON.parse(cookie.value);
+    return session;
+  } catch {
+    return null;
+  }
+}
 
-    // Check if token is expired
-    if (Date.now() >= session.expiresAt) {
-      return null;
+/**
+ * Get session with automatic token refresh.
+ * If the access token is expired but refresh token is valid,
+ * refreshes the token and updates the cookie.
+ */
+export async function getSessionWithRefresh(): Promise<SessionData | null> {
+  const cookieStore = await cookies();
+  const cookie = cookieStore.get(AUTH_COOKIE);
+  if (!cookie) return null;
+
+  try {
+    const session: SessionData = JSON.parse(cookie.value);
+
+    // Token still valid (with 30s buffer)
+    if (Date.now() < session.expiresAt - 30000) {
+      return session;
     }
 
-    return session;
+    // Try to refresh
+    try {
+      const tokens = await refreshAccessToken(session.refreshToken);
+      const payload = parseJwt(tokens.access_token);
+      const roles = extractRoles(payload);
+
+      const newSession: SessionData = {
+        accessToken: tokens.access_token,
+        refreshToken: tokens.refresh_token,
+        idToken: tokens.id_token,
+        user: {
+          id: payload.sub,
+          email: payload.email,
+          username: payload.preferred_username,
+          roles,
+        },
+        expiresAt: Date.now() + tokens.expires_in * 1000,
+      };
+
+      // Update cookie
+      cookieStore.set(AUTH_COOKIE, JSON.stringify(newSession), {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'lax',
+        path: '/',
+        maxAge: tokens.refresh_expires_in || 1800,
+      });
+
+      return newSession;
+    } catch {
+      // Refresh failed — session is dead
+      return null;
+    }
   } catch {
     return null;
   }
