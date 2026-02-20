@@ -25,10 +25,10 @@ import {
   CreateSectorDto, UpdateSectorDto,
   CreateFieldDto, UpdateFieldDto,
 } from './dto';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { KeycloakAuthGuard } from '../auth';
 
 @Controller('master')
-@UseGuards(JwtAuthGuard)
+@UseGuards(KeycloakAuthGuard)
 export class MasterController {
   constructor(private readonly svc: MasterService) {}
 
