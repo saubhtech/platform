@@ -7,14 +7,21 @@
 |------|-------|
 | **Repo** | github.com/saubhtech/platform (public, branch: main) |
 | **Local Path** | `C:\Users\Rishutosh Kumar\Documents\platform` |
-| **Server Path** | `/data/projects/platform` (also symlinked from `/data/projects/saubh-gig`) |
-| **CRM Path** | `/opt/whatsapp-ai-platform/` |
+| **Server Path** | `/data/projects/platform` (only project folder on server) |
 | **SSH** | `ssh -p 5104 admin1@103.67.236.186` |
 | **API Domain** | api.saubh.tech |
 | **Admin Domain** | admin.saubh.tech |
 | **Web Domain** | saubh.tech |
-| **CRM URL** | saubh.tech/crmwhats (changed from /whats in P4) |
 | **Package Manager** | pnpm (never npm) |
+
+## Server Layout (Current)
+
+| Item | Details |
+|------|---------|
+| **Filesystem** | 40G used / 379G total (11%) |
+| **Docker containers** | saubh-keycloak (8080), saubh-postgres (5432), saubh-redis (6379) |
+| **PM2 apps** | web (3000), api (3001), realtime (3002), admin (3003) |
+| **Projects** | `/data/projects/platform` — only project remaining |
 
 ## What's Been Built
 
@@ -25,18 +32,6 @@
 | api | `apps/api` | NestJS, Prisma, PostgreSQL, Keycloak + WhatsApp OTP auth | 3001 | ✅ Live |
 | admin | `apps/admin` | Next.js, Tailwind, Keycloak SSO | 3003 | ✅ Live |
 | realtime | `apps/realtime` | WebSocket server | 3002 | ✅ Live |
-
-### WhatsApp CRM (Docker — 8 containers)
-| Container | Image | Port | Role |
-|-----------|-------|------|------|
-| whats-backend | Custom NestJS + Drizzle ORM | 4000 | CRM API |
-| whats-frontend | Custom Next.js (basePath: /whats) | 3100 | CRM UI |
-| whats-worker | Custom BullMQ | — | Background jobs |
-| whats-media | nginx:alpine | 4001 | Media server |
-| whats-postgres | postgres:16-alpine | 5432 (internal) | DB: whatsapp_platform |
-| whats-redis | redis:7-alpine | 6379 (internal) | Queue + cache |
-| whats-minio | minio/minio:latest | 9000/9001 | S3 storage |
-| whats-n8n | n8nio/n8n:latest | 5678 (internal) | Workflow automation |
 
 ---
 
@@ -71,47 +66,55 @@
 - `apps/web/src/app/[locale]/dashboard/page.tsx` — Protected stub (JWT check, user info, logout)
 - `apps/web/src/proxy.ts` — Updated with dashboard auth guard (saubh_token cookie check)
 
----
-
-### Completed: P4 — WhatsApp CRM Audit + URL Migration ✅ (Feb 21, 2026)
-
-**Audit Findings**:
-- Full-featured WhatsApp CRM at `/opt/whatsapp-ai-platform/`
-- 8 Docker containers, 81 DB tables, 19 API modules, 12 frontend pages
-- NestJS + Drizzle ORM (different from main platform's Prisma)
-- Separate DB (`whatsapp_platform`) from main platform (`saubhtech`)
-- Dual connector: Evolution API + WABA (WhatsApp Business Cloud API)
-- n8n automation built in
-
-**Gap Analysis Summary** (17 EXISTS, 1 PARTIAL, 1 MISSING):
-- ✅ EXISTS: Multi-tenant, channels, inbox, contacts, messages, WABA, Evolution, AI bot, human handoff, broadcast, templates, CRM pipeline, analytics, n8n, attachments, consent
-- ⚠️ PARTIAL: Multilingual (backend hook exists, no i18n tables)
-- ❌ MISSING: SIM-based WhatsApp connector
-- ⚠️ NOT RUNNING: Evolution API container
-
-**Top 5 Integration Gaps** (platform ↔ CRM):
-1. Auth not connected — CRM has own JWT, not linked to P3 auth
-2. User tables separate — CRM `users` vs main `public.user`
-3. Databases separate — `whatsapp_platform` vs `saubhtech`
-4. Evolution API down — OTP sender can't deliver messages
-5. No shared session/SSO between platforms
-
-**URL Migration**: `/whats` → `/crmwhats` in Caddy config (done)
-
-**Integration Plan**: `docs/crm-integration-plan.md` — auth SSO, user mapping, shared services, API boundaries, phase plan P5–P10
+**Note**: Evolution API not running. OTP messages silently skipped. OTP readable from DB for testing.
 
 ---
 
-## What's Next: P5 — Connect CRM Auth to Main Platform JWT
+### Completed: P4 — WhatsApp CRM Audit ✅ (Feb 21, 2026)
 
-- Share `JWT_SECRET` between main platform API and CRM backend
-- Add JWT validation middleware in CRM that accepts main platform tokens
-- Add `platform_user_id BIGINT UNIQUE` to CRM `users` table
-- Auto-provision CRM user on first valid JWT access (lazy provisioning)
-- Start Evolution API container for OTP delivery + CRM webhooks
-- See `docs/crm-integration-plan.md` for full details
+Audited old WhatsApp CRM at `/opt/whatsapp-ai-platform/` (now removed in P5):
+- Was: 8 Docker containers, 81 DB tables, 19 API modules, 12 frontend pages
+- Stack: NestJS + Drizzle ORM, separate DB (`whatsapp_platform`), BullMQ workers, MinIO, n8n
+- Features found: multi-tenant, channels, inbox, contacts, messages, WABA, Evolution, AI bot, human handoff, broadcast, templates, CRM pipeline, analytics, n8n, attachments, consent
+- Integration plan created: `docs/crm-integration-plan.md`
 
-**Future phases**: P6 (WABA) → P7 (AI agent) → P8 (CRM pipeline) → P9 (Broadcast) → P10 (Analytics)
+---
+
+### Completed: P5 — Remove Old WhatsApp Platform + Free Disk Space ✅ (Feb 21, 2026)
+
+**Decision**: Old CRM was architecturally incompatible (separate DB, separate ORM, separate auth). Removed entirely. Will build fresh CRM inside monorepo.
+
+**Removed**:
+- `/opt/whatsapp-ai-platform/` — entire folder
+- 8 Docker containers (whats-backend, whats-frontend, whats-worker, whats-media, whats-postgres, whats-redis, whats-minio, whats-n8n)
+- 4 Docker volumes + whats-network
+- `/data/projects/saubh-gig/` (45MB) — old pre-monorepo project
+- `/data/projects/saubh-gig-backup-20260219/` (394MB) — old backup
+- Stopped `saubh-evolution` container (was crashed 42hrs)
+- Docker prune: unused images, build cache
+
+**Disk freed**: 52G (92G → 40G used), Docker images 126GB → 1.3GB
+
+**Saved for P6** (Evolution API credentials):
+- `EVOLUTION_API_URL=https://evo.saubh.tech`
+- `AUTHENTICATION_API_KEY=20bc14ff5e5ce0b98d2ec7d9ed51046d78fc1ba4ce8e3540ba25e1d3e5cbb458`
+- `DATABASE_CONNECTION_URI=postgresql://saubh_admin:PgSecure2026Saubh@postgres:5432/saubh_gig`
+- Evolution image: `evoapicloud/evolution-api:v2.3.7`
+- Instance data was at: `/data/evolution` (may still exist)
+
+---
+
+## What's Next: P6 — Build Fresh CRM WhatsApp Inside Monorepo
+
+Build a new WhatsApp CRM app inside the monorepo at `apps/crmwhats/`:
+- Use same stack as main platform (NestJS + Prisma + PostgreSQL)
+- Share `saubhtech` DB (add CRM tables to existing schema)
+- Share JWT auth from P3
+- Start with: contacts, conversations, messages, inbox UI
+- Evolution API: start fresh container, connect to platform API for OTP + CRM
+- Route: `saubh.tech/crmwhats`
+
+**Future phases**: P7 (WABA) → P8 (AI agent) → P9 (Broadcast) → P10 (Analytics)
 
 ---
 
@@ -136,15 +139,6 @@
 ### Main Platform DB (`saubhtech`)
 - **public schema**: Business, Client, User (with WhatsApp OTP fields), UserMembership, Conversation, Message, Telephony
 - **master schema**: Geographic hierarchy (Country → State → District → Postal → Place), Organizational hierarchy (Locality → Area → Division → Region → Zone), Industry classification (Sector → Field → Market), Language (basic — langid + language only)
-
-### CRM DB (`whatsapp_platform`) — 81 tables
-- **CRM Core**: tenants, users, user, contacts, contact_notes, contact_lists, conversations, messages, attachments, labels, whatsapp_channels, quick_replies, templates
-- **Pipeline**: crm_deals, crm_pipelines, crm_tasks
-- **Broadcast**: broadcasts, broadcast_recipients
-- **Chat Hub**: chat_hub_agents, chat_hub_messages, chat_hub_sessions
-- **AI + Consent**: ai_bot_config, consent_records
-- **Analytics**: analytics_events, insights_by_period, insights_metadata, insights_raw
-- **n8n**: ~30 workflow/execution/credential tables (shared DB)
 
 ## Master Tables Status
 
