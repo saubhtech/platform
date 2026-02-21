@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { BullModule } from '@nestjs/bullmq';
 import { PrismaModule } from './prisma/prisma.module';
 import { HealthModule } from './health/health.module';
 import { UserModule } from './user/user.module';
@@ -8,9 +10,17 @@ import { AdminModule } from './admin/admin.module';
 import { MasterModule } from './master/master.module';
 import { WhatsappModule } from './whatsapp/whatsapp.module';
 import { WhatsappAuthModule } from './auth/whatsapp-auth.module';
+import { CrmModule } from './crm/crm.module';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    BullModule.forRoot({
+      connection: {
+        host: process.env.REDIS_HOST || '127.0.0.1',
+        port: parseInt(process.env.REDIS_PORT || '6379', 10),
+      },
+    }),
     PrismaModule,
     HealthModule,
     UserModule,
@@ -20,6 +30,7 @@ import { WhatsappAuthModule } from './auth/whatsapp-auth.module';
     MasterModule,
     WhatsappModule,
     WhatsappAuthModule,
+    CrmModule,
   ],
 })
 export class AppModule {}
