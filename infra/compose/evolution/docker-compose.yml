@@ -1,0 +1,61 @@
+# ─── Evolution API — WhatsApp SIM-based connector ───────────────────────────
+# Start: docker compose up -d
+# Logs: docker compose logs -f evolution
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  evolution:
+    container_name: saubh-evolution
+    image: atendai/evolution-api:v2.2.0
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      # ─── Auth
+      - AUTHENTICATION_API_KEY=${EVOLUTION_API_KEY}
+      - AUTHENTICATION_EXPOSE_IN_FETCH_INSTANCES=false
+
+      # ─── Server
+      - SERVER_URL=${EVOLUTION_SERVER_URL:-https://evo.saubh.tech}
+      - SERVER_PORT=8080
+      - CORS_ORIGIN=${CORS_ORIGIN:-https://saubh.tech}
+      - LOG_LEVEL=${LOG_LEVEL:-WARN}
+      - LANGUAGE=en
+
+      # ─── Database (disabled — using in-memory/file store)
+      - DATABASE_ENABLED=false
+
+      # ─── Redis (shared with main platform)
+      - CACHE_REDIS_ENABLED=true
+      - CACHE_REDIS_URI=redis://${REDIS_PASSWORD:+:${REDIS_PASSWORD}@}saubh-redis:6379
+
+      # ─── QR Code
+      - QRCODE_LIMIT=10
+      - QRCODE_COLOR=#000000
+
+      # ─── Session
+      - CONFIG_SESSION_PHONE_CLIENT=Saubh Platform
+      - CONFIG_SESSION_PHONE_NAME=Chrome
+
+      # ─── Instance
+      - DEL_INSTANCE=false
+
+      # ─── Webhook (disabled globally — set per instance)
+      - WEBHOOK_GLOBAL_ENABLED=false
+      - WEBHOOK_GLOBAL_ENCODING=false
+
+      # ─── RabbitMQ (disabled)
+      - RABBITMQ_ENABLED=false
+
+    volumes:
+      - evolution_instances:/evolution/instances
+    networks:
+      - saubh-network
+
+volumes:
+  evolution_instances:
+    name: saubh-evolution-instances
+
+networks:
+  saubh-network:
+    external: true
