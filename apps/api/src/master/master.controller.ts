@@ -267,7 +267,17 @@ export class MasterController {
   // ─── Language ───────────────────────────────────────────────────────────
 
   @Get('languages')
-  listLanguages() { return this.svc.findAllLanguages(); }
+  listLanguages(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('active') active?: string,
+  ) {
+    return this.svc.findAllLanguages(
+      page ? +page : 1,
+      limit ? +limit : 50,
+      active === 'true',
+    );
+  }
 
   @Get('languages/:id')
   getLanguage(@Param('id', ParseIntPipe) id: number) { return this.svc.findLanguage(id); }
