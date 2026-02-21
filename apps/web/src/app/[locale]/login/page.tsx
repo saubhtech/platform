@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { LOGO_SRC } from '@/lib/constants';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.saubh.tech';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.saubh.tech/api';
 const RTL_LOCALES = ['ur-in', 'ks-in', 'sd-in'];
 
 export default function LoginPage() {
