@@ -1,7 +1,7 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  // Self-hosted Node.js server — no Vercel
+  // Self-hosted on port 3004, behind Caddy at saubh.tech/crmwhats
   basePath: '/crmwhats',
 
   poweredByHeader: false,

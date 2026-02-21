@@ -1,7 +1,9 @@
 import type { Config } from 'tailwindcss';
 
 const config: Config = {
-  content: ['./src/**/*.{ts,tsx}'],
+  content: [
+    './src/**/*.{ts,tsx}',
+  ],
   theme: {
     extend: {
       colors: {
@@ -11,8 +13,8 @@ const config: Config = {
         primary: '#7C3AED',
         secondary: '#EC4899',
         accent: '#F97316',
-        txt: '#F8F8FF',
-        'txt-muted': '#6B7280',
+        'text-main': '#F8F8FF',
+        'text-muted': '#6B7280',
         success: '#10B981',
         warning: '#F59E0B',
         error: '#EF4444',
@@ -23,19 +25,18 @@ const config: Config = {
       borderRadius: {
         glass: '16px',
       },
-      animation: {
-        skeleton: 'skeleton 1.5s ease-in-out infinite',
-        'pulse-dot': 'pulse-dot 2s ease-in-out infinite',
+      backdropBlur: {
+        glass: '12px',
       },
       keyframes: {
         skeleton: {
-          '0%, 100%': { opacity: '0.05' },
-          '50%': { opacity: '0.12' },
+          '0%': { opacity: '0.4' },
+          '50%': { opacity: '0.7' },
+          '100%': { opacity: '0.4' },
         },
-        'pulse-dot': {
-          '0%, 100%': { opacity: '1', transform: 'scale(1)' },
-          '50%': { opacity: '0.5', transform: 'scale(1.2)' },
-        },
+      },
+      animation: {
+        skeleton: 'skeleton 1.5s ease-in-out infinite',
       },
     },
   },
