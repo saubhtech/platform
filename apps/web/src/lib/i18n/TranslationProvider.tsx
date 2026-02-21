@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import en from './strings/en';
 import { LANGUAGES, DEFAULT_LANG, SUPPORTED_CODES, getLang, type LangDef } from './languages';
+import { isValidLocale, localeToLang } from './locale-map';
 
 // Widen en's 'as const' literal type for dynamic key lookups
 const enBase: Record<string, string> = en;
@@ -82,6 +83,17 @@ const LANG_LOADERS: Record<string, LangLoader> = {
   tr: () => import('./strings/tr'),
 };
 
+// ─── Extract lang from URL path ───
+// e.g. /hi-in/about → "hi", /en-in → "en"
+function langFromPathname(): string | null {
+  if (typeof window === 'undefined') return null;
+  const firstSegment = window.location.pathname.split('/')[1] ?? '';
+  if (isValidLocale(firstSegment)) {
+    return localeToLang(firstSegment);
+  }
+  return null;
+}
+
 // ─── Provider ───
 export function TranslationProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<string>(DEFAULT_LANG);
@@ -127,13 +139,18 @@ export function TranslationProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // ─── Detect initial language (runs once on mount) ───
+  // Priority: ?lang= param > URL path locale > saubh-lang cookie > default
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const urlLang = params.get('lang');
+    const pathLang = langFromPathname();
     const cookieLang = getCookie('saubh-lang');
 
-    const detected = urlLang || cookieLang || DEFAULT_LANG;
+    const detected = urlLang || pathLang || cookieLang || DEFAULT_LANG;
     const valid = SUPPORTED_CODES.includes(detected) ? detected : DEFAULT_LANG;
+
+    // Always sync cookie with detected language
+    setCookie('saubh-lang', valid);
 
     if (valid !== DEFAULT_LANG) {
       setLangState(valid);
