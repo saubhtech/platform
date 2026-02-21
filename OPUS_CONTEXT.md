@@ -18,10 +18,11 @@
 
 | Item | Details |
 |------|---------|
-| **Filesystem** | 40G used / 379G total (11%) |
-| **Docker containers** | saubh-keycloak (8080), saubh-postgres (5432), saubh-redis (6379) |
+| **Filesystem** | ~41G used / 379G total (11%) |
+| **Docker containers** | saubh-keycloak (8080), saubh-postgres (5432), saubh-redis (6379), saubh-evolution (8081) |
 | **PM2 apps** | web (3000), api (3001), realtime (3002), admin (3003) |
 | **Projects** | `/data/projects/platform` — only project remaining |
+| **Redis password** | `Red1sSecure2026` |
 
 ## What's Been Built
 
@@ -29,9 +30,17 @@
 | App | Path | Stack | Port | Status |
 |-----|------|-------|------|--------|
 | web | `apps/web` | Next.js 16, Tailwind v4, i18n (13 active languages) | 3000 | ✅ Live |
-| api | `apps/api` | NestJS, Prisma, PostgreSQL, Keycloak + WhatsApp OTP auth | 3001 | ✅ Live |
-| admin | `apps/admin` | Next.js, Tailwind, Keycloak SSO | 3003 | ✅ Live |
+| api | `apps/api` | NestJS, Prisma, PostgreSQL, Keycloak + WhatsApp OTP auth + CRM | 3001 | ✅ Live |
+| admin | `apps/admin` | Next.js, Tailwind, Keycloak SSO, CRM UI | 3003 | ✅ Live |
 | realtime | `apps/realtime` | WebSocket server | 3002 | ✅ Live |
+
+### Docker Services
+| Container | Image | Port | Role |
+|-----------|-------|------|------|
+| saubh-keycloak | keycloak/keycloak | 8080 | SSO/Auth |
+| saubh-postgres | postgres:16 | 5432 | Main DB (`saubhtech` + `evolution`) |
+| saubh-redis | redis:7 | 6379 | Cache + BullMQ queues |
+| saubh-evolution | atendai/evolution-api:v2.2.0 | 8081 | WhatsApp API (v2.3.7) |
 
 ---
 
@@ -40,8 +49,6 @@
 **Users Table** (`public.user`):
 - Unified table for all user types (BO/CL/GW/SA/AD)
 - Key fields: `userid` (BigInt PK), `whatsapp` (unique), `passcode`, `passcodeExpiry`, `fname`, `lname`, `usertype`, `email`, `status`
-- Enums preserved: Gender, VerifiedType, UserStatus
-- New fields added: `lname`, `passcodeExpiry` (mapped `passcode_expiry`), `usertype` (default "GW")
 
 **WhatsApp Auth Endpoints** (all under `/api/` prefix):
 | Endpoint | Method | Description |
@@ -52,69 +59,111 @@
 | `/api/auth/whatsapp/logout` | POST | Client-side cookie clear |
 | `/api/webhooks/whatsapp` | POST | Evolution API webhook (Register/Login commands) |
 
-**Backend Files**:
-- `apps/api/src/auth/otp.service.ts` — OTP generation/verification
-- `apps/api/src/auth/whatsapp-auth.service.ts` — register, requestOTP, loginWithOTP
-- `apps/api/src/auth/whatsapp-auth.controller.ts` — 4 auth endpoints
-- `apps/api/src/auth/whatsapp-auth.module.ts` — module wiring
-- `apps/api/src/whatsapp/whatsapp-sender.service.ts` — Evolution API sender (sendOTP, sendWelcome)
-- `apps/api/src/whatsapp/whatsapp-webhook.controller.ts` — webhook handler
-- `apps/api/src/whatsapp/whatsapp.module.ts` — module wiring
-
-**Frontend Files**:
-- `apps/web/src/app/[locale]/login/page.tsx` — Register tab (WhatsApp deep link) + Sign In tab (OTP flow)
-- `apps/web/src/app/[locale]/dashboard/page.tsx` — Protected stub (JWT check, user info, logout)
-- `apps/web/src/proxy.ts` — Updated with dashboard auth guard (saubh_token cookie check)
-
-**Note**: Evolution API not running. OTP messages silently skipped. OTP readable from DB for testing.
-
 ---
 
 ### Completed: P4 — WhatsApp CRM Audit ✅ (Feb 21, 2026)
 
 Audited old WhatsApp CRM at `/opt/whatsapp-ai-platform/` (now removed in P5):
 - Was: 8 Docker containers, 81 DB tables, 19 API modules, 12 frontend pages
-- Stack: NestJS + Drizzle ORM, separate DB (`whatsapp_platform`), BullMQ workers, MinIO, n8n
-- Features found: multi-tenant, channels, inbox, contacts, messages, WABA, Evolution, AI bot, human handoff, broadcast, templates, CRM pipeline, analytics, n8n, attachments, consent
 - Integration plan created: `docs/crm-integration-plan.md`
 
 ---
 
 ### Completed: P5 — Remove Old WhatsApp Platform + Free Disk Space ✅ (Feb 21, 2026)
 
-**Decision**: Old CRM was architecturally incompatible (separate DB, separate ORM, separate auth). Removed entirely. Will build fresh CRM inside monorepo.
-
-**Removed**:
-- `/opt/whatsapp-ai-platform/` — entire folder
-- 8 Docker containers (whats-backend, whats-frontend, whats-worker, whats-media, whats-postgres, whats-redis, whats-minio, whats-n8n)
-- 4 Docker volumes + whats-network
-- `/data/projects/saubh-gig/` (45MB) — old pre-monorepo project
-- `/data/projects/saubh-gig-backup-20260219/` (394MB) — old backup
-- Stopped `saubh-evolution` container (was crashed 42hrs)
-- Docker prune: unused images, build cache
-
-**Disk freed**: 52G (92G → 40G used), Docker images 126GB → 1.3GB
-
-**Saved for P6** (Evolution API credentials):
-- `EVOLUTION_API_URL=https://evo.saubh.tech`
-- `AUTHENTICATION_API_KEY=20bc14ff5e5ce0b98d2ec7d9ed51046d78fc1ba4ce8e3540ba25e1d3e5cbb458`
-- `DATABASE_CONNECTION_URI=postgresql://saubh_admin:PgSecure2026Saubh@postgres:5432/saubh_gig`
-- Evolution image: `evoapicloud/evolution-api:v2.3.7`
-- Instance data was at: `/data/evolution` (may still exist)
+Old CRM removed entirely (architecturally incompatible). Disk freed: 52G.
 
 ---
 
-## What's Next: P6 — Build Fresh CRM WhatsApp Inside Monorepo
+### Completed: P6 — Fresh CRM WhatsApp Inside Monorepo ✅ (Feb 21, 2026)
 
-Build a new WhatsApp CRM app inside the monorepo at `apps/crmwhats/`:
-- Use same stack as main platform (NestJS + Prisma + PostgreSQL)
-- Share `saubhtech` DB (add CRM tables to existing schema)
-- Share JWT auth from P3
-- Start with: contacts, conversations, messages, inbox UI
-- Evolution API: start fresh container, connect to platform API for OTP + CRM
-- Route: `saubh.tech/crmwhats`
+**Evolution API Setup**:
+- Container `saubh-evolution` running v2.3.7 on port 8081
+- Instance `saubh-sim` connected to +918800607598 via QR
+- Separate `evolution` database on saubh-postgres
+- API Key: `eec4e150ae057851d1f1d690d371d3844373fa963191e01a09064dc105c35540`
+- Webhook configured: `http://localhost:3001/crm/webhooks/evolution` (MESSAGES_UPSERT)
+- Docker config: `infra/compose/evolution/docker-compose.yml`
 
-**Future phases**: P7 (WABA) → P8 (AI agent) → P9 (Broadcast) → P10 (Analytics)
+**CRM Database** (`crm` schema in `saubhtech` DB — 6 tables):
+| Model | Purpose |
+|-------|---------|
+| `WaChannel` | Phone numbers + provider type (EVOLUTION/WABA) |
+| `WaContact` | WhatsApp contacts, links to `public.user` |
+| `WaConversation` | Threads (OPEN/ASSIGNED/RESOLVED), bot toggle |
+| `WaMessage` | Messages (IN/OUT), media, delivery status |
+| `WaBroadcast` | Bulk message campaigns |
+| `WaBroadcastRecipient` | Per-recipient delivery tracking |
+
+**Seeded Channels**:
+- Saubh SIM (+918800607598) → EVOLUTION, instance: `saubh-sim`
+- Saubh Business (+918130960040) → WABA, instance: null
+
+**CRM Backend Modules** (`apps/api/src/crm/`):
+| Module | Key Files | Endpoints |
+|--------|-----------|-----------|
+| channels | `channel.service.ts` | Dual-provider routing (Evolution + WABA) |
+| inbox | `inbox.controller.ts`, `inbox.service.ts` | `GET/POST /crm/conversations`, messages, assign, resolve, toggle-bot |
+| contacts | `contacts.controller.ts`, `contacts.service.ts` | `GET/POST/PATCH /crm/contacts`, findOrCreate, auto-link to user |
+| broadcast | `broadcast.controller.ts`, `broadcast.service.ts`, `broadcast.processor.ts` | `GET/POST /crm/broadcasts`, BullMQ queue `crm-broadcast`, 1msg/sec throttle |
+| webhooks | `evolution-webhook.controller.ts`, `waba-webhook.controller.ts`, `webhook.service.ts` | Inbound message processing, auto-create contacts + conversations |
+
+**CRM API Endpoints** (all under `/api/crm/`):
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/crm/conversations` | GET | List conversations (filter: channelId, status) |
+| `/api/crm/conversations/:id/messages` | GET | Message thread (paginated) |
+| `/api/crm/conversations/:id/messages` | POST | Send message via channel |
+| `/api/crm/conversations/:id/assign` | PATCH | Assign to agent |
+| `/api/crm/conversations/:id/resolve` | PATCH | Mark resolved |
+| `/api/crm/conversations/:id/toggle-bot` | PATCH | Toggle bot on/off |
+| `/api/crm/contacts` | GET | List contacts (search, filter) |
+| `/api/crm/contacts` | POST | Create contact |
+| `/api/crm/contacts/:id` | GET | Contact detail + conversations |
+| `/api/crm/contacts/:id` | PATCH | Update contact |
+| `/api/crm/broadcasts` | GET | List broadcasts |
+| `/api/crm/broadcasts/:id` | GET | Broadcast detail + recipients |
+| `/api/crm/broadcasts` | POST | Create broadcast (immediate or scheduled) |
+| `/api/crm/webhooks/evolution` | POST | Evolution inbound webhook |
+| `/api/crm/webhooks/waba` | GET/POST | WABA verification + inbound webhook |
+
+**CRM Frontend** (admin app at `apps/admin/src/app/[locale]/crm/`):
+| Page | Route | Features |
+|------|-------|----------|
+| Inbox | `/crm/inbox` | Conversation list, filter by status, chat thread, send messages, resolve, toggle bot, 5s auto-refresh |
+| Contacts | `/crm/contacts` | Contact list, search, add contact, block/unblock |
+| Broadcasts | `/crm/broadcasts` | Broadcast list with status badges |
+
+**Sidebar**: CRM section added with Inbox, Contacts, Broadcasts links.
+
+**Dependencies Added** (apps/api):
+- `@nestjs/config`, `@nestjs/axios`, `@nestjs/bullmq`, `bullmq`
+- `@nestjs/passport`, `passport-jwt`, `jwks-rsa`, `jsonwebtoken`, `@types/express`
+
+**Caddy Routes**:
+- `saubh.tech/whats/*` → Evolution API (QR reconnection, instance management)
+- `api.saubh.tech/api/crm/webhooks/waba` → WABA webhook (for Meta console)
+
+**Env Vars** (apps/api/.env):
+- `EVOLUTION_API_URL=http://localhost:8081`
+- `EVOLUTION_API_KEY=eec4e150ae057851d1f1d690d371d3844373fa963191e01a09064dc105c35540`
+- `EVOLUTION_INSTANCE=saubh-sim`
+- `REDIS_HOST=127.0.0.1`, `REDIS_PORT=6379`, `REDIS_PASSWORD=Red1sSecure2026`
+- WABA credentials (phone number ID, business account ID, access token, verify token) — configured but not active yet
+
+**Verified**: Outbound message sent via Evolution API → WhatsApp delivered ✅
+
+---
+
+## What's Next: P7 — AI Bot + WABA Integration
+
+- Connect WABA (WhatsApp Business Cloud API) for +918130960040
+- Build AI auto-responder bot (toggle per conversation)
+- Template studio for WABA-approved templates
+- Media message support (images, documents)
+- Real-time inbox updates via WebSocket (rt.saubh.tech)
+
+**Future phases**: P8 (CRM Pipeline/Deals) → P9 (Analytics Dashboard) → P10 (n8n Automation)
 
 ---
 
@@ -122,6 +171,7 @@ Build a new WhatsApp CRM app inside the monorepo at `apps/crmwhats/`:
 
 - **Master tables**: schema `master`, no businessId
 - **Tenant tables**: always include businessId
+- **CRM tables**: schema `crm`
 - **Every table must have**: id, createdAt, updatedAt (except legacy tables being modified in-place)
 - **i18n split pattern** for all translatable master data:
   - Base table: code (UPPERCASE, unique), sortOrder, isActive
@@ -139,27 +189,19 @@ Build a new WhatsApp CRM app inside the monorepo at `apps/crmwhats/`:
 ### Main Platform DB (`saubhtech`)
 - **public schema**: Business, Client, User (with WhatsApp OTP fields), UserMembership, Conversation, Message, Telephony
 - **master schema**: Geographic hierarchy (Country → State → District → Postal → Place), Organizational hierarchy (Locality → Area → Division → Region → Zone), Industry classification (Sector → Field → Market), Language (basic — langid + language only)
+- **crm schema**: WaChannel, WaContact, WaConversation, WaMessage, WaBroadcast, WaBroadcastRecipient
 
-## Master Tables Status
-
-| Table | Current State | Target State | Status |
-|-------|--------------|--------------|--------|
-| Language | Basic (langid, language) | Add locale, isActive, isRtl, sortOrder | 🔜 NEXT |
-| Sector | Basic (sectorid, sector) | Add code, sortOrder, isActive, createdAt, updatedAt + SectorI18n | ⏳ PENDING |
-| Field | Basic (fieldid, field, sectorid) | Add code, sortOrder, isActive, createdAt, updatedAt + FieldI18n | ⏳ PENDING |
-| Market → Item | Basic (marketid, sectorid, fieldid, p_s_ps, item) | Evolve into Item with i18n, or create ItemI18n alongside | ⏳ PENDING |
-| DeliveryMode enum | Does not exist | `PHYSICAL, DIGITAL, PHYGITAL` | ⏳ PENDING |
-| SectorI18n | Does not exist | New table | ⏳ PENDING |
-| FieldI18n | Does not exist | New table | ⏳ PENDING |
-| ItemI18n | Does not exist | New table | ⏳ PENDING |
+### Evolution DB (`evolution`)
+- Managed by Evolution API internally
 
 ## Admin UI Pattern (Permanent)
 
 - **Route**: `admin.saubh.tech/[locale]/master/[table]`
+- **CRM Route**: `admin.saubh.tech/[locale]/crm/inbox|contacts|broadcasts`
 - **All routes**: Keycloak protected (ADMIN or SUPER_ADMIN)
 - **All tables**: paginated list + create + edit + soft delete
 - **Existing generic viewer**: `apps/admin/src/app/[locale]/master/[table]/page.tsx`
-- **API base**: `api.saubh.tech/master/`
+- **API base**: `api.saubh.tech/api/`
 
 ## Session Rules
 
