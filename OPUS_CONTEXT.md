@@ -12,15 +12,16 @@
 | **API Domain** | api.saubh.tech |
 | **Admin Domain** | admin.saubh.tech |
 | **Web Domain** | saubh.tech |
+| **CRM WhatsApp** | saubh.tech/crmwhats |
 | **Package Manager** | pnpm (never npm) |
 
 ## Server Layout (Current)
 
 | Item | Details |
-|------|---------|
+|------|---------| 
 | **Filesystem** | ~41G used / 379G total (11%) |
 | **Docker containers** | saubh-keycloak (8080), saubh-postgres (5432), saubh-redis (6379), saubh-evolution (8081) |
-| **PM2 apps** | web (3000), api (3001), realtime (3002), admin (3003) |
+| **PM2 apps** | web (3000), api (3001), realtime (3002), admin (3003), crmwhats (3004) |
 | **Projects** | `/data/projects/platform` — only project remaining |
 | **Redis password** | `Red1sSecure2026` |
 
@@ -33,6 +34,7 @@
 | api | `apps/api` | NestJS, Prisma, PostgreSQL, Keycloak + WhatsApp OTP auth + CRM + Bot | 3001 | ✅ Live |
 | admin | `apps/admin` | Next.js, Tailwind, Keycloak SSO, CRM UI with channel switcher | 3003 | ✅ Live |
 | realtime | `apps/realtime` | WebSocket server | 3002 | ✅ Live |
+| crmwhats | `apps/crmwhats` | Next.js 16, dark glassmorphism UI, JWT auth (BO/GW only) | 3004 | ✅ Live |
 
 ### Docker Services
 | Container | Image | Port | Role |
@@ -176,7 +178,47 @@ Old CRM removed entirely (architecturally incompatible). Disk freed: 52G.
 
 ---
 
-## What's Next: P8 — CRM Polish + Bot Activation
+### Completed: P8 — CRM WhatsApp App (crmwhats) ✅ (Feb 21, 2026)
+
+**Standalone Next.js app** for Business Owners + Gig Workers (not admins).
+- URL: `saubh.tech/crmwhats/[locale]/inbox|contacts|broadcast|settings`
+- Auth: WhatsApp JWT (`saubh_token` cookie from P3), only BO/GW usertypes allowed
+- Port: 3004 (Caddy reverse proxy via `handle /crmwhats*`)
+- Design: Dark glassmorphism Gen-Z/Alpha UI
+
+**Design System**:
+- Background: #0A0A0F, #13131A, #1C1C27
+- Primary: #7C3AED (violet), Secondary: #EC4899 (pink), Accent: #F97316 (orange)
+- Glass cards: `rgba(255,255,255,0.05)` + `backdrop-filter: blur(12px)`
+- Gradient buttons: `linear-gradient(135deg, #7C3AED, #EC4899)`
+
+**App Structure** (`apps/crmwhats/src/`):
+| Component | Description |
+|-----------|-------------|
+| `middleware.ts` | Locale detection (`saubh_locale` cookie), JWT auth, BO/GW gate, expiry check |
+| `components/Sidebar.tsx` | Desktop collapsible sidebar + mobile bottom nav, channel switcher pills, user footer |
+| `context/UserContext.tsx` | Decodes JWT, provides userid/fname/usertype/whatsapp + logout |
+| `context/ChannelContext.tsx` | ALL/EVOLUTION/WABA filter, persists to localStorage |
+| `components/ui/*` | GlassCard, GradientButton, Avatar, ChannelBadge, StatusDot, UnreadBadge, SkeletonLoader |
+
+**Pages**:
+| Page | Route | Features |
+|------|-------|----------|
+| Inbox | `/[locale]/inbox` | Two-panel (list + thread), search, status filters, channel filter, gradient chat bubbles, bot banner + take over, auto-scroll, 5s refresh |
+| Contacts | `/[locale]/contacts` | Grid/list toggle, search, add contact, detail panel (hero, info, recent conversations), block/unblock |
+| Broadcast | `/[locale]/broadcast` | List with status pills (DRAFT/SCHEDULED/SENDING/DONE/FAILED), detail panel with recipients |
+| Broadcast Create | `/[locale]/broadcast/create` | 4-step wizard: Channel → Message (live preview) → Recipients (checkbox list) → Confirm (send now/schedule) |
+| Settings | `/[locale]/settings` | Profile, channel status cards, notification toggles, default channel filter, sign out |
+| Health | `/api/healthz` | `{ status: ok, app: crmwhats }` |
+
+**Infrastructure**:
+- Caddy: `handle /crmwhats*` → localhost:3004 (added inside saubh.tech block)
+- PM2: `crmwhats` process, cwd `apps/crmwhats`, Next.js start --port 3004
+- basePath: `/crmwhats` in next.config.ts
+
+---
+
+## What's Next: P9 — Bot Activation + CRM Polish
 
 - Add `ANTHROPIC_API_KEY` to server `.env` to activate bot
 - Bot settings page (system prompt customization, handoff keywords)
@@ -186,7 +228,7 @@ Old CRM removed entirely (architecturally incompatible). Disk freed: 52G.
 - Media message support (images, documents)
 - Real-time inbox updates via WebSocket (rt.saubh.tech)
 
-**Future phases**: P9 (CRM Pipeline/Deals) → P10 (Analytics Dashboard)
+**Future phases**: P10 (CRM Pipeline/Deals) → P11 (Analytics Dashboard)
 
 ---
 
@@ -225,6 +267,13 @@ Old CRM removed entirely (architecturally incompatible). Disk freed: 52G.
 - **All tables**: paginated list + create + edit + soft delete
 - **Existing generic viewer**: `apps/admin/src/app/[locale]/master/[table]/page.tsx`
 - **API base**: `api.saubh.tech/api/`
+
+## CRM WhatsApp UI Pattern (Permanent)
+
+- **Route**: `saubh.tech/crmwhats/[locale]/inbox|contacts|broadcast|settings`
+- **Auth**: WhatsApp JWT (`saubh_token` cookie), BO/GW usertypes only
+- **Design**: Dark glassmorphism, violet/pink gradient accents
+- **API base**: `api.saubh.tech/api/crm/`
 
 ## Session Rules
 
