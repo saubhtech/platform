@@ -4,7 +4,6 @@ import {
   localeFromAcceptLanguage,
   localeFromCountry,
   DEFAULT_LOCALE,
-  SUPPORTED_LOCALES_SET,
 } from './lib/i18n/locale-map';
 
 const COOKIE_NAME = 'saubh_locale';
@@ -15,9 +14,10 @@ const COOKIE_MAX_AGE = 365 * 24 * 60 * 60; // 1 year
 //
 // Detection priority (per PROJECT_MASTER.md):
 //   1. Cookie saubh_locale (if valid)
-//   2. Accept-Language header
-//   3. Cloudflare cf-ipcountry
-//   4. Default: en-in
+//   2. Accept-Language header (non-English Indian languages prioritised)
+//   3. Cloudflare cf-ipcountry (IN → hi-in)
+//   4. Accept-Language header (English fallback for non-Indian users)
+//   5. Default: en-in
 //
 // Behavior:
 //   - Path has no locale prefix → 302 redirect to /{locale}/path
@@ -74,29 +74,36 @@ export default function proxy(req: NextRequest) {
 // ─── Locale detection chain ─────────────────────────────────────────
 
 function detectLocale(req: NextRequest): string {
-  // 1. Cookie
+  // 1. Cookie (returning user — honour their previous choice)
   const cookieLocale = req.cookies.get(COOKIE_NAME)?.value;
   if (cookieLocale && isValidLocale(cookieLocale)) {
     return cookieLocale;
   }
 
-  // 2. Accept-Language header
-  const fromHeader = localeFromAcceptLanguage(
-    req.headers.get('accept-language'),
-  );
-  if (fromHeader) {
+  const acceptLang = req.headers.get('accept-language');
+  const fromHeader = localeFromAcceptLanguage(acceptLang);
+  const country = req.headers.get('cf-ipcountry');
+
+  // 2. Accept-Language — if a *non-English* language is detected, use it
+  //    e.g. Bengali user's browser sends "bn-IN,bn;q=0.9,en;q=0.8" → bn-in
+  if (fromHeader && fromHeader !== 'en-in') {
     return fromHeader;
   }
 
-  // 3. Cloudflare cf-ipcountry header
-  const fromCountry = localeFromCountry(
-    req.headers.get('cf-ipcountry'),
-  );
+  // 3. Geo-detection (Cloudflare cf-ipcountry)
+  //    For India: default to Hindi (regional users already matched in step 2)
+  //    For other countries: use country-specific mapping
+  const fromCountry = localeFromCountry(country);
   if (fromCountry) {
     return fromCountry;
   }
 
-  // 4. Default
+  // 4. Accept-Language English fallback (non-Indian users with English browser)
+  if (fromHeader) {
+    return fromHeader;
+  }
+
+  // 5. Default
   return DEFAULT_LOCALE;
 }
 
