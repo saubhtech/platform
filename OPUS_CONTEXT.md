@@ -8,21 +8,37 @@
 | **Repo** | github.com/saubhtech/platform (public, branch: main) |
 | **Local Path** | `C:\Users\Rishutosh Kumar\Documents\platform` |
 | **Server Path** | `/data/projects/platform` (also symlinked from `/data/projects/saubh-gig`) |
+| **CRM Path** | `/opt/whatsapp-ai-platform/` |
 | **SSH** | `ssh -p 5104 admin1@103.67.236.186` |
 | **API Domain** | api.saubh.tech |
 | **Admin Domain** | admin.saubh.tech |
 | **Web Domain** | saubh.tech |
+| **CRM URL** | saubh.tech/crmwhats (changed from /whats in P4) |
 | **Package Manager** | pnpm (never npm) |
 
 ## What's Been Built
 
-### Apps in Monorepo
-| App | Path | Stack | Status |
-|-----|------|-------|--------|
-| web | `apps/web` | Next.js 16, Tailwind v4, i18n (13 active languages) | ✅ Live |
-| api | `apps/api` | NestJS, Prisma, PostgreSQL, Keycloak + WhatsApp OTP auth | ✅ Live |
-| admin | `apps/admin` | Next.js, Tailwind, Keycloak SSO | ✅ Live |
-| realtime | `apps/realtime` | WebSocket server | ✅ Live |
+### Apps in Monorepo (PM2)
+| App | Path | Stack | Port | Status |
+|-----|------|-------|------|--------|
+| web | `apps/web` | Next.js 16, Tailwind v4, i18n (13 active languages) | 3000 | ✅ Live |
+| api | `apps/api` | NestJS, Prisma, PostgreSQL, Keycloak + WhatsApp OTP auth | 3001 | ✅ Live |
+| admin | `apps/admin` | Next.js, Tailwind, Keycloak SSO | 3003 | ✅ Live |
+| realtime | `apps/realtime` | WebSocket server | 3002 | ✅ Live |
+
+### WhatsApp CRM (Docker — 8 containers)
+| Container | Image | Port | Role |
+|-----------|-------|------|------|
+| whats-backend | Custom NestJS + Drizzle ORM | 4000 | CRM API |
+| whats-frontend | Custom Next.js (basePath: /whats) | 3100 | CRM UI |
+| whats-worker | Custom BullMQ | — | Background jobs |
+| whats-media | nginx:alpine | 4001 | Media server |
+| whats-postgres | postgres:16-alpine | 5432 (internal) | DB: whatsapp_platform |
+| whats-redis | redis:7-alpine | 6379 (internal) | Queue + cache |
+| whats-minio | minio/minio:latest | 9000/9001 | S3 storage |
+| whats-n8n | n8nio/n8n:latest | 5678 (internal) | Workflow automation |
+
+---
 
 ### Completed: P3 — WhatsApp OTP Login ✅ (Feb 21, 2026)
 
@@ -55,30 +71,47 @@
 - `apps/web/src/app/[locale]/dashboard/page.tsx` — Protected stub (JWT check, user info, logout)
 - `apps/web/src/proxy.ts` — Updated with dashboard auth guard (saubh_token cookie check)
 
-**Environment Variables** (added to `.env.example`):
-- `EVOLUTION_API_URL`, `EVOLUTION_API_KEY`, `EVOLUTION_INSTANCE`
-- `WHATSAPP_NUMBER_1=+918800607598`, `WHATSAPP_NUMBER_2=+918130960040`
-- `JWT_SECRET`, `JWT_EXPIRY=86400`
-- `OTP_EXPIRY_SECONDS=120`, `OTP_MAX_PER_HOUR=3`
+---
 
-**Note**: Evolution API container is not running. WhatsApp message delivery is silently skipped. OTP can be read from DB for testing. Evolution setup deferred to P4.
+### Completed: P4 — WhatsApp CRM Audit + URL Migration ✅ (Feb 21, 2026)
 
-### Database Schema (Current)
-- **public schema**: Business, Client, User (with WhatsApp OTP fields), UserMembership, Conversation, Message, Telephony models
-- **master schema**: Geographic hierarchy (Country → State → District → Postal → Place), Organizational hierarchy (Locality → Area → Division → Region → Zone), Industry classification (Sector → Field → Market), Language (basic — langid + language only)
+**Audit Findings**:
+- Full-featured WhatsApp CRM at `/opt/whatsapp-ai-platform/`
+- 8 Docker containers, 81 DB tables, 19 API modules, 12 frontend pages
+- NestJS + Drizzle ORM (different from main platform's Prisma)
+- Separate DB (`whatsapp_platform`) from main platform (`saubhtech`)
+- Dual connector: Evolution API + WABA (WhatsApp Business Cloud API)
+- n8n automation built in
 
-### Existing Master API
-- `apps/api/src/master/` — generic MasterModule with controller/service handling all master tables
-- `apps/admin/src/app/[locale]/master/[table]/page.tsx` — dynamic generic master table viewer (52KB)
+**Gap Analysis Summary** (17 EXISTS, 1 PARTIAL, 1 MISSING):
+- ✅ EXISTS: Multi-tenant, channels, inbox, contacts, messages, WABA, Evolution, AI bot, human handoff, broadcast, templates, CRM pipeline, analytics, n8n, attachments, consent
+- ⚠️ PARTIAL: Multilingual (backend hook exists, no i18n tables)
+- ❌ MISSING: SIM-based WhatsApp connector
+- ⚠️ NOT RUNNING: Evolution API container
+
+**Top 5 Integration Gaps** (platform ↔ CRM):
+1. Auth not connected — CRM has own JWT, not linked to P3 auth
+2. User tables separate — CRM `users` vs main `public.user`
+3. Databases separate — `whatsapp_platform` vs `saubhtech`
+4. Evolution API down — OTP sender can't deliver messages
+5. No shared session/SSO between platforms
+
+**URL Migration**: `/whats` → `/crmwhats` in Caddy config (done)
+
+**Integration Plan**: `docs/crm-integration-plan.md` — auth SSO, user mapping, shared services, API boundaries, phase plan P5–P10
 
 ---
 
-## What's Next: P4 — WhatsApp CRM Audit + /crmwhats
+## What's Next: P5 — Connect CRM Auth to Main Platform JWT
 
-- Audit existing WhatsApp CRM (`whats-backend`, `whats-frontend` Docker containers)
-- Integrate or replace with platform-native CRM at `/crmwhats`
-- Start Evolution API container and configure sender service
-- Connect webhook to live Evolution instance
+- Share `JWT_SECRET` between main platform API and CRM backend
+- Add JWT validation middleware in CRM that accepts main platform tokens
+- Add `platform_user_id BIGINT UNIQUE` to CRM `users` table
+- Auto-provision CRM user on first valid JWT access (lazy provisioning)
+- Start Evolution API container for OTP delivery + CRM webhooks
+- See `docs/crm-integration-plan.md` for full details
+
+**Future phases**: P6 (WABA) → P7 (AI agent) → P8 (CRM pipeline) → P9 (Broadcast) → P10 (Analytics)
 
 ---
 
@@ -97,6 +130,21 @@
 - **Never force migrations**: always use `prisma migrate dev --name descriptive_name`
 - **Soft delete only**: set `isActive=false`, never hard delete
 - **All migrations must be reversible**
+
+## Database Schema (Current)
+
+### Main Platform DB (`saubhtech`)
+- **public schema**: Business, Client, User (with WhatsApp OTP fields), UserMembership, Conversation, Message, Telephony
+- **master schema**: Geographic hierarchy (Country → State → District → Postal → Place), Organizational hierarchy (Locality → Area → Division → Region → Zone), Industry classification (Sector → Field → Market), Language (basic — langid + language only)
+
+### CRM DB (`whatsapp_platform`) — 81 tables
+- **CRM Core**: tenants, users, user, contacts, contact_notes, contact_lists, conversations, messages, attachments, labels, whatsapp_channels, quick_replies, templates
+- **Pipeline**: crm_deals, crm_pipelines, crm_tasks
+- **Broadcast**: broadcasts, broadcast_recipients
+- **Chat Hub**: chat_hub_agents, chat_hub_messages, chat_hub_sessions
+- **AI + Consent**: ai_bot_config, consent_records
+- **Analytics**: analytics_events, insights_by_period, insights_metadata, insights_raw
+- **n8n**: ~30 workflow/execution/credential tables (shared DB)
 
 ## Master Tables Status
 
