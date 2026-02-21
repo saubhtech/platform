@@ -4,6 +4,14 @@ import { useEffect, useState } from 'react';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'https://api.saubh.tech';
 
+interface WaChannel {
+  id: string;
+  name: string;
+  type: string;
+  phoneNumber: string;
+  isActive: boolean;
+}
+
 interface WaMessage {
   id: string;
   direction: string;
@@ -25,6 +33,8 @@ interface WaConversation {
 }
 
 export default function InboxPage() {
+  const [channels, setChannels] = useState<WaChannel[]>([]);
+  const [activeChannel, setActiveChannel] = useState<string>('');
   const [conversations, setConversations] = useState<WaConversation[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [messages, setMessages] = useState<WaMessage[]>([]);
@@ -33,10 +43,26 @@ export default function InboxPage() {
   const [sending, setSending] = useState(false);
   const [filter, setFilter] = useState<'ALL' | 'OPEN' | 'ASSIGNED' | 'RESOLVED'>('ALL');
 
-  const fetchConversations = async () => {
+  const fetchChannels = async () => {
     try {
-      const params = filter !== 'ALL' ? `?status=${filter}` : '';
-      const res = await fetch(`${API}/api/crm/conversations${params}`);
+      const res = await fetch(`${API}/api/crm/channels`);
+      const data = await res.json();
+      setChannels(data || []);
+      if (data?.length > 0 && !activeChannel) {
+        setActiveChannel(data[0].id);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const fetchConversations = async () => {
+    if (!activeChannel) return;
+    try {
+      const params = new URLSearchParams();
+      params.set('channelId', activeChannel);
+      if (filter !== 'ALL') params.set('status', filter);
+      const res = await fetch(`${API}/api/crm/conversations?${params}`);
       const json = await res.json();
       setConversations(json.data || []);
     } catch (e) {
@@ -84,7 +110,13 @@ export default function InboxPage() {
     await fetchConversations();
   };
 
-  useEffect(() => { fetchConversations(); }, [filter]);
+  useEffect(() => { fetchChannels(); }, []);
+  useEffect(() => {
+    setSelected(null);
+    setMessages([]);
+    setLoading(true);
+    fetchConversations();
+  }, [activeChannel, filter]);
   useEffect(() => { if (selected) fetchMessages(selected); }, [selected]);
 
   // Auto-refresh every 5s
@@ -94,14 +126,37 @@ export default function InboxPage() {
       if (selected) fetchMessages(selected);
     }, 5000);
     return () => clearInterval(timer);
-  }, [selected, filter]);
+  }, [selected, filter, activeChannel]);
 
   const selectedConv = conversations.find(c => c.id === selected);
+  const activeChannelData = channels.find(c => c.id === activeChannel);
 
   return (
     <div>
-      <h1 style={titleStyle}>💬 Inbox</h1>
-      <div style={{ display: 'flex', gap: '24px', height: 'calc(100vh - 140px)' }}>
+      <h1 style={titleStyle}>\uD83D\uDCAC Inbox</h1>
+
+      {/* Channel Switcher */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+        {channels.map(ch => (
+          <button key={ch.id} onClick={() => setActiveChannel(ch.id)} style={{
+            padding: '8px 16px', borderRadius: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
+            background: activeChannel === ch.id
+              ? ch.type === 'WABA' ? 'rgba(34,197,94,0.15)' : 'rgba(139,92,246,0.15)'
+              : 'rgba(255,255,255,0.04)',
+            color: activeChannel === ch.id
+              ? ch.type === 'WABA' ? '#4ade80' : '#a78bfa'
+              : 'rgba(255,255,255,0.4)',
+            border: activeChannel === ch.id
+              ? ch.type === 'WABA' ? '1px solid rgba(34,197,94,0.3)' : '1px solid rgba(139,92,246,0.3)'
+              : '1px solid rgba(255,255,255,0.08)',
+          }}>
+            {ch.type === 'WABA' ? '\uD83C\uDFE2' : '\uD83D\uDCF1'} {ch.name}
+            <span style={{ marginLeft: '6px', fontSize: '10px', opacity: 0.6 }}>{ch.type}</span>
+          </button>
+        ))}
+      </div>
+
+      <div style={{ display: 'flex', gap: '24px', height: 'calc(100vh - 200px)' }}>
         {/* Conversation list */}
         <div style={{ width: '360px', flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
@@ -116,7 +171,7 @@ export default function InboxPage() {
           </div>
           <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '4px' }}>
             {loading ? <div style={{ color: 'rgba(255,255,255,0.3)', padding: '20px', textAlign: 'center' }}>Loading...</div> :
-              conversations.length === 0 ? <div style={{ color: 'rgba(255,255,255,0.3)', padding: '20px', textAlign: 'center' }}>No conversations yet. Send a WhatsApp message to +918800607598 to start.</div> :
+              conversations.length === 0 ? <div style={{ color: 'rgba(255,255,255,0.3)', padding: '20px', textAlign: 'center' }}>No conversations on this channel yet.</div> :
               conversations.map(conv => (
                 <div key={conv.id} onClick={() => setSelected(conv.id)} style={{
                   ...convItemStyle,
@@ -130,13 +185,16 @@ export default function InboxPage() {
                     <span style={statusBadge(conv.status)}>{conv.status}</span>
                   </div>
                   <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginTop: '4px' }}>
-                    {conv.channel.name} • {conv.contact.whatsapp}
+                    {conv.contact.whatsapp}
                   </div>
                   {conv.messages[0] && (
                     <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', marginTop: '6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {conv.messages[0].direction === 'OUT' ? '↗ ' : '↙ '}
+                      {conv.messages[0].direction === 'OUT' ? '\u2197 ' : '\u2199 '}
                       {conv.messages[0].body || '[media]'}
                     </div>
+                  )}
+                  {conv.isBot && (
+                    <div style={{ fontSize: '10px', color: '#c084fc', marginTop: '4px' }}>\uD83E\uDD16 Bot Active</div>
                   )}
                 </div>
               ))
@@ -159,16 +217,16 @@ export default function InboxPage() {
                     {selectedConv?.contact.name || selectedConv?.contact.whatsapp}
                   </div>
                   <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>
-                    {selectedConv?.channel.name} • {selectedConv?.contact.whatsapp}
+                    {selectedConv?.contact.whatsapp} \u2022 {activeChannelData?.name || ''}
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button onClick={() => toggleBot(selected)} style={actionBtnStyle}>
-                    {selectedConv?.isBot ? '🤖 Bot ON' : '👤 Bot OFF'}
+                    {selectedConv?.isBot ? '\uD83E\uDD16 Bot ON' : '\uD83D\uDC64 Bot OFF'}
                   </button>
                   {selectedConv?.status !== 'RESOLVED' && (
                     <button onClick={() => resolveConv(selected)} style={{ ...actionBtnStyle, background: 'rgba(34,197,94,0.15)', color: '#4ade80' }}>
-                      ✓ Resolve
+                      \u2713 Resolve
                     </button>
                   )}
                 </div>
@@ -189,7 +247,7 @@ export default function InboxPage() {
                   }}>
                     <div>{msg.body || `[${msg.mediaType || 'media'}]`}</div>
                     <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginTop: '4px', textAlign: msg.direction === 'OUT' ? 'right' : 'left' }}>
-                      {new Date(msg.sentAt).toLocaleTimeString()} • {msg.status}
+                      {new Date(msg.sentAt).toLocaleTimeString()} \u2022 {msg.status}
                     </div>
                   </div>
                 ))}
@@ -216,7 +274,7 @@ export default function InboxPage() {
   );
 }
 
-const titleStyle: React.CSSProperties = { fontFamily: '"Syne", sans-serif', fontWeight: 800, fontSize: '28px', letterSpacing: '-0.03em', color: '#fff', marginBottom: '24px' };
+const titleStyle: React.CSSProperties = { fontFamily: '"Syne", sans-serif', fontWeight: 800, fontSize: '28px', letterSpacing: '-0.03em', color: '#fff', marginBottom: '16px' };
 const filterBtnStyle: React.CSSProperties = { padding: '6px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' };
 const convItemStyle: React.CSSProperties = { padding: '12px 14px', borderRadius: '12px', cursor: 'pointer', border: '1px solid', transition: 'all 0.15s' };
 const actionBtnStyle: React.CSSProperties = { padding: '6px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', fontSize: '12px', fontWeight: 600, cursor: 'pointer' };

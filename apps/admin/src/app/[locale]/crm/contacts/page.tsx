@@ -4,6 +4,13 @@ import { useEffect, useState } from 'react';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'https://api.saubh.tech';
 
+interface WaChannel {
+  id: string;
+  name: string;
+  type: string;
+  phoneNumber: string;
+}
+
 interface WaContact {
   id: string;
   whatsapp: string;
@@ -16,6 +23,8 @@ interface WaContact {
 }
 
 export default function ContactsPage() {
+  const [channels, setChannels] = useState<WaChannel[]>([]);
+  const [activeChannel, setActiveChannel] = useState<string>('');
   const [contacts, setContacts] = useState<WaContact[]>([]);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState('');
@@ -24,10 +33,26 @@ export default function ContactsPage() {
   const [newWhatsapp, setNewWhatsapp] = useState('');
   const [newName, setNewName] = useState('');
 
-  const fetchContacts = async () => {
+  const fetchChannels = async () => {
     try {
-      const params = search ? `?search=${encodeURIComponent(search)}` : '';
-      const res = await fetch(`${API}/api/crm/contacts${params}`);
+      const res = await fetch(`${API}/api/crm/channels`);
+      const data = await res.json();
+      setChannels(data || []);
+      if (data?.length > 0 && !activeChannel) {
+        setActiveChannel(data[0].id);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const fetchContacts = async () => {
+    if (!activeChannel) return;
+    try {
+      const params = new URLSearchParams();
+      params.set('channelId', activeChannel);
+      if (search) params.set('search', search);
+      const res = await fetch(`${API}/api/crm/contacts?${params}`);
       const json = await res.json();
       setContacts(json.data || []);
       setTotal(json.total || 0);
@@ -64,18 +89,41 @@ export default function ContactsPage() {
     await fetchContacts();
   };
 
+  useEffect(() => { fetchChannels(); }, []);
   useEffect(() => {
+    setLoading(true);
     const timer = setTimeout(() => fetchContacts(), search ? 300 : 0);
     return () => clearTimeout(timer);
-  }, [search]);
+  }, [search, activeChannel]);
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h1 style={titleStyle}>👤 Contacts <span style={{ fontSize: '16px', color: 'rgba(255,255,255,0.3)', fontWeight: 400 }}>({total})</span></h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <h1 style={titleStyle}>\uD83D\uDC64 Contacts <span style={{ fontSize: '16px', color: 'rgba(255,255,255,0.3)', fontWeight: 400 }}>({total})</span></h1>
         <button onClick={() => setShowAdd(!showAdd)} style={addBtnStyle}>
           + Add Contact
         </button>
+      </div>
+
+      {/* Channel Switcher */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+        {channels.map(ch => (
+          <button key={ch.id} onClick={() => setActiveChannel(ch.id)} style={{
+            padding: '8px 16px', borderRadius: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
+            background: activeChannel === ch.id
+              ? ch.type === 'WABA' ? 'rgba(34,197,94,0.15)' : 'rgba(139,92,246,0.15)'
+              : 'rgba(255,255,255,0.04)',
+            color: activeChannel === ch.id
+              ? ch.type === 'WABA' ? '#4ade80' : '#a78bfa'
+              : 'rgba(255,255,255,0.4)',
+            border: activeChannel === ch.id
+              ? ch.type === 'WABA' ? '1px solid rgba(34,197,94,0.3)' : '1px solid rgba(139,92,246,0.3)'
+              : '1px solid rgba(255,255,255,0.08)',
+          }}>
+            {ch.type === 'WABA' ? '\uD83C\uDFE2' : '\uD83D\uDCF1'} {ch.name}
+            <span style={{ marginLeft: '6px', fontSize: '10px', opacity: 0.6 }}>{ch.type}</span>
+          </button>
+        ))}
       </div>
 
       {showAdd && (
@@ -96,7 +144,7 @@ export default function ContactsPage() {
       {loading ? (
         <div style={{ color: 'rgba(255,255,255,0.3)' }}>Loading...</div>
       ) : contacts.length === 0 ? (
-        <div style={{ color: 'rgba(255,255,255,0.3)', padding: '40px', textAlign: 'center' }}>No contacts found.</div>
+        <div style={{ color: 'rgba(255,255,255,0.3)', padding: '40px', textAlign: 'center' }}>No contacts on this channel yet.</div>
       ) : (
         <div style={{ display: 'grid', gap: '8px' }}>
           {/* Header */}
@@ -110,7 +158,7 @@ export default function ContactsPage() {
           </div>
           {contacts.map(c => (
             <div key={c.id} style={rowStyle}>
-              <span style={{ flex: 1, fontWeight: 500, color: '#fff' }}>{c.name || '—'}</span>
+              <span style={{ flex: 1, fontWeight: 500, color: '#fff' }}>{c.name || '\u2014'}</span>
               <span style={{ width: '180px', color: 'rgba(255,255,255,0.6)', fontFamily: 'monospace', fontSize: '13px' }}>{c.whatsapp}</span>
               <span style={{ width: '100px' }}>
                 {c.isBlocked ? <span style={{ color: '#f87171' }}>Blocked</span> :
@@ -118,7 +166,7 @@ export default function ContactsPage() {
                  <span style={{ color: '#4ade80' }}>Active</span>}
               </span>
               <span style={{ width: '100px', color: 'rgba(255,255,255,0.4)', fontSize: '12px' }}>
-                {c.userId ? `User #${c.userId}` : '—'}
+                {c.userId ? `User #${c.userId}` : '\u2014'}
               </span>
               <span style={{ width: '140px', color: 'rgba(255,255,255,0.4)', fontSize: '12px' }}>
                 {new Date(c.createdAt).toLocaleDateString()}
