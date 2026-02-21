@@ -1,4 +1,4 @@
-# ─── Evolution API — WhatsApp SIM-based connector ───────────────────────────
+# ─── Evolution API — WhatsApp SIM-based connector ────────────────────────────
 # Start: docker compose up -d
 # Logs: docker compose logs -f evolution
 # ─────────────────────────────────────────────────────────────────────────────
@@ -6,24 +6,30 @@
 services:
   evolution:
     container_name: saubh-evolution
-    image: atendai/evolution-api:v2.2.0
+    image: evoapicloud/evolution-api:v2.3.7
     restart: unless-stopped
     ports:
-      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:8081:8080"
     environment:
       # ─── Auth
       - AUTHENTICATION_API_KEY=${EVOLUTION_API_KEY}
       - AUTHENTICATION_EXPOSE_IN_FETCH_INSTANCES=false
 
       # ─── Server
-      - SERVER_URL=${EVOLUTION_SERVER_URL:-https://evo.saubh.tech}
+      - SERVER_URL=${EVOLUTION_SERVER_URL:-https://saubh.tech/whats}
       - SERVER_PORT=8080
-      - CORS_ORIGIN=${CORS_ORIGIN:-https://saubh.tech}
+      - CORS_ORIGIN=${CORS_ORIGIN:-*}
       - LOG_LEVEL=${LOG_LEVEL:-WARN}
       - LANGUAGE=en
 
-      # ─── Database (disabled — using in-memory/file store)
-      - DATABASE_ENABLED=false
+      # ─── Database (separate DB on shared postgres)
+      - DATABASE_PROVIDER=postgresql
+      - DATABASE_CONNECTION_URI=postgresql://saubh_admin:PgSecure2026Saubh@saubh-postgres:5432/evolution
+      - DATABASE_CONNECTION_CLIENT_NAME=evolution
+      - DATABASE_SAVE_DATA_INSTANCE=true
+      - DATABASE_SAVE_DATA_NEW_MESSAGE=false
+      - DATABASE_SAVE_DATA_CONTACTS=false
+      - DATABASE_SAVE_DATA_CHATS=false
 
       # ─── Redis (shared with main platform)
       - CACHE_REDIS_ENABLED=true
