@@ -61,6 +61,14 @@ enum CallStatus {
   @@schema("public")
 }
 
+enum DeliveryMode {
+  PHYSICAL
+  DIGITAL
+  PHYGITAL
+
+  @@schema("master")
+}
+
 // ─── Core Models ────────────────────────────────────────────────────────────
 
 model Business {
@@ -417,43 +425,114 @@ model Zone {
 // ─── Master Schema: Industry Classification ─────────────────────────────────
 
 model Sector {
-  sectorid Int    @id @default(autoincrement())
-  sector   String @db.VarChar(200)
+  sectorid  Int      @id @default(autoincrement())
+  sector    String   @db.VarChar(200)
+  code      String   @unique @map("code") @db.VarChar(50)
+  sortOrder Int      @default(0) @map("sort_order")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
   fields  Field[]
   markets Market[]
+  i18n    SectorI18n[]
 
   @@map("sector")
   @@schema("master")
 }
 
-model Field {
-  fieldid  Int    @id @default(autoincrement())
-  field    String @db.VarChar(200)
-  sectorid Int
+model SectorI18n {
+  id          Int     @id @default(autoincrement())
+  sectorid    Int
+  locale      String  @db.VarChar(10)
+  name        String  @db.VarChar(200)
+  description String? @db.VarChar(500)
+  isFallback  Boolean @default(false) @map("is_fallback")
 
-  sector  Sector   @relation(fields: [sectorid], references: [sectorid], onDelete: Cascade)
+  sector Sector @relation(fields: [sectorid], references: [sectorid], onDelete: Cascade)
+
+  @@unique([sectorid, locale])
+  @@index([sectorid])
+  @@index([locale])
+  @@map("sector_i18n")
+  @@schema("master")
+}
+
+model Field {
+  fieldid   Int      @id @default(autoincrement())
+  field     String   @db.VarChar(200)
+  sectorid  Int
+  code      String   @unique @map("code") @db.VarChar(50)
+  sortOrder Int      @default(0) @map("sort_order")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  sector  Sector       @relation(fields: [sectorid], references: [sectorid], onDelete: Cascade)
   markets Market[]
+  i18n    FieldI18n[]
 
   @@index([sectorid])
   @@map("field")
   @@schema("master")
 }
 
-model Market {
-  marketid BigInt @id @default(autoincrement())
-  sectorid Int
-  fieldid  Int
-  p_s_ps   String @map("p_s_ps") @db.Char(2)
-  item     String @db.VarChar(200)
+model FieldI18n {
+  id          Int     @id @default(autoincrement())
+  fieldid     Int
+  locale      String  @db.VarChar(10)
+  name        String  @db.VarChar(200)
+  description String? @db.VarChar(500)
+  isFallback  Boolean @default(false) @map("is_fallback")
 
-  sector Sector @relation(fields: [sectorid], references: [sectorid], onDelete: Cascade)
-  field  Field  @relation(fields: [fieldid], references: [fieldid], onDelete: Cascade)
+  field Field @relation(fields: [fieldid], references: [fieldid], onDelete: Cascade)
+
+  @@unique([fieldid, locale])
+  @@index([fieldid])
+  @@index([locale])
+  @@map("field_i18n")
+  @@schema("master")
+}
+
+model Market {
+  marketid     BigInt        @id @default(autoincrement())
+  sectorid     Int
+  fieldid      Int
+  p_s_ps       String        @map("p_s_ps") @db.Char(2)
+  item         String        @db.VarChar(200)
+  code         String        @unique @map("code") @db.VarChar(50)
+  deliveryMode DeliveryMode  @default(PHYSICAL) @map("delivery_mode")
+  sortOrder    Int           @default(0) @map("sort_order")
+  isActive     Boolean       @default(true) @map("is_active")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @default(now()) @updatedAt @map("updated_at")
+
+  sector Sector       @relation(fields: [sectorid], references: [sectorid], onDelete: Cascade)
+  field  Field        @relation(fields: [fieldid], references: [fieldid], onDelete: Cascade)
+  i18n   MarketI18n[]
 
   @@index([sectorid])
   @@index([fieldid])
   @@index([p_s_ps])
+  @@index([code])
   @@map("market")
+  @@schema("master")
+}
+
+model MarketI18n {
+  id          Int     @id @default(autoincrement())
+  marketid    BigInt
+  locale      String  @db.VarChar(10)
+  name        String  @db.VarChar(200)
+  description String? @db.VarChar(500)
+  isFallback  Boolean @default(false) @map("is_fallback")
+
+  market Market @relation(fields: [marketid], references: [marketid], onDelete: Cascade)
+
+  @@unique([marketid, locale])
+  @@index([marketid])
+  @@index([locale])
+  @@map("market_i18n")
   @@schema("master")
 }
 
