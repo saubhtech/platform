@@ -30,8 +30,8 @@
 | App | Path | Stack | Port | Status |
 |-----|------|-------|------|--------|
 | web | `apps/web` | Next.js 16, Tailwind v4, i18n (13 active languages) | 3000 | ✅ Live |
-| api | `apps/api` | NestJS, Prisma, PostgreSQL, Keycloak + WhatsApp OTP auth + CRM | 3001 | ✅ Live |
-| admin | `apps/admin` | Next.js, Tailwind, Keycloak SSO, CRM UI | 3003 | ✅ Live |
+| api | `apps/api` | NestJS, Prisma, PostgreSQL, Keycloak + WhatsApp OTP auth + CRM + Bot | 3001 | ✅ Live |
+| admin | `apps/admin` | Next.js, Tailwind, Keycloak SSO, CRM UI with channel switcher | 3003 | ✅ Live |
 | realtime | `apps/realtime` | WebSocket server | 3002 | ✅ Live |
 
 ### Docker Services
@@ -82,7 +82,7 @@ Old CRM removed entirely (architecturally incompatible). Disk freed: 52G.
 - Instance `saubh-sim` connected to +918800607598 via QR
 - Separate `evolution` database on saubh-postgres
 - API Key: `eec4e150ae057851d1f1d690d371d3844373fa963191e01a09064dc105c35540`
-- Webhook configured: `http://localhost:3001/crm/webhooks/evolution` (MESSAGES_UPSERT)
+- Webhook: `https://api.saubh.tech/api/crm/webhooks/evolution` (must use public URL — Docker can't reach localhost)
 - Docker config: `infra/compose/evolution/docker-compose.yml`
 
 **CRM Database** (`crm` schema in `saubhtech` DB — 6 tables):
@@ -102,7 +102,7 @@ Old CRM removed entirely (architecturally incompatible). Disk freed: 52G.
 **CRM Backend Modules** (`apps/api/src/crm/`):
 | Module | Key Files | Endpoints |
 |--------|-----------|-----------|
-| channels | `channel.service.ts` | Dual-provider routing (Evolution + WABA) |
+| channels | `channel.service.ts`, `channels.controller.ts` | `GET /crm/channels`, dual-provider routing (Evolution + WABA) |
 | inbox | `inbox.controller.ts`, `inbox.service.ts` | `GET/POST /crm/conversations`, messages, assign, resolve, toggle-bot |
 | contacts | `contacts.controller.ts`, `contacts.service.ts` | `GET/POST/PATCH /crm/contacts`, findOrCreate, auto-link to user |
 | broadcast | `broadcast.controller.ts`, `broadcast.service.ts`, `broadcast.processor.ts` | `GET/POST /crm/broadcasts`, BullMQ queue `crm-broadcast`, 1msg/sec throttle |
@@ -111,13 +111,14 @@ Old CRM removed entirely (architecturally incompatible). Disk freed: 52G.
 **CRM API Endpoints** (all under `/api/crm/`):
 | Endpoint | Method | Description |
 |----------|--------|-------------|
+| `/api/crm/channels` | GET | List all channels |
 | `/api/crm/conversations` | GET | List conversations (filter: channelId, status) |
 | `/api/crm/conversations/:id/messages` | GET | Message thread (paginated) |
 | `/api/crm/conversations/:id/messages` | POST | Send message via channel |
 | `/api/crm/conversations/:id/assign` | PATCH | Assign to agent |
 | `/api/crm/conversations/:id/resolve` | PATCH | Mark resolved |
 | `/api/crm/conversations/:id/toggle-bot` | PATCH | Toggle bot on/off |
-| `/api/crm/contacts` | GET | List contacts (search, filter) |
+| `/api/crm/contacts` | GET | List contacts (search, channelId filter) |
 | `/api/crm/contacts` | POST | Create contact |
 | `/api/crm/contacts/:id` | GET | Contact detail + conversations |
 | `/api/crm/contacts/:id` | PATCH | Update contact |
@@ -130,40 +131,62 @@ Old CRM removed entirely (architecturally incompatible). Disk freed: 52G.
 **CRM Frontend** (admin app at `apps/admin/src/app/[locale]/crm/`):
 | Page | Route | Features |
 |------|-------|----------|
-| Inbox | `/crm/inbox` | Conversation list, filter by status, chat thread, send messages, resolve, toggle bot, 5s auto-refresh |
-| Contacts | `/crm/contacts` | Contact list, search, add contact, block/unblock |
+| Inbox | `/crm/inbox` | **Channel switcher tabs**, conversation list, filter by status, chat thread, send messages, resolve, toggle bot, 5s auto-refresh |
+| Contacts | `/crm/contacts` | **Channel switcher tabs**, contact list, search, add contact, block/unblock |
 | Broadcasts | `/crm/broadcasts` | Broadcast list with status badges |
 
-**Sidebar**: CRM section added with Inbox, Contacts, Broadcasts links.
-
-**Dependencies Added** (apps/api):
-- `@nestjs/config`, `@nestjs/axios`, `@nestjs/bullmq`, `bullmq`
-- `@nestjs/passport`, `passport-jwt`, `jwks-rsa`, `jsonwebtoken`, `@types/express`
-
-**Caddy Routes**:
-- `saubh.tech/whats/*` → Evolution API (QR reconnection, instance management)
-- `api.saubh.tech/api/crm/webhooks/waba` → WABA webhook (for Meta console)
-
-**Env Vars** (apps/api/.env):
-- `EVOLUTION_API_URL=http://localhost:8081`
-- `EVOLUTION_API_KEY=eec4e150ae057851d1f1d690d371d3844373fa963191e01a09064dc105c35540`
-- `EVOLUTION_INSTANCE=saubh-sim`
-- `REDIS_HOST=127.0.0.1`, `REDIS_PORT=6379`, `REDIS_PASSWORD=Red1sSecure2026`
-- WABA credentials (phone number ID, business account ID, access token, verify token) — configured but not active yet
-
-**Verified**: Outbound message sent via Evolution API → WhatsApp delivered ✅
+**Verified**: Outbound + inbound messages working on both Evolution and WABA ✅
 
 ---
 
-## What's Next: P7 — AI Bot + WABA Integration
+### Completed: P7 — WABA Activation + AI Bot ✅ (Feb 21, 2026)
 
-- Connect WABA (WhatsApp Business Cloud API) for +918130960040
-- Build AI auto-responder bot (toggle per conversation)
+**WABA (WhatsApp Business Cloud API)**:
+- +918130960040 activated via Meta Graph API
+- Webhook registered: `https://api.saubh.tech/api/crm/webhooks/waba`
+- Meta webhook verified with `hub.challenge` ✅
+- Subscribed to: `messages` field
+- Outbound test: message delivered via Graph API ✅
+- Inbound test: webhook received, contact + conversation auto-created ✅
+- HMAC SHA256 signature verification implemented (skipped if `WABA_APP_SECRET` not set)
+
+**WABA Env Vars** (apps/api/.env):
+- `WABA_PHONE_NUMBER_ID=135600659640001`
+- `WABA_BUSINESS_ACCOUNT_ID=124563407414910`
+- `WABA_ACCESS_TOKEN=EAAImsV1nxWk...` (long-lived token)
+- `WABA_VERIFY_TOKEN=a7f3c9e1b2d4068f5a9c7e3b1d204f68`
+
+**AI Bot Module** (`apps/api/src/crm/bot/`):
+- `bot.service.ts` — Claude Haiku auto-responder (model: `claude-haiku-4-5-20251001`)
+- `bot.module.ts` — imports PrismaModule + ChannelModule
+- System prompt: Saubh assistant, reply in user's language, under 100 words
+- `[HANDOFF]` detection for human agent transfer
+- Graceful fallback when `ANTHROPIC_API_KEY` not set
+- Wired into `webhook.service.ts` — auto-replies on inbound if `conversation.isBot === true`
+- **Status: Code ready, awaiting `ANTHROPIC_API_KEY`**
+
+**Channel Switcher**:
+- `GET /api/crm/channels` endpoint added
+- Inbox + Contacts pages now have channel tabs (SIM vs WABA)
+- Conversations and contacts filtered by selected channel
+- Purple tabs for Evolution/SIM, green tabs for WABA
+
+**Dependencies Added** (apps/api):
+- `@anthropic-ai/sdk ^0.78.0`
+
+---
+
+## What's Next: P8 — CRM Polish + Bot Activation
+
+- Add `ANTHROPIC_API_KEY` to server `.env` to activate bot
+- Bot settings page (system prompt customization, handoff keywords)
+- `BotConfig` table + `defaultBotEnabled` on WaChannel
+- Bot greeting on new conversations
 - Template studio for WABA-approved templates
 - Media message support (images, documents)
 - Real-time inbox updates via WebSocket (rt.saubh.tech)
 
-**Future phases**: P8 (CRM Pipeline/Deals) → P9 (Analytics Dashboard) → P10 (n8n Automation)
+**Future phases**: P9 (CRM Pipeline/Deals) → P10 (Analytics Dashboard)
 
 ---
 
