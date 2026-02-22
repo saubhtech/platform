@@ -6,8 +6,8 @@ import GlassCard from '@/components/ui/GlassCard';
 import ChannelBadge from '@/components/ui/ChannelBadge';
 import GradientButton from '@/components/ui/GradientButton';
 import Avatar from '@/components/ui/Avatar';
+import api from '@/lib/api';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'https://api.saubh.tech';
 const BASE = '/crmwhats';
 
 interface Channel { id: string; name: string; type: string; phone: string; }
@@ -36,7 +36,7 @@ export default function CreateBroadcastPage() {
   const charLimit = isWaba ? 1024 : null;
 
   useEffect(() => {
-    fetch(`${API}/api/crm/channels`).then(r => r.json()).then(setChannels).catch(console.error);
+    api.get<Channel[]>('/api/crm/channels').then(setChannels).catch(console.error);
   }, []);
 
   const fetchContacts = useCallback(async () => {
@@ -45,8 +45,7 @@ export default function CreateBroadcastPage() {
     try {
       const params = new URLSearchParams({ channelId: selectedChannelId });
       if (searchContacts) params.set('search', searchContacts);
-      const res = await fetch(`${API}/api/crm/contacts?${params}&limit=200`);
-      const json = await res.json();
+      const json = await api.get<any>(`/api/crm/contacts?${params}&limit=200`);
       setContacts(json.data || []);
     } catch (e) { console.error(e); }
     finally { setContactsLoading(false); }
@@ -83,16 +82,12 @@ export default function CreateBroadcastPage() {
         .filter(c => selectedContacts.has(c.id))
         .map(c => c.whatsapp);
 
-      await fetch(`${API}/api/crm/broadcasts`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name,
-          channelId: selectedChannelId,
-          body,
-          recipients: recipientWhatsapps,
-          scheduledAt: sendNow ? null : scheduledAt || null,
-        }),
+      await api.post('/api/crm/broadcasts', {
+        name,
+        channelId: selectedChannelId,
+        body,
+        recipients: recipientWhatsapps,
+        scheduledAt: sendNow ? null : scheduledAt || null,
       });
       router.push(`${BASE}/${locale}/broadcast`);
     } catch (e) { console.error(e); }

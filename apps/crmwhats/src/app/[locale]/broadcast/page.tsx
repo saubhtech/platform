@@ -7,8 +7,8 @@ import GlassCard from '@/components/ui/GlassCard';
 import ChannelBadge from '@/components/ui/ChannelBadge';
 import GradientButton from '@/components/ui/GradientButton';
 import SkeletonLoader from '@/components/ui/SkeletonLoader';
+import api from '@/lib/api';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'https://api.saubh.tech';
 const BASE = '/crmwhats';
 
 interface Broadcast {
@@ -43,8 +43,7 @@ export default function BroadcastPage() {
 
   const fetchBroadcasts = useCallback(async () => {
     try {
-      const res = await fetch(`${API}/api/crm/broadcasts`);
-      const json = await res.json();
+      const json = await api.get<any>('/api/crm/broadcasts');
       setBroadcasts(json.data || []);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
@@ -53,8 +52,8 @@ export default function BroadcastPage() {
   const fetchDetail = async (id: string) => {
     setDetailLoading(true);
     try {
-      const res = await fetch(`${API}/api/crm/broadcasts/${id}`);
-      setSelectedBc(await res.json());
+      const data = await api.get<any>(`/api/crm/broadcasts/${id}`);
+      setSelectedBc(data);
     } catch (e) { console.error(e); }
     finally { setDetailLoading(false); }
   };
