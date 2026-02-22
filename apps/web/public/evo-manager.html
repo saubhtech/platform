@@ -42,6 +42,7 @@
     input.field{height:44px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);padding:0 14px;color:#f1f5f9;font-size:.92rem;font-family:inherit;width:100%;}
     input.field:focus{outline:none;border-color:rgba(34,197,94,.4);box-shadow:0 0 0 3px rgba(34,197,94,.1);}
     label{font-size:.8rem;color:rgba(255,255,255,.5);font-weight:600;display:block;margin-bottom:5px;}
+    .hint{font-size:.72rem;color:rgba(255,255,255,.3);margin-top:3px;}
     .field-group{margin-bottom:12px;}
     .btn-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;}
     .log{background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:12px;font-family:monospace;font-size:.75rem;color:rgba(255,255,255,.4);max-height:150px;overflow-y:auto;white-space:pre-wrap;margin-top:12px;}
@@ -58,10 +59,9 @@
   <h1>Saubh<span>.</span>Tech — WhatsApp</h1>
   <p class="sub">Connect your WhatsApp number</p>
 
-  <!-- Tabs -->
   <div class="tabs">
     <div class="tab active" onclick="switchTab('connect')">📱 Connect</div>
-    <div class="tab" onclick="switchTab('create')">➕ New Instance</div>
+    <div class="tab" onclick="switchTab('create')">➕ New</div>
     <div class="tab" onclick="switchTab('status')">📊 Status</div>
   </div>
 
@@ -71,7 +71,13 @@
       <h2>📱 Connect WhatsApp</h2>
       <div class="field-group">
         <label>Instance Name</label>
-        <input class="field" id="connectInstName" placeholder="Enter your instance name" value="saubh-sim"/>
+        <input class="field" id="connectInstName" placeholder="e.g. saubh-sim" value="saubh-sim"/>
+        <div class="hint">The name given when instance was created (not your phone number)</div>
+      </div>
+      <div class="field-group">
+        <label>Phone Number (for pairing code)</label>
+        <input class="field" id="connectPhone" placeholder="e.g. 918800607598" value=""/>
+        <div class="hint">Country code + number, no + or spaces. Needed for pairing code on mobile.</div>
       </div>
       <button class="btn btn-blue" onclick="connectInstance()">Get QR Code & Pairing Code</button>
       <div class="qr-area" id="qrArea" style="margin-top:16px;">
@@ -80,7 +86,7 @@
       <div id="qrRefreshRow" style="display:none;margin-top:10px;">
         <div class="btn-row">
           <button class="btn btn-blue" id="qrRefreshBtn">🔄 Refresh</button>
-          <button class="btn btn-green" onclick="checkStatus()">✅ Verify</button>
+          <button class="btn btn-green" onclick="checkStatusConnect()">✅ Verify</button>
         </div>
       </div>
     </div>
@@ -93,10 +99,12 @@
       <div class="field-group">
         <label>Instance Name</label>
         <input class="field" id="newInstName" placeholder="e.g. my-business"/>
+        <div class="hint">A unique short name for this WhatsApp connection</div>
       </div>
       <div class="field-group">
         <label>Phone Number (optional)</label>
         <input class="field" id="newInstPhone" placeholder="e.g. 918130960040"/>
+        <div class="hint">Country code + number. Used to generate pairing code.</div>
       </div>
       <button class="btn btn-green" onclick="createInstance()">Create Instance</button>
       <div id="createResult" style="margin-top:12px;"></div>
@@ -109,7 +117,7 @@
       <h2>📊 Check Status</h2>
       <div class="field-group">
         <label>Instance Name</label>
-        <input class="field" id="statusInstName" placeholder="Enter your instance name" value="saubh-sim"/>
+        <input class="field" id="statusInstName" placeholder="e.g. saubh-sim" value="saubh-sim"/>
       </div>
       <button class="btn btn-green" onclick="checkStatus()">Check Status</button>
       <div id="statusResult" style="margin-top:16px;"></div>
@@ -158,57 +166,73 @@ function switchTab(name) {
   for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('active');
   for (var i = 0; i < contents.length; i++) contents[i].classList.remove('active');
   document.getElementById('tab-' + name).classList.add('active');
-  // Highlight correct tab
   var tabLabels = { connect: 0, create: 1, status: 2 };
   tabs[tabLabels[name]].classList.add('active');
 }
 
-function stateTag(s) {
-  var c = s === 'open' ? 'tag-open' : s === 'connecting' ? 'tag-connecting' : 'tag-close';
-  return '<span class="tag ' + c + '">' + s + '</span>';
-}
 function dotHtml(s) {
   var c = s === 'open' ? 'dot-green' : s === 'connecting' ? 'dot-yellow' : 'dot-red';
   return '<div class="dot ' + c + '"></div>';
 }
+function stateTag(s) {
+  var c = s === 'open' ? 'tag-open' : s === 'connecting' ? 'tag-connecting' : 'tag-close';
+  return '<span class="tag ' + c + '">' + s + '</span>';
+}
 
 async function connectInstance() {
   var name = document.getElementById('connectInstName').value.trim();
+  var phone = document.getElementById('connectPhone').value.trim().replace(/[\s+\-]/g, '');
   if (!name) { alert('Enter instance name'); return; }
   var el = document.getElementById('qrArea');
-  el.innerHTML = '<span class="loader"></span> Generating QR & pairing code...';
+  el.innerHTML = '<span class="loader"></span> Generating QR' + (phone ? ' & pairing code' : '') + '...';
   document.getElementById('qrRefreshRow').style.display = 'none';
-  log('Connect: ' + name);
+  log('Connect: ' + name + (phone ? ' (phone: ' + phone + ')' : ''));
+
   try {
-    var data = await api('/instance/connect/' + name);
+    // Build URL with optional phone number for pairing code
+    var url = '/instance/connect/' + name;
+    if (phone) url += '?number=' + phone;
+
+    var data = await api(url);
     log('Keys: ' + Object.keys(data).join(', '));
 
+    // Already connected
     if (data && data.instance && data.instance.state === 'open') {
       el.innerHTML = '<div class="status-row">' + dotHtml('open') + ' <b>' + name + '</b> is already connected!</div>' +
         '<p class="qr-msg">Instance is paired and active. No QR needed.</p>';
       return;
     }
 
+    // Error
+    if (data && data.status && data.status >= 400) {
+      el.innerHTML = '<p style="color:#fca5a5;">Error: ' + (data.response && data.response.message ? data.response.message : JSON.stringify(data)) + '</p>';
+      return;
+    }
+
     var html = '';
 
-    // Pairing code first (mobile-friendly)
+    // Pairing code (show first — mobile friendly)
     if (data && data.pairingCode) {
       html += '<div class="pairing-code">' + data.pairingCode + '</div>';
-      html += '<p class="pairing-label">Enter code in WhatsApp → Linked Devices → Link with phone number</p>';
+      html += '<p class="pairing-label">Open WhatsApp → Linked Devices → Link with phone number → Enter code above</p>';
+    } else if (phone) {
+      html += '<p style="color:rgba(245,158,11,.6);font-size:.82rem;">⚠️ Pairing code not available. Try refreshing or use QR below.</p>';
+    } else {
+      html += '<p style="color:rgba(255,255,255,.3);font-size:.82rem;">💡 Enter phone number above to also get a pairing code</p>';
     }
 
     // QR code
     if (data && data.base64) {
       if (html) html += '<div class="or-divider">— or scan QR code —</div>';
       html += '<img src="' + data.base64 + '" alt="QR Code"/>';
-      html += '<p class="qr-msg">Open WhatsApp → Settings → Linked Devices → Link a Device</p>';
+      html += '<p class="qr-msg">Open WhatsApp → Settings → Linked Devices → Link a Device → Scan</p>';
     }
 
-    if (!html) {
+    if (!data.pairingCode && !data.base64) {
       html = '<pre style="color:rgba(255,255,255,.5);font-size:.72rem;text-align:left;overflow:auto;">' + JSON.stringify(data, null, 2) + '</pre>';
     }
 
-    html += '<p class="qr-msg" style="margin-top:6px;">⏱ Expires in ~45s. Click Refresh if needed.</p>';
+    html += '<p class="qr-msg" style="margin-top:8px;">⏱ Expires in ~45s. Click Refresh if needed.</p>';
     el.innerHTML = html;
     document.getElementById('qrRefreshRow').style.display = 'block';
     document.getElementById('qrRefreshBtn').onclick = function() { connectInstance(); };
@@ -220,7 +244,7 @@ async function connectInstance() {
 
 async function createInstance() {
   var name = document.getElementById('newInstName').value.trim();
-  var phone = document.getElementById('newInstPhone').value.trim();
+  var phone = document.getElementById('newInstPhone').value.trim().replace(/[\s+\-]/g, '');
   var el = document.getElementById('createResult');
   if (!name) { alert('Enter an instance name'); return; }
   el.innerHTML = '<span class="loader"></span> Creating...';
@@ -240,19 +264,29 @@ async function createInstance() {
     if (phone) body.number = phone;
     var data = await api('/instance/create', 'POST', body);
     log('Created: ' + JSON.stringify(data).slice(0, 200));
-    el.innerHTML = '<p style="color:#86efac;">✅ Instance <b>' + name + '</b> created!</p>';
-    // Switch to connect tab and auto-connect
+    el.innerHTML = '<p style="color:#86efac;">✅ Instance <b>' + name + '</b> created! Switching to Connect tab...</p>';
+    // Switch to connect tab
     document.getElementById('connectInstName').value = name;
+    document.getElementById('connectPhone').value = phone;
     switchTab('connect');
-    setTimeout(function() { connectInstance(); }, 500);
+    setTimeout(function() { connectInstance(); }, 600);
   } catch(e) {
     el.innerHTML = '<p style="color:#fca5a5;">Error: ' + e.message + '</p>';
     log('Error: ' + e.message);
   }
 }
 
+function checkStatusConnect() {
+  var name = document.getElementById('connectInstName').value.trim();
+  if (name) {
+    document.getElementById('statusInstName').value = name;
+    switchTab('status');
+    checkStatus();
+  }
+}
+
 async function checkStatus() {
-  var name = document.getElementById('statusInstName').value.trim() || document.getElementById('connectInstName').value.trim();
+  var name = document.getElementById('statusInstName').value.trim();
   if (!name) { alert('Enter instance name'); return; }
   var el = document.getElementById('statusResult');
   el.innerHTML = '<span class="loader"></span> Checking...';
@@ -261,13 +295,11 @@ async function checkStatus() {
     var state = await api('/instance/connectionState/' + name);
     var s = (state && state.instance && state.instance.state) || 'unknown';
     var html = '<div class="status-row">' + dotHtml(s) + ' <b>' + name + '</b> ' + stateTag(s) + '</div>';
-
     try {
       var wh = await api('/webhook/find/' + name);
       html += '<div class="detail">Webhook: ' + (wh.enabled ? '✅ Active' : '❌ Disabled') + '</div>';
       if (wh.url) html += '<div class="detail" style="font-size:.75rem;word-break:break-all;">' + wh.url + '</div>';
     } catch(e2) {}
-
     el.innerHTML = html;
     log(name + ': ' + s);
   } catch(e) {
@@ -284,7 +316,7 @@ async function setWebhook() {
   el.innerHTML = '<span class="loader"></span> Setting...';
   log('Webhook: ' + name + ' → ' + url);
   try {
-    var data = await api('/webhook/set/' + name, 'POST', {
+    await api('/webhook/set/' + name, 'POST', {
       webhook: { url: url, enabled: true, webhookByEvents: false, events: ['MESSAGES_UPSERT'] }
     });
     el.innerHTML = '<p style="color:#86efac;">✅ Webhook set for <b>' + name + '</b></p>';
