@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ContactsService } from '../contacts/contacts.service';
 import { BotService } from '../bot/bot.service';
-import Redis from 'ioredis';
 
 export interface InboundMessage {
   senderWhatsapp: string;  // e.g. '918800607598'
@@ -17,7 +16,7 @@ export interface InboundMessage {
 @Injectable()
 export class WebhookService {
   private readonly logger = new Logger(WebhookService.name);
-  private redis: Redis | null = null;
+  private redis: any = null;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -26,10 +25,17 @@ export class WebhookService {
   ) {
     const redisUrl = process.env.REDIS_URL;
     if (redisUrl) {
-      this.redis = new Redis(redisUrl);
-      this.redis.on('error', (err) =>
-        this.logger.error(`Redis pub error: ${err.message}`),
-      );
+      try {
+        // Dynamic require to avoid TS module resolution when ioredis isn't installed
+        const IORedis = require('ioredis');
+        this.redis = new IORedis(redisUrl);
+        this.redis.on('error', (err: any) =>
+          this.logger.error(`Redis pub error: ${err.message}`),
+        );
+        this.logger.log('WebhookService Redis publisher connected');
+      } catch (err: any) {
+        this.logger.warn(`Redis not available for pub/sub: ${err.message}`);
+      }
     }
   }
 
