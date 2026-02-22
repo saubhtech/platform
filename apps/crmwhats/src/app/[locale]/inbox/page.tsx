@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useChannel } from '@/context/ChannelContext';
 import Avatar from '@/components/ui/Avatar';
 import ChannelBadge from '@/components/ui/ChannelBadge';
@@ -13,6 +13,7 @@ interface WaMessage {
   id: string;
   direction: string;
   body: string | null;
+  mediaUrl: string | null;
   mediaType: string | null;
   status: string;
   sentAt: string;
@@ -41,6 +42,71 @@ function timeAgo(date: string): string {
   return `${Math.floor(diff / 86400)}d`;
 }
 
+const MEDIA_ICONS: Record<string, string> = {
+  image: '🖼️',
+  video: '🎬',
+  audio: '🎵',
+  document: '📄',
+};
+
+function MediaBubble({ msg }: { msg: WaMessage }) {
+  if (!msg.mediaUrl) return null;
+  const type = msg.mediaType || 'document';
+
+  if (type === 'image') {
+    return (
+      <div style={{ marginBottom: msg.body ? '6px' : 0 }}>
+        <img
+          src={msg.mediaUrl}
+          alt="media"
+          style={{
+            maxWidth: '100%', maxHeight: '220px', borderRadius: '10px',
+            display: 'block', objectFit: 'cover',
+          }}
+          loading="lazy"
+        />
+      </div>
+    );
+  }
+
+  if (type === 'video') {
+    return (
+      <div style={{ marginBottom: msg.body ? '6px' : 0 }}>
+        <video
+          src={msg.mediaUrl}
+          controls
+          style={{ maxWidth: '100%', maxHeight: '220px', borderRadius: '10px', display: 'block' }}
+        />
+      </div>
+    );
+  }
+
+  if (type === 'audio') {
+    return (
+      <div style={{ marginBottom: msg.body ? '6px' : 0 }}>
+        <audio src={msg.mediaUrl} controls style={{ width: '100%', maxWidth: '260px' }} />
+      </div>
+    );
+  }
+
+  // document fallback
+  return (
+    <a
+      href={msg.mediaUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{
+        display: 'flex', alignItems: 'center', gap: '8px',
+        padding: '8px 12px', borderRadius: '8px', textDecoration: 'none',
+        background: 'rgba(255,255,255,0.06)', marginBottom: msg.body ? '6px' : 0,
+      }}
+    >
+      <span style={{ fontSize: '20px' }}>📄</span>
+      <span style={{ fontSize: '12px', color: '#A78BFA' }}>Download Document</span>
+    </a>
+  );
+}
+
 export default function InboxPage() {
   const { selectedChannel } = useChannel();
   const [channels, setChannels] = useState<any[]>([]);
@@ -53,6 +119,8 @@ export default function InboxPage() {
   const [loading, setLoading] = useState(true);
   const [msgsLoading, setMsgsLoading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchChannels = useCallback(async () => {
     try {
@@ -68,7 +136,6 @@ export default function InboxPage() {
       if (filter !== 'ALL') params.set('status', filter);
       if (search) params.set('search', search);
 
-      // If channel filter is set, find matching channelId
       if (selectedChannel !== 'ALL' && channels.length > 0) {
         const ch = channels.find((c: any) => c.type === selectedChannel);
         if (ch) params.set('channelId', ch.id);
@@ -104,6 +171,41 @@ export default function InboxPage() {
       await fetchMessages(selected);
     } catch (e) { console.error(e); }
     finally { setSending(false); }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !selected) return;
+    setUploading(true);
+    try {
+      // 1. Upload file
+      const formData = new FormData();
+      formData.append('file', file);
+      const uploadRes = await fetch(`${API}/api/crm/media/upload`, { method: 'POST', body: formData });
+      const uploadData = await uploadRes.json();
+
+      if (!uploadRes.ok) throw new Error(uploadData.message || 'Upload failed');
+
+      // 2. Send media message
+      await fetch(`${API}/api/crm/conversations/${selected}/media`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mediaUrl: uploadData.mediaUrl,
+          mediaType: uploadData.mediaType,
+          caption: msgInput.trim() || undefined,
+          filename: uploadData.originalName,
+        }),
+      });
+
+      setMsgInput('');
+      await fetchMessages(selected);
+    } catch (err: any) {
+      console.error('Upload failed:', err);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   };
 
   const resolveConv = async (id: string) => {
@@ -155,7 +257,7 @@ export default function InboxPage() {
         {/* Header */}
         <div style={{ padding: '20px 16px 12px' }}>
           <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#F8F8FF', margin: '0 0 12px 0', letterSpacing: '-0.02em' }}>
-            \uD83D\uDCAC Inbox
+            💬 Inbox
           </h1>
 
           {/* Search */}
@@ -232,12 +334,15 @@ export default function InboxPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
                     <ChannelBadge type={conv.channel.type} />
                     <StatusDot status={conv.status} isBot={conv.isBot} size={6} />
-                    {conv.isBot && <span style={{ fontSize: '10px', color: '#7C3AED' }}>\u26A1 Bot</span>}
+                    {conv.isBot && <span style={{ fontSize: '10px', color: '#7C3AED' }}>⚡ Bot</span>}
                   </div>
                   {conv.messages[0] && (
                     <div style={{ fontSize: '12px', color: '#6B7280', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {conv.messages[0].direction === 'OUT' ? '\u2197 You: ' : ''}
-                      {conv.messages[0].body || `[${conv.messages[0].mediaType || 'media'}]`}
+                      {conv.messages[0].direction === 'OUT' ? '↗ You: ' : ''}
+                      {conv.messages[0].mediaType
+                        ? `${MEDIA_ICONS[conv.messages[0].mediaType] || '📎'} ${conv.messages[0].body || conv.messages[0].mediaType}`
+                        : conv.messages[0].body || '[media]'
+                      }
                     </div>
                   )}
                 </div>
@@ -251,7 +356,7 @@ export default function InboxPage() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }} className="msg-panel">
         {!selected ? (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '12px' }}>
-            <span style={{ fontSize: '48px' }}>\uD83D\uDCAC</span>
+            <span style={{ fontSize: '48px' }}>💬</span>
             <span style={{ color: '#6B7280', fontSize: '15px' }}>Select a conversation to start messaging</span>
           </div>
         ) : (
@@ -267,6 +372,15 @@ export default function InboxPage() {
               backdropFilter: 'blur(8px)',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                {/* Back button for mobile */}
+                <button
+                  onClick={() => setSelected(null)}
+                  className="mobile-back-btn"
+                  style={{
+                    display: 'none', background: 'none', border: 'none',
+                    color: '#6B7280', fontSize: '18px', cursor: 'pointer', padding: '4px',
+                  }}
+                >←</button>
                 <Avatar name={selectedConv?.contact.name || selectedConv?.contact.whatsapp || null} size="md" />
                 <div>
                   <div style={{ fontSize: '15px', fontWeight: 600, color: '#F8F8FF' }}>
@@ -285,14 +399,14 @@ export default function InboxPage() {
                   color: selectedConv?.isBot ? '#7C3AED' : '#6B7280',
                   transition: 'all 0.15s ease',
                 }}>
-                  \u26A1 {selectedConv?.isBot ? 'Bot ON' : 'Bot OFF'}
+                  ⚡ {selectedConv?.isBot ? 'Bot ON' : 'Bot OFF'}
                 </button>
                 {selectedConv?.status !== 'RESOLVED' && (
                   <button onClick={() => resolveConv(selected)} style={{
                     padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', border: 'none',
                     background: 'rgba(16,185,129,0.12)', color: '#10B981',
                   }}>
-                    \u2713 Resolve
+                    ✓ Resolve
                   </button>
                 )}
               </div>
@@ -309,7 +423,7 @@ export default function InboxPage() {
                 justifyContent: 'space-between',
                 fontSize: '12px',
               }}>
-                <span style={{ color: '#7C3AED' }}>\uD83E\uDD16 Bot is handling this conversation</span>
+                <span style={{ color: '#7C3AED' }}>🤖 Bot is handling this conversation</span>
                 <button onClick={() => toggleBot(selected)} style={{
                   padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 600,
                   cursor: 'pointer', border: 'none',
@@ -343,7 +457,9 @@ export default function InboxPage() {
                       color: '#e2e8f0',
                       lineHeight: 1.5,
                     }}>
-                      {msg.body || `[${msg.mediaType || 'media'}]`}
+                      {msg.mediaUrl && <MediaBubble msg={msg} />}
+                      {msg.body && <span style={{ whiteSpace: 'pre-wrap' }}>{msg.body}</span>}
+                      {!msg.body && !msg.mediaUrl && `[${msg.mediaType || 'media'}]`}
                     </div>
                     <div style={{
                       fontSize: '10px',
@@ -355,7 +471,7 @@ export default function InboxPage() {
                       {new Date(msg.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       {msg.direction === 'OUT' && (
                         <span style={{ marginLeft: '4px' }}>
-                          {msg.status === 'DELIVERED' ? '\u2713\u2713' : msg.status === 'READ' ? '\u2713\u2713' : '\u2713'}
+                          {msg.status === 'DELIVERED' ? '✓✓' : msg.status === 'READ' ? '✓✓' : '✓'}
                         </span>
                       )}
                     </div>
@@ -364,15 +480,56 @@ export default function InboxPage() {
               )}
             </div>
 
+            {/* Uploading indicator */}
+            {uploading && (
+              <div style={{
+                padding: '8px 20px',
+                borderTop: '1px solid rgba(255,255,255,0.06)',
+                fontSize: '12px', color: '#7C3AED',
+                display: 'flex', alignItems: 'center', gap: '8px',
+              }}>
+                <span style={{
+                  width: '14px', height: '14px', border: '2px solid rgba(124,58,237,0.3)',
+                  borderTopColor: '#7C3AED', borderRadius: '50%',
+                  animation: 'spin 0.6s linear infinite', display: 'inline-block',
+                }} />
+                Uploading file...
+              </div>
+            )}
+
             {/* Input Area */}
             <div style={{
               padding: '12px 16px',
               borderTop: '1px solid rgba(255,255,255,0.06)',
               display: 'flex',
-              gap: '10px',
+              gap: '8px',
               alignItems: 'flex-end',
               background: 'rgba(19,19,26,0.5)',
             }}>
+              {/* Hidden file input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx"
+                onChange={handleFileUpload}
+                style={{ display: 'none' }}
+              />
+
+              {/* Attachment button */}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                style={{
+                  width: '40px', height: '40px', borderRadius: '10px',
+                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
+                  color: '#6B7280', fontSize: '18px', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0, transition: 'all 0.15s ease',
+                  opacity: uploading ? 0.4 : 1,
+                }}
+                title="Attach file"
+              >📎</button>
+
               <input
                 value={msgInput}
                 onChange={e => setMsgInput(e.target.value)}
@@ -407,6 +564,9 @@ export default function InboxPage() {
       </div>
 
       <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
         @media (max-width: 768px) {
           .conv-list-panel {
             width: 100% !important;
@@ -414,6 +574,9 @@ export default function InboxPage() {
           }
           .msg-panel {
             display: ${selected ? 'flex' : 'none'} !important;
+          }
+          .mobile-back-btn {
+            display: block !important;
           }
         }
       `}</style>
