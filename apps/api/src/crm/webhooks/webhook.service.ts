@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ContactsService } from '../contacts/contacts.service';
 import { BotService } from '../bot/bot.service';
+import Redis from 'ioredis';
 
 export interface InboundMessage {
   senderWhatsapp: string;  // e.g. '918800607598'
@@ -16,14 +17,36 @@ export interface InboundMessage {
 @Injectable()
 export class WebhookService {
   private readonly logger = new Logger(WebhookService.name);
+  private redis: Redis | null = null;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly contactsService: ContactsService,
     private readonly botService: BotService,
-  ) {}
+  ) {
+    const redisUrl = process.env.REDIS_URL;
+    if (redisUrl) {
+      this.redis = new Redis(redisUrl);
+      this.redis.on('error', (err) =>
+        this.logger.error(`Redis pub error: ${err.message}`),
+      );
+    }
+  }
 
-  // ─── Process inbound message (shared by both providers) ───────────────────
+  // ─── Publish CRM event to Redis for real-time fanout ──────────────────
+  private async publishEvent(type: string, conversationId: string, data: any) {
+    if (!this.redis) return;
+    try {
+      await this.redis.publish(
+        'crm:events',
+        JSON.stringify({ type, conversationId, data }),
+      );
+    } catch (err: any) {
+      this.logger.error(`Redis publish failed: ${err.message}`);
+    }
+  }
+
+  // ─── Process inbound message (shared by both providers) ───────────────
   async processInbound(msg: InboundMessage) {
     // 1. Find or create contact
     const contact = await this.contactsService.findOrCreate(
@@ -63,6 +86,15 @@ export class WebhookService {
 
       isNewConversation = true;
       this.logger.log(`New conversation ${conversation.id} for ${msg.senderWhatsapp} (bot: ${enableBot})`);
+
+      // Publish new conversation event
+      await this.publishEvent('conversation:update', conversation.id, {
+        conversationId: conversation.id,
+        contact,
+        status: 'OPEN',
+        isBot: enableBot,
+        isNew: true,
+      });
     }
 
     // 3. Save inbound message
@@ -88,14 +120,33 @@ export class WebhookService {
       `Inbound ${msg.senderWhatsapp} → conv ${conversation.id}: ${msg.body?.substring(0, 50) || '[media]'}`,
     );
 
-    // 5. Bot: send greeting on NEW conversation if bot enabled
+    // 5. Publish message event to Redis for real-time delivery
+    await this.publishEvent('message', conversation.id, {
+      conversationId: conversation.id,
+      message: {
+        id: message.id,
+        direction: message.direction,
+        body: message.body,
+        mediaUrl: message.mediaUrl,
+        mediaType: message.mediaType,
+        status: message.status,
+        sentAt: message.sentAt,
+      },
+      contact: {
+        id: contact.id,
+        whatsapp: contact.whatsapp,
+        name: contact.name,
+      },
+    });
+
+    // 6. Bot: send greeting on NEW conversation if bot enabled
     if (isNewConversation && conversation.isBot) {
       this.botService.sendGreeting(conversation.id).catch(err => {
         this.logger.error(`Bot greeting failed: ${err.message}`);
       });
     }
 
-    // 6. Bot: auto-reply on existing conversation if bot enabled
+    // 7. Bot: auto-reply on existing conversation if bot enabled
     if (!isNewConversation && msg.body && conversation.isBot) {
       this.botService.autoReply(conversation.id, msg.body).catch(err => {
         this.logger.error(`Bot auto-reply failed: ${err.message}`);
