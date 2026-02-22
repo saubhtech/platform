@@ -1,5 +1,5 @@
 # OPUS_CONTEXT.md — Session Context for Claude/Opus
-> Last updated: February 21, 2026
+> Last updated: February 22, 2026
 
 ## Quick Reference
 
@@ -13,6 +13,7 @@
 | **Admin Domain** | admin.saubh.tech |
 | **Web Domain** | saubh.tech |
 | **CRM WhatsApp** | saubh.tech/crmwhats |
+| **Realtime WS** | realtime.saubh.tech |
 | **Package Manager** | pnpm (never npm) |
 
 ## Server Layout (Current)
@@ -24,6 +25,7 @@
 | **PM2 apps** | web (3000), api (3001), realtime (3002), admin (3003), crmwhats (3004) |
 | **Projects** | `/data/projects/platform` — only project remaining |
 | **Redis password** | `Red1sSecure2026` |
+| **Media uploads** | `/data/uploads/crm/` |
 
 ## What's Been Built
 
@@ -31,17 +33,17 @@
 | App | Path | Stack | Port | Status |
 |-----|------|-------|------|--------|
 | web | `apps/web` | Next.js 16, Tailwind v4, i18n (13 active languages) | 3000 | ✅ Live |
-| api | `apps/api` | NestJS, Prisma, PostgreSQL, Keycloak + WhatsApp OTP auth + CRM + Bot | 3001 | ✅ Live |
+| api | `apps/api` | NestJS, Prisma 7, PostgreSQL, Keycloak + WhatsApp OTP + CRM + Bot + Templates + Media | 3001 | ✅ Live |
 | admin | `apps/admin` | Next.js, Tailwind, Keycloak SSO, CRM UI with channel switcher | 3003 | ✅ Live |
-| realtime | `apps/realtime` | WebSocket server | 3002 | ✅ Live |
-| crmwhats | `apps/crmwhats` | Next.js 16, dark glassmorphism UI, JWT auth (BO/GW only) | 3004 | ✅ Live |
+| realtime | `apps/realtime` | WebSocket server, Socket.io, Redis pub/sub, CRM gateway | 3002 | ✅ Live |
+| crmwhats | `apps/crmwhats` | Next.js 16, dark glassmorphism UI, JWT auth (BO/GW only), WebSocket real-time | 3004 | ✅ Live |
 
 ### Docker Services
 | Container | Image | Port | Role |
 |-----------|-------|------|------|
 | saubh-keycloak | keycloak/keycloak | 8080 | SSO/Auth |
 | saubh-postgres | postgres:16 | 5432 | Main DB (`saubhtech` + `evolution`) |
-| saubh-redis | redis:7 | 6379 | Cache + BullMQ queues |
+| saubh-redis | redis:7 | 6379 | Cache + BullMQ queues + CRM pub/sub |
 | saubh-evolution | atendai/evolution-api:v2.2.0 | 8081 | WhatsApp API (v2.3.7) |
 
 ---
@@ -87,15 +89,17 @@ Old CRM removed entirely (architecturally incompatible). Disk freed: 52G.
 - Webhook: `https://api.saubh.tech/api/crm/webhooks/evolution` (must use public URL — Docker can't reach localhost)
 - Docker config: `infra/compose/evolution/docker-compose.yml`
 
-**CRM Database** (`crm` schema in `saubhtech` DB — 6 tables):
+**CRM Database** (`crm` schema in `saubhtech` DB — 9 tables):
 | Model | Purpose |
 |-------|---------|
-| `WaChannel` | Phone numbers + provider type (EVOLUTION/WABA) |
+| `WaChannel` | Phone numbers + provider type (EVOLUTION/WABA) + `defaultBotEnabled` |
 | `WaContact` | WhatsApp contacts, links to `public.user` |
 | `WaConversation` | Threads (OPEN/ASSIGNED/RESOLVED), bot toggle |
 | `WaMessage` | Messages (IN/OUT), media, delivery status |
 | `WaBroadcast` | Bulk message campaigns |
 | `WaBroadcastRecipient` | Per-recipient delivery tracking |
+| `BotConfig` | Per-channel bot settings (systemPrompt, greetingMessage, handoffKeywords) |
+| `WaTemplate` | WABA message templates (MARKETING/UTILITY/AUTHENTICATION) |
 
 **Seeded Channels**:
 - Saubh SIM (+918800607598) → EVOLUTION, instance: `saubh-sim`
@@ -104,11 +108,14 @@ Old CRM removed entirely (architecturally incompatible). Disk freed: 52G.
 **CRM Backend Modules** (`apps/api/src/crm/`):
 | Module | Key Files | Endpoints |
 |--------|-----------|-----------|
-| channels | `channel.service.ts`, `channels.controller.ts` | `GET /crm/channels`, dual-provider routing (Evolution + WABA) |
-| inbox | `inbox.controller.ts`, `inbox.service.ts` | `GET/POST /crm/conversations`, messages, assign, resolve, toggle-bot |
+| channels | `channel.service.ts`, `channels.controller.ts` | `GET /crm/channels`, dual-provider routing (Evolution + WABA), `sendMediaMessage()` |
+| inbox | `inbox.controller.ts`, `inbox.service.ts` | `GET/POST /crm/conversations`, messages, assign, resolve, toggle-bot, send media |
 | contacts | `contacts.controller.ts`, `contacts.service.ts` | `GET/POST/PATCH /crm/contacts`, findOrCreate, auto-link to user |
 | broadcast | `broadcast.controller.ts`, `broadcast.service.ts`, `broadcast.processor.ts` | `GET/POST /crm/broadcasts`, BullMQ queue `crm-broadcast`, 1msg/sec throttle |
-| webhooks | `evolution-webhook.controller.ts`, `waba-webhook.controller.ts`, `webhook.service.ts` | Inbound message processing, auto-create contacts + conversations |
+| webhooks | `evolution-webhook.controller.ts`, `waba-webhook.controller.ts`, `webhook.service.ts` | Inbound message processing, auto-create contacts + conversations, Redis pub/sub |
+| bot | `bot.service.ts`, `bot.controller.ts`, `bot.module.ts` | AI auto-reply (Claude Haiku), greeting, handoff, per-channel config |
+| templates | `template.service.ts`, `template.controller.ts`, `template.module.ts` | WABA template CRUD, Meta Graph API sync, listAll |
+| media | `media.controller.ts`, `media.module.ts` | File upload (16MB max), serve uploaded files |
 
 **CRM API Endpoints** (all under `/api/crm/`):
 | Endpoint | Method | Description |
@@ -117,6 +124,7 @@ Old CRM removed entirely (architecturally incompatible). Disk freed: 52G.
 | `/api/crm/conversations` | GET | List conversations (filter: channelId, status) |
 | `/api/crm/conversations/:id/messages` | GET | Message thread (paginated) |
 | `/api/crm/conversations/:id/messages` | POST | Send message via channel |
+| `/api/crm/conversations/:id/media` | POST | Send media message (image/video/audio/document) |
 | `/api/crm/conversations/:id/assign` | PATCH | Assign to agent |
 | `/api/crm/conversations/:id/resolve` | PATCH | Mark resolved |
 | `/api/crm/conversations/:id/toggle-bot` | PATCH | Toggle bot on/off |
@@ -127,17 +135,20 @@ Old CRM removed entirely (architecturally incompatible). Disk freed: 52G.
 | `/api/crm/broadcasts` | GET | List broadcasts |
 | `/api/crm/broadcasts/:id` | GET | Broadcast detail + recipients |
 | `/api/crm/broadcasts` | POST | Create broadcast (immediate or scheduled) |
+| `/api/crm/bot/config/:channelId` | GET | Get bot config for channel |
+| `/api/crm/bot/config/:channelId` | PATCH | Update bot config (isEnabled, systemPrompt, greetingMessage, handoffKeywords) |
+| `/api/crm/bot/status` | GET | All channels with bot status |
+| `/api/crm/templates` | GET | List all templates (optional ?status=) |
+| `/api/crm/templates/channel/:channelId` | GET | Templates for channel |
+| `/api/crm/templates/detail/:id` | GET | Single template |
+| `/api/crm/templates` | POST | Create template (submits to Meta for WABA) |
+| `/api/crm/templates/:id` | PATCH | Update template |
+| `/api/crm/templates/:id` | DELETE | Delete template (+ Meta cleanup) |
+| `/api/crm/templates/sync/:channelId` | POST | Sync templates from Meta |
+| `/api/crm/media/upload` | POST | Upload file (multipart, 16MB max) |
+| `/api/crm/media/:filename` | GET | Serve uploaded file |
 | `/api/crm/webhooks/evolution` | POST | Evolution inbound webhook |
 | `/api/crm/webhooks/waba` | GET/POST | WABA verification + inbound webhook |
-
-**CRM Frontend** (admin app at `apps/admin/src/app/[locale]/crm/`):
-| Page | Route | Features |
-|------|-------|----------|
-| Inbox | `/crm/inbox` | **Channel switcher tabs**, conversation list, filter by status, chat thread, send messages, resolve, toggle bot, 5s auto-refresh |
-| Contacts | `/crm/contacts` | **Channel switcher tabs**, contact list, search, add contact, block/unblock |
-| Broadcasts | `/crm/broadcasts` | Broadcast list with status badges |
-
-**Verified**: Outbound + inbound messages working on both Evolution and WABA ✅
 
 ---
 
@@ -157,15 +168,6 @@ Old CRM removed entirely (architecturally incompatible). Disk freed: 52G.
 - `WABA_BUSINESS_ACCOUNT_ID=124563407414910`
 - `WABA_ACCESS_TOKEN=EAAImsV1nxWk...` (long-lived token)
 - `WABA_VERIFY_TOKEN=a7f3c9e1b2d4068f5a9c7e3b1d204f68`
-
-**AI Bot Module** (`apps/api/src/crm/bot/`):
-- `bot.service.ts` — Claude Haiku auto-responder (model: `claude-haiku-4-5-20251001`)
-- `bot.module.ts` — imports PrismaModule + ChannelModule
-- System prompt: Saubh assistant, reply in user's language, under 100 words
-- `[HANDOFF]` detection for human agent transfer
-- Graceful fallback when `ANTHROPIC_API_KEY` not set
-- Wired into `webhook.service.ts` — auto-replies on inbound if `conversation.isBot === true`
-- **Status: Code ready, awaiting `ANTHROPIC_API_KEY`**
 
 **Channel Switcher**:
 - `GET /api/crm/channels` endpoint added
@@ -204,11 +206,12 @@ Old CRM removed entirely (architecturally incompatible). Disk freed: 52G.
 **Pages**:
 | Page | Route | Features |
 |------|-------|----------|
-| Inbox | `/[locale]/inbox` | Two-panel (list + thread), search, status filters, channel filter, gradient chat bubbles, bot banner + take over, auto-scroll, 5s refresh |
+| Inbox | `/[locale]/inbox` | Two-panel (list + thread), search, status filters, channel filter, gradient chat bubbles, bot banner + take over, media display + upload, WebSocket real-time (fallback: 30s polling), Live/Polling indicator |
 | Contacts | `/[locale]/contacts` | Grid/list toggle, search, add contact, detail panel (hero, info, recent conversations), block/unblock |
 | Broadcast | `/[locale]/broadcast` | List with status pills (DRAFT/SCHEDULED/SENDING/DONE/FAILED), detail panel with recipients |
 | Broadcast Create | `/[locale]/broadcast/create` | 4-step wizard: Channel → Message (live preview) → Recipients (checkbox list) → Confirm (send now/schedule) |
-| Settings | `/[locale]/settings` | Profile, channel status cards, notification toggles, default channel filter, sign out |
+| Templates | `/[locale]/templates` | Template Studio: list with channel/status filters, create form (channel, category, name, language, header, body, footer, variables), WhatsApp-style preview, delete with Meta cleanup |
+| Settings | `/[locale]/settings` | Profile, channel status cards, notification toggles, default channel filter, AI Bot Configuration (per-channel toggle, greeting, system prompt, handoff keywords), bot activity stats, sign out |
 | Health | `/api/healthz` | `{ status: ok, app: crmwhats }` |
 
 **Infrastructure**:
@@ -218,17 +221,56 @@ Old CRM removed entirely (architecturally incompatible). Disk freed: 52G.
 
 ---
 
-## What's Next: P9 — Bot Activation + CRM Polish
+### Completed: P9 — Bot Activation + Templates + Media + Real-time ✅ (Feb 22, 2026)
 
-- Add `ANTHROPIC_API_KEY` to server `.env` to activate bot
-- Bot settings page (system prompt customization, handoff keywords)
-- `BotConfig` table + `defaultBotEnabled` on WaChannel
-- Bot greeting on new conversations
-- Template studio for WABA-approved templates
-- Media message support (images, documents)
-- Real-time inbox updates via WebSocket (rt.saubh.tech)
+**Bot Activation** (Tasks 1-6):
+- `ANTHROPIC_API_KEY` added to `apps/api/.env`
+- `BotConfig` model: per-channel settings (systemPrompt, greetingMessage, handoffKeywords)
+- `defaultBotEnabled` field on `WaChannel`
+- `BotService` enhanced: dynamic system prompts from DB, greeting on new conversations, handoff detection
+- Bot API: `GET/PATCH /api/crm/bot/config/:channelId`, `GET /api/crm/bot/status`
+- Bot Settings UI in crmwhats Settings page: per-channel toggle, greeting message, system prompt, handoff keywords tag input, bot activity stats
 
-**Future phases**: P10 (CRM Pipeline/Deals) → P11 (Analytics Dashboard)
+**WABA Templates** (Tasks 7-9):
+- `WaTemplate` model: name, category (MARKETING/UTILITY/AUTHENTICATION), language, status (PENDING/APPROVED/REJECTED), body, header, footer, variables, metaId
+- Template API: full CRUD + Meta Graph API sync for WABA channels, auto-approve for non-WABA
+- Template Studio UI: list with channel/status filters, create form with WhatsApp preview, delete
+
+**Media Messages** (Tasks 10-12):
+- `ChannelService.sendMediaMessage()`: routes to Evolution or WABA Graph API
+- `MediaModule`: upload endpoint (Multer, 16MB max, image/video/audio/document), serve endpoint
+- Storage: `/data/uploads/crm/`
+- `InboxService.sendMediaMessage()`: sends via channel + saves to DB
+- Inbox UI: `MediaBubble` component (inline images, video player, audio player, document download), 📎 attachment button with file upload
+
+**Real-time WebSocket** (Tasks 13-14):
+- `CrmGateway` in realtime app (`/crm` namespace)
+  - Client events: `crm:join` (conversation room), `crm:leave`, `crm:join:all` (inbox feed)
+  - Server events: `crm:message`, `crm:update`
+  - Redis subscriber on `crm:events` channel → fans out to WebSocket rooms
+- `WebhookService` Redis publisher: publishes `message` and `conversation:update` events on inbound
+- Inbox UI: Socket.io client connects to `realtime.saubh.tech/crm`, real-time message delivery, 30s fallback polling when WS disconnected, Live/Polling indicator
+
+**Dependencies Added**:
+- `ioredis ^5.9.3` (apps/api — Redis pub/sub for webhook→realtime)
+- `socket.io-client ^4.8.3` (apps/crmwhats — WebSocket client)
+
+**Env Vars Added**:
+- `apps/api/.env`: `REDIS_URL=redis://:Red1sSecure2026@127.0.0.1:6379`, `ANTHROPIC_API_KEY`
+- `apps/realtime/.env`: `REDIS_URL=redis://:Red1sSecure2026@127.0.0.1:6379`
+- `apps/crmwhats/.env.local`: `NEXT_PUBLIC_WS_URL=https://realtime.saubh.tech`
+
+---
+
+## What's Next: P10 — CRM Pipeline/Deals + Analytics
+
+- CRM Pipeline: Deal stages, lead tracking, contact tagging
+- Analytics Dashboard: message volumes, response times, bot performance, channel comparison
+- Broadcast scheduling improvements
+- Contact import/export (CSV)
+- Agent assignment + team management
+
+**Future phases**: P11 (Multi-tenant), P12 (Marketplace Integration)
 
 ---
 
@@ -254,7 +296,7 @@ Old CRM removed entirely (architecturally incompatible). Disk freed: 52G.
 ### Main Platform DB (`saubhtech`)
 - **public schema**: Business, Client, User (with WhatsApp OTP fields), UserMembership, Conversation, Message, Telephony
 - **master schema**: Geographic hierarchy (Country → State → District → Postal → Place), Organizational hierarchy (Locality → Area → Division → Region → Zone), Industry classification (Sector → Field → Market), Language (basic — langid + language only)
-- **crm schema**: WaChannel, WaContact, WaConversation, WaMessage, WaBroadcast, WaBroadcastRecipient
+- **crm schema**: WaChannel, WaContact, WaConversation, WaMessage, WaBroadcast, WaBroadcastRecipient, BotConfig, WaTemplate
 
 ### Evolution DB (`evolution`)
 - Managed by Evolution API internally
@@ -270,9 +312,10 @@ Old CRM removed entirely (architecturally incompatible). Disk freed: 52G.
 
 ## CRM WhatsApp UI Pattern (Permanent)
 
-- **Route**: `saubh.tech/crmwhats/[locale]/inbox|contacts|broadcast|settings`
+- **Route**: `saubh.tech/crmwhats/[locale]/inbox|contacts|broadcast|templates|settings`
 - **Auth**: WhatsApp JWT (`saubh_token` cookie), BO/GW usertypes only
 - **Design**: Dark glassmorphism, violet/pink gradient accents
+- **Real-time**: Socket.io client → `realtime.saubh.tech/crm` namespace
 - **API base**: `api.saubh.tech/api/crm/`
 
 ## Session Rules
