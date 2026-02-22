@@ -7,8 +7,8 @@ import ChannelBadge from '@/components/ui/ChannelBadge';
 import StatusDot from '@/components/ui/StatusDot';
 import SkeletonLoader from '@/components/ui/SkeletonLoader';
 import { io, Socket } from 'socket.io-client';
+import api from '@/lib/api';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'https://api.saubh.tech';
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'https://realtime.saubh.tech';
 
 interface WaMessage {
@@ -131,8 +131,14 @@ export default function InboxPage() {
 
   // ─── WebSocket connection ─────────────────────────────────────────────
   useEffect(() => {
+    // Get JWT for WebSocket auth
+    const token = typeof document !== 'undefined'
+      ? document.cookie.split('; ').find(r => r.startsWith('saubh_token='))?.split('=')[1] || ''
+      : '';
+
     const socket = io(`${WS_URL}/crm`, {
       transports: ['websocket', 'polling'],
+      auth: { token },
       reconnection: true,
       reconnectionDelay: 2000,
       reconnectionAttempts: 20,
@@ -210,8 +216,7 @@ export default function InboxPage() {
   // ─── REST fetches ─────────────────────────────────────────────────────
   const fetchChannels = useCallback(async () => {
     try {
-      const res = await fetch(`${API}/api/crm/channels`);
-      const data = await res.json();
+      const data = await api.get<any[]>('/api/crm/channels');
       setChannels(data || []);
     } catch (e) { console.error(e); }
   }, []);
@@ -227,8 +232,7 @@ export default function InboxPage() {
         if (ch) params.set('channelId', ch.id);
       }
 
-      const res = await fetch(`${API}/api/crm/conversations?${params}`);
-      const json = await res.json();
+      const json = await api.get<any>(`/api/crm/conversations?${params}`);
       setConversations(json.data || []);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
@@ -237,8 +241,7 @@ export default function InboxPage() {
   const fetchMessages = useCallback(async (convId: string) => {
     setMsgsLoading(true);
     try {
-      const res = await fetch(`${API}/api/crm/conversations/${convId}/messages?limit=100`);
-      const json = await res.json();
+      const json = await api.get<any>(`/api/crm/conversations/${convId}/messages?limit=100`);
       setMessages(json.data || []);
     } catch (e) { console.error(e); }
     finally { setMsgsLoading(false); }
@@ -248,11 +251,7 @@ export default function InboxPage() {
     if (!msgInput.trim() || !selected) return;
     setSending(true);
     try {
-      await fetch(`${API}/api/crm/conversations/${selected}/messages`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ body: msgInput }),
-      });
+      await api.post(`/api/crm/conversations/${selected}/messages`, { body: msgInput });
       setMsgInput('');
       await fetchMessages(selected);
     } catch (e) { console.error(e); }
@@ -266,20 +265,13 @@ export default function InboxPage() {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const uploadRes = await fetch(`${API}/api/crm/media/upload`, { method: 'POST', body: formData });
-      const uploadData = await uploadRes.json();
+      const uploadData = await api.upload<any>('/api/crm/media/upload', formData);
 
-      if (!uploadRes.ok) throw new Error(uploadData.message || 'Upload failed');
-
-      await fetch(`${API}/api/crm/conversations/${selected}/media`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          mediaUrl: uploadData.mediaUrl,
-          mediaType: uploadData.mediaType,
-          caption: msgInput.trim() || undefined,
-          filename: uploadData.originalName,
-        }),
+      await api.post(`/api/crm/conversations/${selected}/media`, {
+        mediaUrl: uploadData.mediaUrl,
+        mediaType: uploadData.mediaType,
+        caption: msgInput.trim() || undefined,
+        filename: uploadData.originalName,
       });
 
       setMsgInput('');
@@ -293,12 +285,12 @@ export default function InboxPage() {
   };
 
   const resolveConv = async (id: string) => {
-    await fetch(`${API}/api/crm/conversations/${id}/resolve`, { method: 'PATCH' });
+    await api.patch(`/api/crm/conversations/${id}/resolve`);
     await fetchConversations();
   };
 
   const toggleBot = async (id: string) => {
-    await fetch(`${API}/api/crm/conversations/${id}/toggle-bot`, { method: 'PATCH' });
+    await api.patch(`/api/crm/conversations/${id}/toggle-bot`);
     await fetchConversations();
   };
 
