@@ -5,20 +5,19 @@ import { TemplateService } from './template.service';
 export class TemplateController {
   constructor(private readonly templateService: TemplateService) {}
 
-  // ─── List templates for a channel ───────────────────────────────────────
-  @Get()
-  async list(@Query('channelId') channelId: string) {
-    if (!channelId) return [];
-    return this.templateService.list(channelId);
+  @Get(':channelId')
+  async list(
+    @Param('channelId') channelId: string,
+    @Query('status') status?: string,
+  ) {
+    return this.templateService.list(channelId, status);
   }
 
-  // ─── Get single template ────────────────────────────────────────────────
-  @Get(':id')
-  async getById(@Param('id') id: string) {
-    return this.templateService.getById(id);
+  @Get('detail/:id')
+  async get(@Param('id') id: string) {
+    return this.templateService.get(id);
   }
 
-  // ─── Create template ────────────────────────────────────────────────────
   @Post()
   async create(@Body() body: {
     channelId: string;
@@ -33,7 +32,6 @@ export class TemplateController {
     return this.templateService.create(body);
   }
 
-  // ─── Update template ────────────────────────────────────────────────────
   @Patch(':id')
   async update(
     @Param('id') id: string,
@@ -48,13 +46,11 @@ export class TemplateController {
     return this.templateService.update(id, body);
   }
 
-  // ─── Delete template ────────────────────────────────────────────────────
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    return this.templateService.remove(id);
+  async delete(@Param('id') id: string) {
+    return this.templateService.delete(id);
   }
 
-  // ─── Sync templates from Meta ───────────────────────────────────────────
   @Post('sync/:channelId')
   async sync(@Param('channelId') channelId: string) {
     return this.templateService.syncFromMeta(channelId);

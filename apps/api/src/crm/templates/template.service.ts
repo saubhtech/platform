@@ -19,19 +19,22 @@ export class TemplateService {
   }
 
   // ─── List templates for a channel ───────────────────────────────────────
-  async list(channelId: string) {
+  async list(channelId: string, status?: string) {
     return this.prisma.waTemplate.findMany({
-      where: { channelId },
+      where: {
+        channelId,
+        ...(status && status !== 'ALL' ? { status } : {}),
+      },
       orderBy: { createdAt: 'desc' },
     });
   }
 
   // ─── Get single template ────────────────────────────────────────────────
-  async getById(id: string) {
+  async get(id: string) {
     return this.prisma.waTemplate.findUnique({ where: { id } });
   }
 
-  // ─── Create template (local + submit to Meta if WABA) ───────────────────
+  // ─── Create template (save locally + submit to Meta if WABA) ────────────
   async create(data: {
     channelId: string;
     name: string;
@@ -42,20 +45,11 @@ export class TemplateService {
     footer?: string;
     variables?: string[];
   }) {
-    const channel = await this.prisma.waChannel.findUnique({
-      where: { id: data.channelId },
-    });
-
-    if (!channel) throw new Error('Channel not found');
-
-    // Normalize name: lowercase, underscores only
-    const normalizedName = data.name.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_');
-
-    // Save to local DB
+    // Save to DB first
     const template = await this.prisma.waTemplate.create({
       data: {
         channelId: data.channelId,
-        name: normalizedName,
+        name: data.name.toLowerCase().replace(/\s+/g, '_'),
         category: data.category,
         language: data.language || 'en',
         body: data.body,
@@ -67,7 +61,8 @@ export class TemplateService {
     });
 
     // Submit to Meta Graph API if WABA channel
-    if (channel.type === 'WABA' && this.wabaToken && this.wabaBizId) {
+    const channel = await this.prisma.waChannel.findUnique({ where: { id: data.channelId } });
+    if (channel?.type === 'WABA' && this.wabaBizId && this.wabaToken) {
       try {
         const metaResult = await this.submitToMeta(template);
         if (metaResult.id) {
@@ -77,12 +72,18 @@ export class TemplateService {
           });
         }
       } catch (err: any) {
-        this.logger.error(`Meta template submission failed: ${err.message}`);
+        this.logger.error(`Meta template submit failed: ${err.message}`);
         await this.prisma.waTemplate.update({
           where: { id: template.id },
           data: { status: 'REJECTED' },
         });
       }
+    } else {
+      // Non-WABA channels: auto-approve
+      await this.prisma.waTemplate.update({
+        where: { id: template.id },
+        data: { status: 'APPROVED' },
+      });
     }
 
     return this.prisma.waTemplate.findUnique({ where: { id: template.id } });
@@ -109,14 +110,17 @@ export class TemplateService {
   }
 
   // ─── Delete template ────────────────────────────────────────────────────
-  async remove(id: string) {
+  async delete(id: string) {
     const template = await this.prisma.waTemplate.findUnique({ where: { id } });
-    if (!template) return;
+    if (!template) return null;
 
-    // Delete from Meta if exists
-    if (template.metaId && this.wabaToken && this.wabaBizId) {
+    // Delete from Meta if WABA
+    if (template.metaId && this.wabaBizId && this.wabaToken) {
       try {
-        await this.deleteFromMeta(template.name);
+        await fetch(
+          `https://graph.facebook.com/v21.0/${this.wabaBizId}/message_templates?name=${template.name}`,
+          { method: 'DELETE', headers: { Authorization: `Bearer ${this.wabaToken}` } },
+        );
       } catch (err: any) {
         this.logger.warn(`Meta template delete failed: ${err.message}`);
       }
@@ -125,84 +129,91 @@ export class TemplateService {
     return this.prisma.waTemplate.delete({ where: { id } });
   }
 
-  // ─── Sync status from Meta ──────────────────────────────────────────────
+  // ─── Sync templates from Meta ───────────────────────────────────────────
   async syncFromMeta(channelId: string) {
-    if (!this.wabaToken || !this.wabaBizId) return [];
-
-    try {
-      const url = `https://graph.facebook.com/v21.0/${this.wabaBizId}/message_templates`;
-      const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${this.wabaToken}` },
-      });
-      const json = await res.json();
-      const metaTemplates = json.data || [];
-
-      // Update local records with Meta status
-      for (const mt of metaTemplates) {
-        const local = await this.prisma.waTemplate.findFirst({
-          where: { channelId, name: mt.name, language: mt.language },
-        });
-        if (local) {
-          await this.prisma.waTemplate.update({
-            where: { id: local.id },
-            data: { metaId: mt.id, status: mt.status?.toUpperCase() || local.status },
-          });
-        }
-      }
-
-      return this.list(channelId);
-    } catch (err: any) {
-      this.logger.error(`Meta sync failed: ${err.message}`);
-      return this.list(channelId);
+    if (!this.wabaBizId || !this.wabaToken) {
+      return { synced: 0, message: 'WABA credentials not configured' };
     }
+
+    const res = await fetch(
+      `https://graph.facebook.com/v21.0/${this.wabaBizId}/message_templates?limit=100`,
+      { headers: { Authorization: `Bearer ${this.wabaToken}` } },
+    );
+    const json = await res.json();
+    const metaTemplates = json.data || [];
+
+    let synced = 0;
+    for (const mt of metaTemplates) {
+      const body = mt.components?.find((c: any) => c.type === 'BODY')?.text || '';
+      const header = mt.components?.find((c: any) => c.type === 'HEADER')?.text || null;
+      const footer = mt.components?.find((c: any) => c.type === 'FOOTER')?.text || null;
+
+      await this.prisma.waTemplate.upsert({
+        where: { id: mt.id },
+        create: {
+          channelId,
+          name: mt.name,
+          category: mt.category,
+          language: mt.language || 'en',
+          body,
+          header,
+          footer,
+          metaId: mt.id,
+          status: mt.status || 'APPROVED',
+        },
+        update: {
+          body,
+          header,
+          footer,
+          status: mt.status || 'APPROVED',
+        },
+      });
+      synced++;
+    }
+
+    return { synced, message: `Synced ${synced} templates from Meta` };
   }
 
   // ─── Submit template to Meta Graph API ──────────────────────────────────
-  private async submitToMeta(template: any): Promise<{ id?: string; status?: string }> {
-    const url = `https://graph.facebook.com/v21.0/${this.wabaBizId}/message_templates`;
-
+  private async submitToMeta(template: {
+    name: string;
+    category: string;
+    language: string;
+    body: string;
+    header?: string | null;
+    footer?: string | null;
+  }): Promise<{ id?: string; status?: string }> {
     const components: any[] = [];
 
     if (template.header) {
       components.push({ type: 'HEADER', format: 'TEXT', text: template.header });
     }
-
     components.push({ type: 'BODY', text: template.body });
-
     if (template.footer) {
       components.push({ type: 'FOOTER', text: template.footer });
     }
 
-    const payload = {
-      name: template.name,
-      category: template.category,
-      language: template.language,
-      components,
-    };
-
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${this.wabaToken}`,
-        'Content-Type': 'application/json',
+    const res = await fetch(
+      `https://graph.facebook.com/v21.0/${this.wabaBizId}/message_templates`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.wabaToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: template.name,
+          category: template.category,
+          language: template.language,
+          components,
+        }),
       },
-      body: JSON.stringify(payload),
-    });
+    );
 
     const json = await res.json();
     if (!res.ok) {
       throw new Error(json.error?.message || 'Meta API error');
     }
-
     return { id: json.id, status: json.status };
-  }
-
-  // ─── Delete template from Meta ──────────────────────────────────────────
-  private async deleteFromMeta(name: string): Promise<void> {
-    const url = `https://graph.facebook.com/v21.0/${this.wabaBizId}/message_templates?name=${name}`;
-    await fetch(url, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${this.wabaToken}` },
-    });
   }
 }
