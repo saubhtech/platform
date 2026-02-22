@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, FormEvent } from 'react';
+import Image from 'next/image';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.saubh.tech/api';
@@ -11,10 +12,7 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect');
 
-  // Register state
   const [regName, setRegName] = useState('');
-
-  // Sign-in state
   const [phone, setPhone] = useState('');
   const [passcode, setPasscode] = useState('');
   const [loading, setLoading] = useState<'otp' | 'login' | null>(null);
@@ -23,284 +21,234 @@ export default function LoginPage() {
   const [otpSent, setOtpSent] = useState(false);
   const passcodeRef = useRef<HTMLInputElement>(null);
 
-  // WhatsApp registration link
   const waLink = `https://wa.me/918800607598?text=Register%20${encodeURIComponent(regName || 'Your Name')}`;
 
-  // Request OTP via WhatsApp
   const handleRequestOtp = async (e: FormEvent) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
-
+    setError(''); setSuccess('');
     const trimmed = phone.trim();
-    if (!trimmed) {
-      setError('Please enter your WhatsApp number.');
-      return;
-    }
-
+    if (!trimmed) { setError('Enter your WhatsApp number'); return; }
     setLoading('otp');
     try {
       const res = await fetch(`${API_BASE}/auth/whatsapp/request-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ whatsapp: trimmed }),
       });
-
       const data = await res.json();
-
-      if (res.status === 404) {
-        setError('This number is not registered. Please register first.');
-        return;
-      }
-      if (res.status === 429) {
-        setError('Too many attempts. Please try again later.');
-        return;
-      }
-      if (!res.ok) {
-        setError(data.message || 'Something went wrong.');
-        return;
-      }
-
+      if (res.status === 404) { setError('Number not registered. Register first →'); return; }
+      if (res.status === 429) { setError('Too many attempts. Try later.'); return; }
+      if (!res.ok) { setError(data.message || 'Something went wrong.'); return; }
       setOtpSent(true);
       setSuccess('Passcode sent to your WhatsApp!');
       setTimeout(() => passcodeRef.current?.focus(), 100);
-    } catch {
-      setError('Network error. Please check your connection.');
-    } finally {
-      setLoading(null);
-    }
+    } catch { setError('Network error.'); }
+    finally { setLoading(null); }
   };
 
-  // Verify passcode + login
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
-
-    const trimmedPasscode = passcode.trim();
-    if (!trimmedPasscode || trimmedPasscode.length !== 4) {
-      setError('Passcode must be a 4-digit number.');
-      return;
-    }
-
+    setError(''); setSuccess('');
+    const pc = passcode.trim();
+    if (!pc || pc.length !== 4) { setError('Enter the 4-digit passcode.'); return; }
     setLoading('login');
     try {
       const res = await fetch(`${API_BASE}/auth/whatsapp/verify-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ whatsapp: phone.trim(), passcode: trimmedPasscode }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ whatsapp: phone.trim(), passcode: pc }),
       });
-
       const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.message || 'Invalid or expired passcode. Please try again.');
-        return;
-      }
-
-      // Save JWT to cookie (24hr)
+      if (!res.ok) { setError(data.message || 'Invalid passcode.'); return; }
       document.cookie = `saubh_token=${data.token}; path=/; max-age=86400; SameSite=Lax`;
       document.cookie = `saubh_user=${encodeURIComponent(JSON.stringify(data.user))}; path=/; max-age=86400; SameSite=Lax`;
-
-      // Redirect
-      if (redirect) {
-        window.location.href = redirect;
-      } else {
-        router.push(`/${locale}/dashboard`);
-      }
-    } catch {
-      setError('Network error. Please check your connection.');
-    } finally {
-      setLoading(null);
-    }
+      if (redirect) { window.location.href = redirect; } else { router.push(`/${locale}/dashboard`); }
+    } catch { setError('Network error.'); }
+    finally { setLoading(null); }
   };
 
   return (
     <>
       <style>{`
-        :root {
-          --bg: #f6f8ff;
-          --card: rgba(255,255,255,0.82);
-          --line: rgba(24, 33, 72, 0.10);
-          --text: #15192d;
-          --muted: #65708d;
-          --accent1: #8b5cf6;
-          --accent2: #22c55e;
-          --accent3: #06b6d4;
-          --accent4: #f59e0b;
-          --shadow: 0 20px 60px rgba(32, 44, 96, 0.10);
-          --radius: 24px;
-        }
-        .lg-page { min-height: 100vh; padding: 22px; font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color: var(--text); background: radial-gradient(circle at 8% 10%, rgba(139,92,246,.18), transparent 28%), radial-gradient(circle at 92% 12%, rgba(34,197,94,.14), transparent 28%), radial-gradient(circle at 20% 90%, rgba(6,182,212,.12), transparent 30%), radial-gradient(circle at 85% 88%, rgba(245,158,11,.12), transparent 30%), var(--bg); }
-        .lg-wrap { max-width: 1120px; margin: 0 auto; }
-        .lg-logo-bar { display: flex; justify-content: center; margin-bottom: 18px; }
-        .lg-logo { display: inline-flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: 999px; background: rgba(255,255,255,0.75); border: 1px solid var(--line); box-shadow: 0 8px 24px rgba(35,42,86,0.06); backdrop-filter: blur(10px); font-weight: 900; letter-spacing: .2px; text-decoration: none; color: var(--text); }
-        .lg-logo-badge { width: 28px; height: 28px; border-radius: 10px; display: grid; place-items: center; color: #fff; font-size: 14px; font-weight: 900; background: linear-gradient(135deg, var(--accent1), var(--accent3)); box-shadow: 0 8px 18px rgba(103,84,214,.25); }
-        .lg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        .lg-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); backdrop-filter: blur(14px); overflow: hidden; position: relative; }
-        .lg-card::before { content: ""; position: absolute; inset: 0 auto auto 0; width: 100%; height: 4px; background: linear-gradient(90deg, var(--accent1), var(--accent3)); opacity: .9; }
-        .lg-card.lg-right::before { background: linear-gradient(90deg, var(--accent4), #fb7185); }
-        .lg-card-inner { padding: 20px; display: grid; gap: 16px; }
-        .lg-section-title { font-size: 1.15rem; font-weight: 900; letter-spacing: .2px; margin: 0; }
-        .lg-mini-title { font-size: 1rem; font-weight: 800; margin: 0 0 6px; }
-        .lg-steps { display: grid; gap: 10px; border: 1px dashed rgba(29,38,77,0.14); border-radius: 16px; padding: 14px; background: rgba(255,255,255,0.55); }
-        .lg-step { display: grid; grid-template-columns: 22px 1fr; gap: 8px; align-items: start; color: var(--text); font-size: .95rem; line-height: 1.35; }
-        .lg-num { width: 22px; height: 22px; border-radius: 999px; border: 1px solid var(--line); display: grid; place-items: center; font-size: 12px; font-weight: 800; background: #fff; }
-        .lg-hint { color: var(--muted); font-size: .85rem; line-height: 1.35; margin-top: -2px; padding-left: 30px; }
-        .lg-phones { font-weight: 800; letter-spacing: .1px; }
-        .lg-block { border: 1px solid var(--line); border-radius: 16px; background: rgba(255,255,255,0.75); padding: 14px; }
-        .lg-form { display: grid; gap: 10px; }
-        .lg-field { display: grid; gap: 6px; }
-        .lg-label { font-size: .8rem; color: var(--muted); font-weight: 700; }
-        .lg-input { height: 44px; border-radius: 12px; border: 1px solid var(--line); background: #fff; padding: 0 12px; font-size: .95rem; outline: none; transition: .2s ease; width: 100%; box-sizing: border-box; }
-        .lg-input:focus { border-color: rgba(99,102,241,.35); box-shadow: 0 0 0 4px rgba(99,102,241,.08); }
-        .lg-input:disabled { opacity: 0.6; cursor: not-allowed; }
-        .lg-btn { height: 46px; border: none; border-radius: 12px; font-weight: 800; font-size: .95rem; cursor: pointer; transition: .18s ease; letter-spacing: .1px; width: 100%; }
-        .lg-btn:active { transform: translateY(1px); }
-        .lg-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        .lg-btn-wa { color: #fff; background: linear-gradient(135deg, #25D366, #128C7E); box-shadow: 0 10px 20px rgba(37,211,102,.22); display: block; text-align: center; text-decoration: none; line-height: 46px; }
-        .lg-btn-wa:hover { transform: translateY(-1px); box-shadow: 0 14px 26px rgba(37,211,102,.28); }
-        .lg-btn-continue { color: #fff; background: linear-gradient(135deg, var(--accent1), var(--accent3)); box-shadow: 0 10px 20px rgba(99,102,241,.20); }
-        .lg-btn-continue:hover { transform: translateY(-1px); box-shadow: 0 14px 26px rgba(99,102,241,.28); }
-        .lg-alert-error { background: #fef2f2; color: #dc2626; padding: 10px 14px; border-radius: 8px; font-size: .88rem; }
-        .lg-alert-success { background: #f0fdf4; color: #16a34a; padding: 10px 14px; border-radius: 8px; font-size: .88rem; }
-        .lg-back-btn { background: transparent; border: none; color: var(--muted); font-size: .82rem; cursor: pointer; padding: 6px 0; font-weight: 600; }
-        .lg-back-btn:hover { color: var(--accent1); }
-        @media (max-width: 860px) {
-          .lg-page { padding: 14px; }
-          .lg-grid { grid-template-columns: 1fr; }
-          .lg-card-inner { padding: 16px; }
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+        .lp { --g1:#22c55e; --g2:#84cc16; --g3:#f97316; --g4:#ef4444; --dark:#0b0f0d; --card:rgba(20,28,22,0.72); --card-b:rgba(34,197,94,0.12); --glass:rgba(255,255,255,0.04); --line:rgba(255,255,255,0.07); --t1:#f0fdf4; --t2:rgba(255,255,255,0.55); --t3:rgba(255,255,255,0.3); min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px; font-family:'DM Sans',system-ui,sans-serif; color:var(--t1); background:var(--dark); position:relative; overflow:hidden; }
+
+        /* animated mesh bg */
+        .lp::before { content:''; position:fixed; inset:0; background: radial-gradient(ellipse 80% 60% at 15% 20%, rgba(34,197,94,.18), transparent), radial-gradient(ellipse 60% 80% at 85% 25%, rgba(249,115,22,.15), transparent), radial-gradient(ellipse 70% 50% at 50% 90%, rgba(132,204,22,.10), transparent), radial-gradient(ellipse 40% 40% at 70% 70%, rgba(239,68,68,.08), transparent); z-index:0; animation: meshDrift 12s ease-in-out infinite alternate; }
+        @keyframes meshDrift { 0%{filter:hue-rotate(0deg);} 100%{filter:hue-rotate(15deg);} }
+
+        /* floating orbs */
+        .lp-orb { position:fixed; border-radius:50%; filter:blur(80px); opacity:.35; z-index:0; animation: orbFloat 8s ease-in-out infinite alternate; }
+        .lp-orb1 { width:300px; height:300px; top:-80px; left:-60px; background:var(--g1); }
+        .lp-orb2 { width:250px; height:250px; bottom:-60px; right:-40px; background:var(--g3); animation-delay:-4s; animation-duration:10s; }
+        .lp-orb3 { width:180px; height:180px; top:40%; left:55%; background:var(--g2); animation-delay:-2s; opacity:.2; }
+        @keyframes orbFloat { 0%{transform:translate(0,0) scale(1);} 100%{transform:translate(20px,-15px) scale(1.08);} }
+
+        .lp-inner { position:relative; z-index:1; width:100%; max-width:920px; }
+
+        /* header */
+        .lp-head { display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:20px; }
+        .lp-logo { width:44px; height:44px; border-radius:14px; object-fit:cover; box-shadow: 0 4px 20px rgba(34,197,94,.3); }
+        .lp-brand { font-family:'Outfit',sans-serif; font-weight:900; font-size:1.5rem; letter-spacing:-.5px; }
+        .lp-brand-dot { background:linear-gradient(135deg,var(--g1),var(--g3)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+
+        /* grid */
+        .lp-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+
+        /* cards */
+        .lp-card { background:var(--card); border:1px solid var(--line); border-radius:20px; padding:22px; position:relative; overflow:hidden; backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); }
+        .lp-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+        .lp-card-reg::before { background:linear-gradient(90deg,var(--g1),var(--g2)); }
+        .lp-card-login::before { background:linear-gradient(90deg,var(--g3),var(--g4)); }
+
+        /* glow border on hover */
+        .lp-card-reg:hover { border-color:rgba(34,197,94,.25); box-shadow:0 0 40px rgba(34,197,94,.08); }
+        .lp-card-login:hover { border-color:rgba(249,115,22,.25); box-shadow:0 0 40px rgba(249,115,22,.08); }
+
+        .lp-card-title { font-family:'Outfit',sans-serif; font-weight:800; font-size:1.15rem; margin:0 0 14px; display:flex; align-items:center; gap:8px; }
+
+        /* steps */
+        .lp-steps { display:grid; gap:8px; padding:12px; border-radius:14px; background:var(--glass); border:1px dashed var(--line); margin-bottom:14px; }
+        .lp-step { display:flex; align-items:center; gap:10px; font-size:.88rem; color:var(--t2); }
+        .lp-step-n { width:20px; height:20px; border-radius:50%; background:rgba(255,255,255,0.06); border:1px solid var(--line); display:grid; place-items:center; font-size:11px; font-weight:800; color:var(--t1); flex-shrink:0; }
+        .lp-step-phone { font-weight:800; color:var(--t1); }
+        .lp-step-hint { font-size:.78rem; color:var(--t3); padding-left:30px; margin-top:-2px; }
+
+        /* form block */
+        .lp-form-block { padding:14px; border-radius:14px; background:rgba(255,255,255,0.03); border:1px solid var(--line); }
+        .lp-form-label { font-family:'Outfit',sans-serif; font-weight:700; font-size:.92rem; margin:0 0 10px; }
+        .lp-form { display:grid; gap:10px; }
+        .lp-input { height:44px; border-radius:12px; border:1px solid var(--line); background:rgba(255,255,255,0.05); padding:0 14px; font-size:.9rem; color:var(--t1); outline:none; width:100%; box-sizing:border-box; font-family:'DM Sans',sans-serif; transition:.2s; }
+        .lp-input::placeholder { color:var(--t3); }
+        .lp-input:focus { border-color:rgba(34,197,94,.4); box-shadow:0 0 0 3px rgba(34,197,94,.1); background:rgba(255,255,255,0.07); }
+        .lp-input:disabled { opacity:.5; }
+
+        /* buttons */
+        .lp-btn { height:44px; border:none; border-radius:12px; font-weight:700; font-size:.9rem; cursor:pointer; width:100%; font-family:'Outfit',sans-serif; transition:.2s; letter-spacing:.2px; }
+        .lp-btn:active { transform:scale(.98); }
+        .lp-btn:disabled { opacity:.5; cursor:not-allowed; }
+        .lp-btn-wa { color:#fff; background:linear-gradient(135deg,#25D366,#128C7E); box-shadow:0 6px 20px rgba(37,211,102,.25); display:block; text-align:center; text-decoration:none; line-height:44px; }
+        .lp-btn-wa:hover { transform:translateY(-1px); box-shadow:0 10px 28px rgba(37,211,102,.35); }
+        .lp-btn-go { color:#0b0f0d; background:linear-gradient(135deg,var(--g1),var(--g2)); box-shadow:0 6px 20px rgba(34,197,94,.2); }
+        .lp-btn-go:hover { transform:translateY(-1px); box-shadow:0 10px 28px rgba(34,197,94,.3); }
+        .lp-btn-fire { color:#fff; background:linear-gradient(135deg,var(--g3),var(--g4)); box-shadow:0 6px 20px rgba(249,115,22,.2); }
+        .lp-btn-fire:hover { transform:translateY(-1px); box-shadow:0 10px 28px rgba(249,115,22,.3); }
+
+        /* alerts */
+        .lp-err { background:rgba(239,68,68,.12); color:#fca5a5; padding:8px 12px; border-radius:10px; font-size:.82rem; border:1px solid rgba(239,68,68,.2); }
+        .lp-ok { background:rgba(34,197,94,.12); color:#86efac; padding:8px 12px; border-radius:10px; font-size:.82rem; border:1px solid rgba(34,197,94,.2); }
+
+        .lp-back { background:none; border:none; color:var(--t3); font-size:.78rem; cursor:pointer; padding:4px 0; font-family:'DM Sans',sans-serif; }
+        .lp-back:hover { color:var(--g1); }
+
+        /* footer tagline */
+        .lp-footer { text-align:center; margin-top:16px; font-size:.75rem; color:var(--t3); letter-spacing:.5px; }
+
+        @media(max-width:720px){
+          .lp { padding:12px; }
+          .lp-grid { grid-template-columns:1fr; gap:12px; }
+          .lp-brand { font-size:1.25rem; }
+          .lp-card { padding:16px; }
         }
       `}</style>
 
-      <div className="lg-page">
-        <div className="lg-wrap">
-          {/* Logo */}
-          <div className="lg-logo-bar">
-            <a href={`/${locale}`} className="lg-logo">
-              <div className="lg-logo-badge">S</div>
-              <div>Saubh.Tech</div>
-            </a>
+      <div className="lp">
+        <div className="lp-orb lp-orb1" />
+        <div className="lp-orb lp-orb2" />
+        <div className="lp-orb lp-orb3" />
+
+        <div className="lp-inner">
+          {/* Header */}
+          <div className="lp-head">
+            <Image src="/logo.jpg" alt="Saubh.Tech" width={44} height={44} className="lp-logo" />
+            <div className="lp-brand">Saubh<span className="lp-brand-dot">.</span>Tech</div>
           </div>
 
-          <div className="lg-grid">
-            {/* LEFT — Register */}
-            <section className="lg-card">
-              <div className="lg-card-inner">
-                <h2 className="lg-section-title">👤 Register</h2>
+          <div className="lp-grid">
+            {/* REGISTER */}
+            <div className="lp-card lp-card-reg">
+              <div className="lp-card-title">👤 Register</div>
 
-                <div className="lg-steps">
-                  <div className="lg-step">
-                    <div className="lg-num">1</div>
-                    <div>Open your WhatsApp</div>
-                  </div>
-                  <div className="lg-step">
-                    <div className="lg-num">2</div>
-                    <div>Type: Register Your Name*</div>
-                  </div>
-                  <div className="lg-step">
-                    <div className="lg-num">3</div>
-                    <div>Send to: <span className="lg-phones">+918800607598</span> or <span className="lg-phones">+918130960040</span></div>
-                  </div>
-                  <div className="lg-hint">* Replace &quot;Your Name&quot; with Your Real Name</div>
-                </div>
+              <div className="lp-steps">
+                <div className="lp-step"><div className="lp-step-n">1</div> Open your WhatsApp</div>
+                <div className="lp-step"><div className="lp-step-n">2</div> Type: <strong style={{marginLeft:4}}>Register Your Name</strong></div>
+                <div className="lp-step"><div className="lp-step-n">3</div> Send to: <span className="lp-step-phone" style={{marginLeft:4}}>+918800607598</span> or <span className="lp-step-phone">+918130960040</span></div>
+                <div className="lp-step-hint">* Replace &quot;Your Name&quot; with your real name</div>
+              </div>
 
-                <div className="lg-block">
-                  <h3 className="lg-mini-title">👤 Join Saubh.Tech</h3>
-                  <div className="lg-form">
-                    <div className="lg-field">
-                      <input
-                        className="lg-input"
-                        type="text"
-                        placeholder="Your name"
-                        value={regName}
-                        onChange={e => setRegName(e.target.value)}
-                      />
-                    </div>
-                    <a href={waLink} target="_blank" rel="noopener noreferrer" className="lg-btn lg-btn-wa">
-                      WhatsApp to Register
-                    </a>
-                  </div>
+              <div className="lp-form-block">
+                <div className="lp-form-label">👤 Join Saubh.Tech</div>
+                <div className="lp-form">
+                  <input
+                    className="lp-input"
+                    type="text"
+                    placeholder="Your name"
+                    value={regName}
+                    onChange={e => setRegName(e.target.value)}
+                  />
+                  <a href={waLink} target="_blank" rel="noopener noreferrer" className="lp-btn lp-btn-wa">
+                    WhatsApp to Register
+                  </a>
                 </div>
               </div>
-            </section>
+            </div>
 
-            {/* RIGHT — Sign In */}
-            <section className="lg-card lg-right">
-              <div className="lg-card-inner">
-                <h2 className="lg-section-title">🔐 Sign In</h2>
+            {/* SIGN IN */}
+            <div className="lp-card lp-card-login">
+              <div className="lp-card-title">🔐 Sign In</div>
 
-                <div className="lg-steps">
-                  <div className="lg-step">
-                    <div className="lg-num">1</div>
-                    <div>Open your WhatsApp</div>
-                  </div>
-                  <div className="lg-step">
-                    <div className="lg-num">2</div>
-                    <div>Type: Passcode</div>
-                  </div>
-                  <div className="lg-step">
-                    <div className="lg-num">3</div>
-                    <div>Send to: <span className="lg-phones">+918800607598</span> or <span className="lg-phones">+918130960040</span></div>
-                  </div>
-                  <div className="lg-hint">You&apos;ll receive a 4-digit passcode</div>
-                </div>
-
-                <div className="lg-block">
-                  <h3 className="lg-mini-title">🔐 Login</h3>
-
-                  {error && <div className="lg-alert-error">{error}</div>}
-                  {success && <div className="lg-alert-success">{success}</div>}
-
-                  {!otpSent ? (
-                    <form className="lg-form" onSubmit={handleRequestOtp}>
-                      <div className="lg-field">
-                        <input
-                          className="lg-input"
-                          type="tel"
-                          inputMode="numeric"
-                          placeholder="WhatsApp Number"
-                          value={phone}
-                          onChange={e => setPhone(e.target.value)}
-                        />
-                      </div>
-                      <button className="lg-btn lg-btn-continue" type="submit" disabled={loading === 'otp'}>
-                        {loading === 'otp' ? 'Sending...' : '📩 Send Passcode'}
-                      </button>
-                    </form>
-                  ) : (
-                    <form className="lg-form" onSubmit={handleLogin}>
-                      <div className="lg-field">
-                        <input className="lg-input" type="tel" value={phone} disabled />
-                      </div>
-                      <div className="lg-field">
-                        <input
-                          ref={passcodeRef}
-                          className="lg-input"
-                          type="password"
-                          inputMode="numeric"
-                          maxLength={4}
-                          placeholder="4-digit Passcode"
-                          value={passcode}
-                          onChange={e => setPasscode(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                        />
-                      </div>
-                      <button className="lg-btn lg-btn-continue" type="submit" disabled={loading === 'login'}>
-                        {loading === 'login' ? 'Verifying...' : 'Continue'}
-                      </button>
-                      <button
-                        type="button"
-                        className="lg-back-btn"
-                        onClick={() => { setOtpSent(false); setPasscode(''); setError(''); setSuccess(''); }}
-                      >
-                        ← Change number / Resend
-                      </button>
-                    </form>
-                  )}
-                </div>
+              <div className="lp-steps">
+                <div className="lp-step"><div className="lp-step-n">1</div> Open your WhatsApp</div>
+                <div className="lp-step"><div className="lp-step-n">2</div> Type: <strong style={{marginLeft:4}}>Passcode</strong></div>
+                <div className="lp-step"><div className="lp-step-n">3</div> Send to: <span className="lp-step-phone" style={{marginLeft:4}}>+918800607598</span> or <span className="lp-step-phone">+918130960040</span></div>
+                <div className="lp-step-hint">You&apos;ll receive a 4-digit passcode on WhatsApp</div>
               </div>
-            </section>
+
+              <div className="lp-form-block">
+                <div className="lp-form-label">🔐 Login</div>
+
+                {error && <div className="lp-err">{error}</div>}
+                {success && <div className="lp-ok">{success}</div>}
+
+                {!otpSent ? (
+                  <form className="lp-form" onSubmit={handleRequestOtp}>
+                    <input
+                      className="lp-input"
+                      type="tel"
+                      inputMode="numeric"
+                      placeholder="WhatsApp Number (e.g. 919876543210)"
+                      value={phone}
+                      onChange={e => setPhone(e.target.value)}
+                    />
+                    <button className="lp-btn lp-btn-fire" type="submit" disabled={loading === 'otp'}>
+                      {loading === 'otp' ? 'Sending...' : '📩 Send Passcode'}
+                    </button>
+                  </form>
+                ) : (
+                  <form className="lp-form" onSubmit={handleLogin}>
+                    <input className="lp-input" type="tel" value={phone} disabled />
+                    <input
+                      ref={passcodeRef}
+                      className="lp-input"
+                      type="password"
+                      inputMode="numeric"
+                      maxLength={4}
+                      placeholder="4-digit Passcode"
+                      value={passcode}
+                      onChange={e => setPasscode(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                    />
+                    <button className="lp-btn lp-btn-fire" type="submit" disabled={loading === 'login'}>
+                      {loading === 'login' ? 'Verifying...' : '🚀 Continue'}
+                    </button>
+                    <button type="button" className="lp-back" onClick={() => { setOtpSent(false); setPasscode(''); setError(''); setSuccess(''); }}>
+                      ← Change number / Resend
+                    </button>
+                  </form>
+                )}
+              </div>
+            </div>
           </div>
+
+          <div className="lp-footer">PHYGITAL GIG MARKETPLACE</div>
         </div>
       </div>
     </>
