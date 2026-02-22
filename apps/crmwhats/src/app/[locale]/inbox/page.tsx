@@ -6,8 +6,10 @@ import Avatar from '@/components/ui/Avatar';
 import ChannelBadge from '@/components/ui/ChannelBadge';
 import StatusDot from '@/components/ui/StatusDot';
 import SkeletonLoader from '@/components/ui/SkeletonLoader';
+import { io, Socket } from 'socket.io-client';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'https://api.saubh.tech';
+const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'https://realtime.saubh.tech';
 
 interface WaMessage {
   id: string;
@@ -89,7 +91,6 @@ function MediaBubble({ msg }: { msg: WaMessage }) {
     );
   }
 
-  // document fallback
   return (
     <a
       href={msg.mediaUrl}
@@ -120,8 +121,93 @@ export default function InboxPage() {
   const [msgsLoading, setMsgsLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [wsConnected, setWsConnected] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const socketRef = useRef<Socket | null>(null);
+  const selectedRef = useRef<string | null>(null);
 
+  // Keep selectedRef in sync
+  useEffect(() => { selectedRef.current = selected; }, [selected]);
+
+  // ─── WebSocket connection ─────────────────────────────────────────────
+  useEffect(() => {
+    const socket = io(`${WS_URL}/crm`, {
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionDelay: 2000,
+      reconnectionAttempts: 20,
+    });
+
+    socketRef.current = socket;
+
+    socket.on('connect', () => {
+      setWsConnected(true);
+      socket.emit('crm:join:all'); // Join inbox-wide feed
+    });
+
+    socket.on('disconnect', () => {
+      setWsConnected(false);
+    });
+
+    // Real-time inbound message
+    socket.on('crm:message', (data: { conversationId: string; message: WaMessage; contact: any }) => {
+      // Update messages if viewing this conversation
+      if (selectedRef.current === data.conversationId) {
+        setMessages(prev => {
+          // Prevent duplicates
+          if (prev.some(m => m.id === data.message.id)) return prev;
+          return [...prev, data.message];
+        });
+      }
+
+      // Update conversation list — bump to top with latest message
+      setConversations(prev => {
+        const idx = prev.findIndex(c => c.id === data.conversationId);
+        if (idx === -1) {
+          // New conversation not in list yet — trigger a re-fetch
+          fetchConversations();
+          return prev;
+        }
+        const updated = [...prev];
+        const conv = { ...updated[idx] };
+        conv.updatedAt = new Date().toISOString();
+        conv.messages = [data.message];
+        updated.splice(idx, 1);
+        updated.unshift(conv);
+        return updated;
+      });
+    });
+
+    // Real-time conversation update (new conv, status change)
+    socket.on('crm:update', (data: { conversationId: string; isNew?: boolean }) => {
+      if (data.isNew) {
+        fetchConversations();
+      }
+    });
+
+    return () => {
+      socket.disconnect();
+      socketRef.current = null;
+    };
+  }, []);
+
+  // Join/leave conversation room when selection changes
+  useEffect(() => {
+    const socket = socketRef.current;
+    if (!socket) return;
+
+    if (selected) {
+      socket.emit('crm:join', { conversationId: selected });
+    }
+
+    return () => {
+      if (selected) {
+        socket.emit('crm:leave', { conversationId: selected });
+      }
+    };
+  }, [selected]);
+
+  // ─── REST fetches ─────────────────────────────────────────────────────
   const fetchChannels = useCallback(async () => {
     try {
       const res = await fetch(`${API}/api/crm/channels`);
@@ -178,7 +264,6 @@ export default function InboxPage() {
     if (!file || !selected) return;
     setUploading(true);
     try {
-      // 1. Upload file
       const formData = new FormData();
       formData.append('file', file);
       const uploadRes = await fetch(`${API}/api/crm/media/upload`, { method: 'POST', body: formData });
@@ -186,7 +271,6 @@ export default function InboxPage() {
 
       if (!uploadRes.ok) throw new Error(uploadData.message || 'Upload failed');
 
-      // 2. Send media message
       await fetch(`${API}/api/crm/conversations/${selected}/media`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -222,14 +306,15 @@ export default function InboxPage() {
   useEffect(() => { setLoading(true); fetchConversations(); }, [fetchConversations]);
   useEffect(() => { if (selected) fetchMessages(selected); }, [selected, fetchMessages]);
 
-  // Auto-refresh
+  // Fallback polling only when WebSocket is disconnected (30s instead of 5s)
   useEffect(() => {
+    if (wsConnected) return;
     const timer = setInterval(() => {
       fetchConversations();
       if (selected) fetchMessages(selected);
-    }, 5000);
+    }, 30000);
     return () => clearInterval(timer);
-  }, [selected, fetchConversations, fetchMessages]);
+  }, [selected, wsConnected, fetchConversations, fetchMessages]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -256,9 +341,23 @@ export default function InboxPage() {
       >
         {/* Header */}
         <div style={{ padding: '20px 16px 12px' }}>
-          <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#F8F8FF', margin: '0 0 12px 0', letterSpacing: '-0.02em' }}>
-            💬 Inbox
-          </h1>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#F8F8FF', margin: 0, letterSpacing: '-0.02em' }}>
+              💬 Inbox
+            </h1>
+            {/* WS status indicator */}
+            <span style={{
+              display: 'flex', alignItems: 'center', gap: '5px',
+              fontSize: '10px', color: wsConnected ? '#10B981' : '#F59E0B',
+            }}>
+              <span style={{
+                width: '6px', height: '6px', borderRadius: '50%',
+                background: wsConnected ? '#10B981' : '#F59E0B',
+                boxShadow: wsConnected ? '0 0 6px #10B981' : 'none',
+              }} />
+              {wsConnected ? 'Live' : 'Polling'}
+            </span>
+          </div>
 
           {/* Search */}
           <input
@@ -372,7 +471,6 @@ export default function InboxPage() {
               backdropFilter: 'blur(8px)',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                {/* Back button for mobile */}
                 <button
                   onClick={() => setSelected(null)}
                   className="mobile-back-btn"
@@ -506,7 +604,6 @@ export default function InboxPage() {
               alignItems: 'flex-end',
               background: 'rgba(19,19,26,0.5)',
             }}>
-              {/* Hidden file input */}
               <input
                 ref={fileInputRef}
                 type="file"
@@ -515,7 +612,6 @@ export default function InboxPage() {
                 style={{ display: 'none' }}
               />
 
-              {/* Attachment button */}
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
