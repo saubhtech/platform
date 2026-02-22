@@ -5,6 +5,7 @@ import { ContactsModule } from './contacts/contacts.module';
 import { BroadcastModule } from './broadcast/broadcast.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
 import { BotModule } from './bot/bot.module';
+import { TemplateModule } from './templates/template.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { BotModule } from './bot/bot.module';
     BroadcastModule,
     WebhooksModule,
     BotModule,
+    TemplateModule,
   ],
 })
 export class CrmModule {}
