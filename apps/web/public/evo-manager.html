@@ -27,16 +27,15 @@
     .dot-red{background:#ef4444;box-shadow:0 0 8px rgba(239,68,68,.5);}
     .dot-yellow{background:#f59e0b;box-shadow:0 0 8px rgba(245,158,11,.5);}
     .detail{color:rgba(255,255,255,.45);font-size:.82rem;text-align:center;margin-bottom:2px;}
-    .qr-area{text-align:center;padding:16px 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
-    .qr-area img{max-width:260px;border-radius:12px;background:#fff;padding:8px;}
-    .pairing-box{background:rgba(34,197,94,.08);border:3px solid rgba(34,197,94,.4);border-radius:18px;padding:24px 20px;text-align:center;width:100%;}
-    .pairing-title{font-family:'Outfit',sans-serif;font-weight:800;font-size:.9rem;color:#86efac;margin-bottom:12px;text-transform:uppercase;letter-spacing:2px;}
-    .pairing-code{font-family:'Outfit',monospace;font-size:3.2rem;font-weight:900;letter-spacing:14px;color:#ffffff;text-shadow:0 0 20px rgba(34,197,94,.6),0 0 40px rgba(34,197,94,.3);display:block;padding:8px 0;}
-    .pairing-label{font-size:.85rem;color:rgba(255,255,255,.6);margin-top:8px;line-height:1.5;}
-    .or-divider{color:rgba(255,255,255,.25);font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:3px;padding:4px 0;}
+    .qr-area{text-align:center;padding:16px 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;min-height:200px;}
+    .qr-area img{max-width:280px;border-radius:12px;background:#fff;padding:10px;}
+    .pairing-box{background:rgba(34,197,94,.08);border:3px solid rgba(34,197,94,.4);border-radius:18px;padding:28px 20px;text-align:center;width:100%;}
+    .pairing-title{font-family:'Outfit',sans-serif;font-weight:800;font-size:1rem;color:#86efac;margin-bottom:14px;text-transform:uppercase;letter-spacing:2px;}
+    .pairing-code{font-family:'Outfit',monospace;font-size:3.5rem;font-weight:900;letter-spacing:16px;color:#ffffff;text-shadow:0 0 24px rgba(34,197,94,.7),0 0 48px rgba(34,197,94,.3);display:block;padding:10px 0;}
+    .pairing-label{font-size:.88rem;color:rgba(255,255,255,.65);margin-top:10px;line-height:1.6;}
     .qr-msg{color:rgba(255,255,255,.35);font-size:.8rem;}
     .loader{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.2);border-top-color:#22c55e;border-radius:50%;animation:spin .6s linear infinite;margin-right:6px;vertical-align:middle;}
-    .big-loader{width:40px;height:40px;border-width:3px;margin:0 auto 12px auto;display:block;}
+    .big-loader{width:48px;height:48px;border-width:3px;margin:0 auto 12px auto;display:block;}
     @keyframes spin{to{transform:rotate(360deg);}}
     .tag{display:inline-block;padding:3px 10px;border-radius:6px;font-size:.75rem;font-weight:700;text-transform:uppercase;}
     .tag-open{background:rgba(34,197,94,.15);color:#86efac;}
@@ -49,13 +48,30 @@
     .field-group{margin-bottom:12px;}
     .btn-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;}
     .log{background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:12px;font-family:monospace;font-size:.75rem;color:rgba(255,255,255,.4);max-height:150px;overflow-y:auto;white-space:pre-wrap;margin-top:12px;}
+
+    /* Top-level tabs */
     .tabs{display:flex;gap:4px;margin-bottom:16px;background:rgba(255,255,255,.03);border-radius:12px;padding:4px;}
     .tab{flex:1;padding:10px;text-align:center;border-radius:10px;cursor:pointer;font-weight:700;font-size:.85rem;font-family:'Outfit',sans-serif;color:rgba(255,255,255,.4);transition:.2s;}
     .tab.active{background:rgba(34,197,94,.15);color:#86efac;}
     .tab:hover{color:rgba(255,255,255,.7);}
     .tab-content{display:none;}
     .tab-content.active{display:block;}
-    .retry-msg{color:rgba(245,158,11,.6);font-size:.82rem;margin-top:4px;}
+
+    /* Connect method nav */
+    .method-nav{display:flex;gap:0;margin:16px 0 0 0;border-radius:14px;overflow:hidden;border:2px solid rgba(255,255,255,.08);}
+    .method-btn{flex:1;padding:14px 10px;text-align:center;cursor:pointer;font-weight:800;font-size:.9rem;font-family:'Outfit',sans-serif;transition:.2s;border:none;background:rgba(255,255,255,.03);color:rgba(255,255,255,.35);}
+    .method-btn:first-child{border-right:1px solid rgba(255,255,255,.06);}
+    .method-btn.active{color:#fff;}
+    .method-btn.qr-active{background:linear-gradient(135deg,rgba(59,130,246,.2),rgba(99,102,241,.2));color:#93c5fd;}
+    .method-btn.pair-active{background:linear-gradient(135deg,rgba(34,197,94,.2),rgba(6,182,212,.2));color:#86efac;}
+    .method-btn:hover{color:rgba(255,255,255,.7);}
+    .method-panel{display:none;}
+    .method-panel.active{display:block;}
+
+    .countdown{font-family:'Outfit',sans-serif;font-size:.82rem;color:rgba(245,158,11,.7);margin-top:6px;}
+    .steps{text-align:left;background:rgba(255,255,255,.03);border-radius:12px;padding:14px 18px;margin-top:12px;font-size:.84rem;line-height:1.8;color:rgba(255,255,255,.55);}
+    .steps b{color:rgba(255,255,255,.85);}
+    .steps .num{display:inline-block;width:22px;height:22px;border-radius:50%;background:rgba(34,197,94,.15);color:#86efac;text-align:center;font-weight:800;font-size:.75rem;line-height:22px;margin-right:6px;}
   </style>
 </head>
 <body>
@@ -76,20 +92,46 @@
       <div class="field-group">
         <label>Instance Name</label>
         <input class="field" id="connectInstName" placeholder="e.g. saubh-sim" value="saubh-sim"/>
-        <div class="hint">The name given when instance was created (not your phone number)</div>
       </div>
       <div class="field-group">
-        <label>Phone Number (for pairing code)</label>
-        <input class="field" id="connectPhone" placeholder="e.g. 918800607598" value=""/>
-        <div class="hint">Country code + number, no + or spaces. Needed for pairing code on mobile.</div>
+        <label>Phone Number</label>
+        <input class="field" id="connectPhone" placeholder="e.g. 918800607598"/>
+        <div class="hint">Required for pairing code. Country code + number, no + or spaces.</div>
       </div>
-      <button class="btn btn-blue" onclick="connectInstance()">Get QR Code & Pairing Code</button>
-      <div class="qr-area" id="qrArea" style="margin-top:16px;">
-        <p style="color:rgba(255,255,255,.25);font-size:.85rem;">Enter instance name and click above</p>
+      <button class="btn btn-blue" onclick="startConnect()">Connect</button>
+
+      <!-- Method Nav: QR | Pairing Code -->
+      <div class="method-nav" id="methodNav" style="display:none;">
+        <div class="method-btn qr-active" id="btnQR" onclick="switchMethod('qr')">📷 QR Code</div>
+        <div class="method-btn" id="btnPair" onclick="switchMethod('pair')">🔢 Pairing Code</div>
       </div>
-      <div id="qrRefreshRow" style="display:none;margin-top:10px;">
+
+      <!-- QR Panel -->
+      <div class="method-panel" id="panel-qr">
+        <div class="qr-area" id="qrArea"></div>
+        <div class="steps">
+          <span class="num">1</span> Open <b>WhatsApp</b> on your phone<br/>
+          <span class="num">2</span> Tap <b>Settings → Linked Devices</b><br/>
+          <span class="num">3</span> Tap <b>Link a Device</b><br/>
+          <span class="num">4</span> <b>Scan</b> the QR code above
+        </div>
         <div class="btn-row">
-          <button class="btn btn-blue" id="qrRefreshBtn">🔄 Refresh</button>
+          <button class="btn btn-blue" onclick="fetchQR()">🔄 Refresh QR</button>
+          <button class="btn btn-green" onclick="checkStatusConnect()">✅ Verify</button>
+        </div>
+      </div>
+
+      <!-- Pairing Code Panel -->
+      <div class="method-panel" id="panel-pair">
+        <div class="qr-area" id="pairArea"></div>
+        <div class="steps">
+          <span class="num">1</span> Open <b>WhatsApp</b> on your phone<br/>
+          <span class="num">2</span> Tap <b>Settings → Linked Devices</b><br/>
+          <span class="num">3</span> Tap <b>Link with phone number</b><br/>
+          <span class="num">4</span> <b>Enter the code</b> shown above
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-green" onclick="fetchPairCode()">🔄 New Code</button>
           <button class="btn btn-green" onclick="checkStatusConnect()">✅ Verify</button>
         </div>
       </div>
@@ -108,7 +150,6 @@
       <div class="field-group">
         <label>Phone Number (optional)</label>
         <input class="field" id="newInstPhone" placeholder="e.g. 918130960040"/>
-        <div class="hint">Country code + number. Used to generate pairing code.</div>
       </div>
       <button class="btn btn-green" onclick="createInstance()">Create Instance</button>
       <div id="createResult" style="margin-top:12px;"></div>
@@ -148,8 +189,9 @@
 <script>
 var EVO_BASE = '/whats';
 var EVO_KEY = 'eec4e150ae057851d1f1d690d371d3844373fa963191e01a09064dc105c35540';
-var MAX_RETRIES = 4;
-var RETRY_DELAY = 3000;
+var MAX_RETRIES = 5;
+var RETRY_DELAY = 2500;
+var countdownTimer = null;
 
 function log(msg) {
   var el = document.getElementById('log');
@@ -166,14 +208,25 @@ async function api(path, method, body) {
   return await res.json();
 }
 
+function sleep(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
+
+// ─── Top-level tabs ────────────────────────────────────────────────
 function switchTab(name) {
-  var tabs = document.querySelectorAll('.tab');
+  var tabs = document.querySelectorAll('.tabs .tab');
   var contents = document.querySelectorAll('.tab-content');
   for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('active');
   for (var i = 0; i < contents.length; i++) contents[i].classList.remove('active');
   document.getElementById('tab-' + name).classList.add('active');
-  var tabLabels = { connect: 0, create: 1, status: 2 };
-  tabs[tabLabels[name]].classList.add('active');
+  var idx = { connect: 0, create: 1, status: 2 };
+  tabs[idx[name]].classList.add('active');
+}
+
+// ─── Method nav: QR vs Pairing Code ───────────────────────────────
+function switchMethod(m) {
+  document.getElementById('btnQR').className = 'method-btn' + (m === 'qr' ? ' qr-active' : '');
+  document.getElementById('btnPair').className = 'method-btn' + (m === 'pair' ? ' pair-active' : '');
+  document.getElementById('panel-qr').className = 'method-panel' + (m === 'qr' ? ' active' : '');
+  document.getElementById('panel-pair').className = 'method-panel' + (m === 'pair' ? ' active' : '');
 }
 
 function dotHtml(s) {
@@ -185,102 +238,126 @@ function stateTag(s) {
   return '<span class="tag ' + c + '">' + s + '</span>';
 }
 
-function sleep(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
+function startCountdown(el, seconds) {
+  if (countdownTimer) clearInterval(countdownTimer);
+  var left = seconds;
+  el.textContent = '⏱ Expires in ' + left + 's';
+  countdownTimer = setInterval(function() {
+    left--;
+    if (left <= 0) { clearInterval(countdownTimer); el.textContent = '⏱ Expired — click Refresh'; return; }
+    el.textContent = '⏱ Expires in ' + left + 's';
+  }, 1000);
+}
 
-async function connectInstance(retryCount) {
-  retryCount = retryCount || 0;
+// ─── Start Connect — fetch both QR and pair code ──────────────────
+async function startConnect() {
   var name = document.getElementById('connectInstName').value.trim();
   var phone = document.getElementById('connectPhone').value.trim().replace(/[\s+\-]/g, '');
   if (!name) { alert('Enter instance name'); return; }
-  var el = document.getElementById('qrArea');
 
-  if (retryCount === 0) {
-    el.innerHTML = '<div class="loader big-loader"></div><p style="color:rgba(255,255,255,.5);">Generating QR' + (phone ? ' & pairing code' : '') + '...</p>';
-    document.getElementById('qrRefreshRow').style.display = 'none';
-    log('Connect: ' + name + (phone ? ' (phone: ' + phone + ')' : ''));
+  document.getElementById('methodNav').style.display = 'flex';
+  switchMethod('qr');
+
+  // Fetch QR (no phone needed)
+  fetchQR();
+  // Fetch Pair Code (needs phone)
+  if (phone) {
+    fetchPairCode();
   } else {
-    el.innerHTML = '<div class="loader big-loader"></div><p style="color:rgba(255,255,255,.5);">Retry ' + retryCount + '/' + MAX_RETRIES + '... waiting for QR</p>';
-    log('Retry ' + retryCount + ' for ' + name);
-  }
-
-  try {
-    var url = '/instance/connect/' + name;
-    if (phone) url += '?number=' + phone;
-
-    var data = await api(url);
-    log('Keys: ' + Object.keys(data).join(', '));
-
-    // Already connected
-    if (data && data.instance && data.instance.state === 'open') {
-      el.innerHTML = '<div class="status-row">' + dotHtml('open') + ' <b>' + name + '</b> is already connected!</div>' +
-        '<p class="qr-msg">Instance is paired and active. No QR needed.</p>';
-      return;
-    }
-
-    // Error — but maybe instance just needs time
-    if (data && data.status && data.status >= 400) {
-      if (retryCount < MAX_RETRIES) {
-        el.innerHTML = '<div class="loader big-loader"></div><p class="retry-msg">Instance initializing... retry ' + (retryCount + 1) + '/' + MAX_RETRIES + ' in ' + (RETRY_DELAY / 1000) + 's</p>';
-        await sleep(RETRY_DELAY);
-        return connectInstance(retryCount + 1);
-      }
-      el.innerHTML = '<p style="color:#fca5a5;">Error: ' + (data.response && data.response.message ? data.response.message : JSON.stringify(data)) + '</p>';
-      document.getElementById('qrRefreshRow').style.display = 'block';
-      document.getElementById('qrRefreshBtn').onclick = function() { connectInstance(0); };
-      return;
-    }
-
-    // No QR or pairing code yet — retry
-    if (!data.base64 && !data.pairingCode) {
-      if (retryCount < MAX_RETRIES) {
-        el.innerHTML = '<div class="loader big-loader"></div><p class="retry-msg">Waiting for QR generation... retry ' + (retryCount + 1) + '/' + MAX_RETRIES + '</p>';
-        await sleep(RETRY_DELAY);
-        return connectInstance(retryCount + 1);
-      }
-      el.innerHTML = '<pre style="color:rgba(255,255,255,.5);font-size:.72rem;text-align:left;overflow:auto;">' + JSON.stringify(data, null, 2) + '</pre>';
-      document.getElementById('qrRefreshRow').style.display = 'block';
-      document.getElementById('qrRefreshBtn').onclick = function() { connectInstance(0); };
-      return;
-    }
-
-    // SUCCESS — show pairing code and/or QR
-    var html = '';
-
-    if (data.pairingCode) {
-      html += '<div class="pairing-box">';
-      html += '<div class="pairing-title">📲 Pairing Code</div>';
-      html += '<div class="pairing-code">' + data.pairingCode + '</div>';
-      html += '<div class="pairing-label">Open <b>WhatsApp</b> → <b>Linked Devices</b> → <b>Link with phone number</b><br/>Enter the code above</div>';
-      html += '</div>';
-    } else if (phone) {
-      html += '<p style="color:rgba(245,158,11,.7);font-size:.85rem;">⚠️ Pairing code not available. Use QR below.</p>';
-    } else {
-      html += '<p style="color:rgba(255,255,255,.4);font-size:.85rem;">💡 Enter phone number above to also get a pairing code</p>';
-    }
-
-    if (data.base64) {
-      if (html) html += '<div class="or-divider">— or scan QR code —</div>';
-      html += '<img src="' + data.base64 + '" alt="QR Code"/>';
-      html += '<p class="qr-msg">Open WhatsApp → Settings → Linked Devices → Link a Device → Scan</p>';
-    }
-
-    html += '<p class="qr-msg" style="margin-top:8px;">⏱ Expires in ~45s. Click Refresh if needed.</p>';
-    el.innerHTML = html;
-    document.getElementById('qrRefreshRow').style.display = 'block';
-    document.getElementById('qrRefreshBtn').onclick = function() { connectInstance(0); };
-  } catch(e) {
-    if (retryCount < MAX_RETRIES) {
-      el.innerHTML = '<div class="loader big-loader"></div><p class="retry-msg">Connection error, retrying ' + (retryCount + 1) + '/' + MAX_RETRIES + '...</p>';
-      await sleep(RETRY_DELAY);
-      return connectInstance(retryCount + 1);
-    }
-    el.innerHTML = '<p style="color:#fca5a5;">Error: ' + e.message + '</p>';
-    document.getElementById('qrRefreshRow').style.display = 'block';
-    document.getElementById('qrRefreshBtn').onclick = function() { connectInstance(0); };
-    log('Error: ' + e.message);
+    document.getElementById('pairArea').innerHTML = '<p style="color:rgba(245,158,11,.7);font-size:.88rem;">⚠️ Enter phone number above, then click <b>New Code</b></p>';
   }
 }
 
+// ─── Fetch QR Code ────────────────────────────────────────────────
+async function fetchQR(retryCount) {
+  retryCount = retryCount || 0;
+  var name = document.getElementById('connectInstName').value.trim();
+  if (!name) return;
+  var el = document.getElementById('qrArea');
+
+  el.innerHTML = '<div class="loader big-loader"></div><p style="color:rgba(255,255,255,.45);">' +
+    (retryCount > 0 ? 'Retry ' + retryCount + '/' + MAX_RETRIES + '...' : 'Loading QR code...') + '</p>';
+  log('QR request: ' + name + (retryCount > 0 ? ' (retry ' + retryCount + ')' : ''));
+
+  try {
+    var data = await api('/instance/connect/' + name);
+
+    // Already connected
+    if (data && data.instance && data.instance.state === 'open') {
+      el.innerHTML = '<div class="status-row">' + dotHtml('open') + ' <b>' + name + '</b> already connected!</div>';
+      document.getElementById('pairArea').innerHTML = '<div class="status-row">' + dotHtml('open') + ' <b>' + name + '</b> already connected!</div>';
+      return;
+    }
+
+    if (data && data.base64) {
+      var cdId = 'qr-cd-' + Date.now();
+      el.innerHTML = '<img src="' + data.base64 + '" alt="QR Code"/><div class="countdown" id="' + cdId + '"></div>';
+      startCountdown(document.getElementById(cdId), 45);
+      log('QR loaded OK');
+      return;
+    }
+
+    // No QR yet — retry
+    if (retryCount < MAX_RETRIES) {
+      await sleep(RETRY_DELAY);
+      return fetchQR(retryCount + 1);
+    }
+    el.innerHTML = '<p style="color:#fca5a5;">Could not load QR. Click Refresh.</p>';
+  } catch(e) {
+    if (retryCount < MAX_RETRIES) { await sleep(RETRY_DELAY); return fetchQR(retryCount + 1); }
+    el.innerHTML = '<p style="color:#fca5a5;">Error: ' + e.message + '</p>';
+  }
+}
+
+// ─── Fetch Pairing Code ───────────────────────────────────────────
+async function fetchPairCode(retryCount) {
+  retryCount = retryCount || 0;
+  var name = document.getElementById('connectInstName').value.trim();
+  var phone = document.getElementById('connectPhone').value.trim().replace(/[\s+\-]/g, '');
+  if (!name) return;
+  if (!phone) {
+    document.getElementById('pairArea').innerHTML = '<p style="color:rgba(245,158,11,.7);font-size:.88rem;">⚠️ Enter phone number above and click <b>New Code</b></p>';
+    return;
+  }
+  var el = document.getElementById('pairArea');
+  el.innerHTML = '<div class="loader big-loader"></div><p style="color:rgba(255,255,255,.45);">' +
+    (retryCount > 0 ? 'Retry ' + retryCount + '/' + MAX_RETRIES + '...' : 'Generating pairing code...') + '</p>';
+  log('Pair code request: ' + name + ' phone=' + phone + (retryCount > 0 ? ' (retry ' + retryCount + ')' : ''));
+
+  try {
+    var data = await api('/instance/connect/' + name + '?number=' + phone);
+
+    // Already connected
+    if (data && data.instance && data.instance.state === 'open') {
+      el.innerHTML = '<div class="status-row">' + dotHtml('open') + ' <b>' + name + '</b> already connected!</div>';
+      return;
+    }
+
+    if (data && data.pairingCode) {
+      var cdId = 'pair-cd-' + Date.now();
+      el.innerHTML = '<div class="pairing-box">' +
+        '<div class="pairing-title">📲 Your Pairing Code</div>' +
+        '<div class="pairing-code">' + data.pairingCode + '</div>' +
+        '<div class="countdown" id="' + cdId + '"></div>' +
+        '</div>';
+      startCountdown(document.getElementById(cdId), 45);
+      log('Pair code: ' + data.pairingCode);
+      return;
+    }
+
+    // No code yet — retry
+    if (retryCount < MAX_RETRIES) {
+      await sleep(RETRY_DELAY);
+      return fetchPairCode(retryCount + 1);
+    }
+    el.innerHTML = '<p style="color:#fca5a5;">Pairing code unavailable. Ensure phone number is correct and click New Code.</p>';
+  } catch(e) {
+    if (retryCount < MAX_RETRIES) { await sleep(RETRY_DELAY); return fetchPairCode(retryCount + 1); }
+    el.innerHTML = '<p style="color:#fca5a5;">Error: ' + e.message + '</p>';
+  }
+}
+
+// ─── Create Instance ──────────────────────────────────────────────
 async function createInstance() {
   var name = document.getElementById('newInstName').value.trim();
   var phone = document.getElementById('newInstPhone').value.trim().replace(/[\s+\-]/g, '');
@@ -303,18 +380,17 @@ async function createInstance() {
     if (phone) body.number = phone;
     var data = await api('/instance/create', 'POST', body);
     log('Created: ' + JSON.stringify(data).slice(0, 200));
-    el.innerHTML = '<p style="color:#86efac;">✅ Instance <b>' + name + '</b> created! Switching to Connect...</p>';
+    el.innerHTML = '<p style="color:#86efac;">✅ <b>' + name + '</b> created! Connecting...</p>';
     document.getElementById('connectInstName').value = name;
     document.getElementById('connectPhone').value = phone;
     switchTab('connect');
-    // Wait for instance to initialize, then auto-connect with retry
-    setTimeout(function() { connectInstance(0); }, 2000);
+    setTimeout(function() { startConnect(); }, 2000);
   } catch(e) {
     el.innerHTML = '<p style="color:#fca5a5;">Error: ' + e.message + '</p>';
-    log('Error: ' + e.message);
   }
 }
 
+// ─── Status ───────────────────────────────────────────────────────
 function checkStatusConnect() {
   var name = document.getElementById('connectInstName').value.trim();
   if (name) {
@@ -343,7 +419,6 @@ async function checkStatus() {
     log(name + ': ' + s);
   } catch(e) {
     el.innerHTML = '<p style="color:#fca5a5;">Error: ' + e.message + '</p>';
-    log('Error: ' + e.message);
   }
 }
 
@@ -353,16 +428,14 @@ async function setWebhook() {
   var el = document.getElementById('webhookResult');
   if (!name || !url) { alert('Enter instance name and URL'); return; }
   el.innerHTML = '<span class="loader"></span> Setting...';
-  log('Webhook: ' + name + ' → ' + url);
   try {
     await api('/webhook/set/' + name, 'POST', {
       webhook: { url: url, enabled: true, webhookByEvents: false, events: ['MESSAGES_UPSERT'] }
     });
     el.innerHTML = '<p style="color:#86efac;">✅ Webhook set for <b>' + name + '</b></p>';
-    log('Webhook set OK');
+    log('Webhook OK');
   } catch(e) {
     el.innerHTML = '<p style="color:#fca5a5;">Error: ' + e.message + '</p>';
-    log('Error: ' + e.message);
   }
 }
 </script>
