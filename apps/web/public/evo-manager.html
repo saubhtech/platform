@@ -29,9 +29,11 @@
     .detail{color:rgba(255,255,255,.45);font-size:.82rem;text-align:center;margin-bottom:2px;}
     .qr-area{text-align:center;padding:16px 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
     .qr-area img{max-width:260px;border-radius:12px;background:#fff;padding:8px;}
-    .pairing-code{font-family:monospace;font-size:2.2rem;font-weight:900;letter-spacing:10px;color:#22c55e;background:rgba(34,197,94,.06);padding:18px 28px;border-radius:14px;border:2px dashed rgba(34,197,94,.25);display:inline-block;}
-    .pairing-label{font-size:.82rem;color:rgba(255,255,255,.5);margin-top:-6px;}
-    .or-divider{color:rgba(255,255,255,.2);font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:3px;}
+    .pairing-box{background:rgba(34,197,94,.08);border:3px solid rgba(34,197,94,.4);border-radius:18px;padding:24px 20px;text-align:center;width:100%;}
+    .pairing-title{font-family:'Outfit',sans-serif;font-weight:800;font-size:.9rem;color:#86efac;margin-bottom:12px;text-transform:uppercase;letter-spacing:2px;}
+    .pairing-code{font-family:'Outfit',monospace;font-size:3.2rem;font-weight:900;letter-spacing:14px;color:#ffffff;text-shadow:0 0 20px rgba(34,197,94,.6),0 0 40px rgba(34,197,94,.3);display:block;padding:8px 0;}
+    .pairing-label{font-size:.85rem;color:rgba(255,255,255,.6);margin-top:8px;line-height:1.5;}
+    .or-divider{color:rgba(255,255,255,.25);font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:3px;padding:4px 0;}
     .qr-msg{color:rgba(255,255,255,.35);font-size:.8rem;}
     .loader{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.2);border-top-color:#22c55e;border-radius:50%;animation:spin .6s linear infinite;margin-right:6px;vertical-align:middle;}
     @keyframes spin{to{transform:rotate(360deg);}}
@@ -189,7 +191,6 @@ async function connectInstance() {
   log('Connect: ' + name + (phone ? ' (phone: ' + phone + ')' : ''));
 
   try {
-    // Build URL with optional phone number for pairing code
     var url = '/instance/connect/' + name;
     if (phone) url += '?number=' + phone;
 
@@ -211,14 +212,17 @@ async function connectInstance() {
 
     var html = '';
 
-    // Pairing code (show first — mobile friendly)
+    // Pairing code — big, bright, unmissable
     if (data && data.pairingCode) {
+      html += '<div class="pairing-box">';
+      html += '<div class="pairing-title">📲 Pairing Code</div>';
       html += '<div class="pairing-code">' + data.pairingCode + '</div>';
-      html += '<p class="pairing-label">Open WhatsApp → Linked Devices → Link with phone number → Enter code above</p>';
+      html += '<div class="pairing-label">Open <b>WhatsApp</b> → <b>Linked Devices</b> → <b>Link with phone number</b><br/>Enter the code above</div>';
+      html += '</div>';
     } else if (phone) {
-      html += '<p style="color:rgba(245,158,11,.6);font-size:.82rem;">⚠️ Pairing code not available. Try refreshing or use QR below.</p>';
+      html += '<p style="color:rgba(245,158,11,.7);font-size:.85rem;">⚠️ Pairing code not available. Try refreshing or use QR below.</p>';
     } else {
-      html += '<p style="color:rgba(255,255,255,.3);font-size:.82rem;">💡 Enter phone number above to also get a pairing code</p>';
+      html += '<p style="color:rgba(255,255,255,.4);font-size:.85rem;">💡 Enter your phone number above to also get a pairing code</p>';
     }
 
     // QR code
@@ -265,7 +269,6 @@ async function createInstance() {
     var data = await api('/instance/create', 'POST', body);
     log('Created: ' + JSON.stringify(data).slice(0, 200));
     el.innerHTML = '<p style="color:#86efac;">✅ Instance <b>' + name + '</b> created! Switching to Connect tab...</p>';
-    // Switch to connect tab
     document.getElementById('connectInstName').value = name;
     document.getElementById('connectPhone').value = phone;
     switchTab('connect');
