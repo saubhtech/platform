@@ -36,7 +36,7 @@
 | api | `apps/api` | NestJS, Prisma 7, PostgreSQL, Keycloak + WhatsApp OTP + CRM + Bot + Templates + Media | 3001 | ✅ Live |
 | admin | `apps/admin` | Next.js, Tailwind, Keycloak SSO, CRM UI with channel switcher | 3003 | ✅ Live |
 | realtime | `apps/realtime` | WebSocket server, Socket.io, Redis pub/sub, CRM gateway | 3002 | ✅ Live |
-| crmwhats | `apps/crmwhats` | Next.js 16, dark glassmorphism UI, JWT auth (BO/GW only), WebSocket real-time | 3004 | ✅ Live |
+| crmwhats | `apps/crmwhats` | Next.js 16, dark glassmorphism UI, JWT auth (BO/GW only), WebSocket real-time, **FULLY WIRED to backend API** ✅ | 3004 | ✅ Live |
 
 ### Docker Services
 | Container | Image | Port | Role |
@@ -200,7 +200,9 @@ Old CRM removed entirely (architecturally incompatible). Disk freed: 52G.
 | `middleware.ts` | Locale detection (`saubh_locale` cookie), JWT auth, BO/GW gate, expiry check |
 | `components/Sidebar.tsx` | Desktop collapsible sidebar + mobile bottom nav, channel switcher pills, user footer |
 | `context/UserContext.tsx` | Decodes JWT, provides userid/fname/usertype/whatsapp + logout |
-| `context/ChannelContext.tsx` | ALL/EVOLUTION/WABA filter, persists to localStorage |
+| `context/ChannelContext.tsx` | ALL/EVOLUTION/WABA filter, persists to localStorage, fetches real channels from API |
+| `lib/api.ts` | Typed fetch wrapper — reads JWT from cookie, Bearer auth, 401 redirect, get/post/patch/delete/upload |
+| `lib/types.ts` | WaChannel, WaContact, WaConversation, WaMessage, WaBroadcast, BotConfig, PaginatedResponse |
 | `components/ui/*` | GlassCard, GradientButton, Avatar, ChannelBadge, StatusDot, UnreadBadge, SkeletonLoader |
 
 **Pages**:
@@ -262,15 +264,55 @@ Old CRM removed entirely (architecturally incompatible). Disk freed: 52G.
 
 ---
 
-## What's Next: P10 — CRM Pipeline/Deals + Analytics
+### Completed: P11 — Wire crmwhats to Backend API ✅ (Feb 22, 2026)
 
-- CRM Pipeline: Deal stages, lead tracking, contact tagging
-- Analytics Dashboard: message volumes, response times, bot performance, channel comparison
-- Broadcast scheduling improvements
-- Contact import/export (CSV)
-- Agent assignment + team management
+**Problem**: crmwhats had UI shell with raw `fetch()` calls — no auth headers, no error handling, no 401 redirect. All API calls would fail on protected endpoints.
 
-**Future phases**: P11 (Multi-tenant), P12 (Marketplace Integration)
+**Solution**: Replaced all raw `fetch()` calls with authenticated `api` client (`lib/api.ts`) across all pages.
+
+**Files Modified**:
+| File | Changes |
+|------|---------|
+| `app/[locale]/inbox/page.tsx` | 9 raw fetch → `api.get/post/patch/upload`, WebSocket JWT auth added |
+| `app/[locale]/contacts/page.tsx` | 6 raw fetch → `api.get/post/patch` |
+| `app/[locale]/broadcast/page.tsx` | 3 raw fetch → `api.get` |
+| `app/[locale]/broadcast/create/page.tsx` | 4 raw fetch → `api.get/post` |
+| `context/ChannelContext.tsx` | Enhanced: fetches real channels from API, exposes `channels[]`, `getChannelByType()`, `refreshChannels()` |
+| `.env.example` | Created: `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL`, `NEXT_PUBLIC_BASE_URL` |
+
+**API Client** (`lib/api.ts`):
+- Reads `saubh_token` JWT from cookie automatically
+- Sets `Authorization: Bearer` header on every request
+- On 401: redirects to `saubh.tech/[locale]/login`
+- Methods: `get<T>`, `post<T>`, `patch<T>`, `delete<T>`, `upload<T>`
+
+**Env Vars Added** (`apps/crmwhats/.env.local`):
+- `NEXT_PUBLIC_API_URL=https://api.saubh.tech`
+- `NEXT_PUBLIC_BASE_URL=https://saubh.tech`
+
+**E2E Verified**:
+- ✅ Inbox: conversations load, messages display, send works, Bot/Resolve buttons functional
+- ✅ Contacts: 5 contacts load in grid, search + add + block functional
+- ✅ Broadcast: page loads, "New Broadcast" wizard accessible
+- ✅ Sidebar: user shown (Mani/BO), channel switcher works
+- ✅ Auth: unauthenticated → redirects to login page
+- ⚠️ WebSocket shows "Polling" (fallback works, WS auth needs server-side gateway update — pre-existing)
+
+---
+
+## What's Next: P12 — CRM Pipeline (Deals, Tasks, SLA)
+
+- Deal stages + pipeline board (Kanban)
+- Lead tracking + contact tagging
+- Task assignment per conversation
+- SLA timers (first response, resolution)
+- Agent performance metrics
+
+**Future phases**:
+- P13 = Analytics Dashboard (message volumes, response times, bot performance, channel comparison)
+- P14 = n8n Automation (workflow triggers, CRM events → actions)
+- P15 = Multi-tenant (business-scoped CRM data)
+- P16 = Marketplace Integration
 
 ---
 
@@ -314,6 +356,7 @@ Old CRM removed entirely (architecturally incompatible). Disk freed: 52G.
 
 - **Route**: `saubh.tech/crmwhats/[locale]/inbox|contacts|broadcast|templates|settings`
 - **Auth**: WhatsApp JWT (`saubh_token` cookie), BO/GW usertypes only
+- **API client**: `lib/api.ts` — authenticated fetch wrapper (Bearer token from cookie)
 - **Design**: Dark glassmorphism, violet/pink gradient accents
 - **Real-time**: Socket.io client → `realtime.saubh.tech/crm` namespace
 - **API base**: `api.saubh.tech/api/crm/`
