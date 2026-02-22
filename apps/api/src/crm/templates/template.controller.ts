@@ -5,7 +5,14 @@ import { TemplateService } from './template.service';
 export class TemplateController {
   constructor(private readonly templateService: TemplateService) {}
 
-  @Get(':channelId')
+  // List ALL templates across channels
+  @Get()
+  async listAll(@Query('status') status?: string) {
+    return this.templateService.listAll(status);
+  }
+
+  // List templates for a specific channel
+  @Get('channel/:channelId')
   async list(
     @Param('channelId') channelId: string,
     @Query('status') status?: string,
